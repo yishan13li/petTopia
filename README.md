@@ -51,7 +51,7 @@
 | f3/luo | ✔ | ✔ |  |  |  |
 
 ## Git 流程
-
+*****貼上的快捷鍵是shift+ctrl+insert
 ### 若尚未安裝 Git
 1. 安裝 Git
 2. 打開 Git Bash
