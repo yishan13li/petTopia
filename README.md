@@ -52,6 +52,7 @@
 
 ## Git 流程
 *****貼上的快捷鍵是shift+ctrl+insert
+*****git bash 一次只能寫一行
 ### 若尚未安裝 Git
 1. 安裝 Git
 2. 打開 Git Bash
