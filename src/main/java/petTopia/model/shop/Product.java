@@ -62,6 +62,9 @@ public class Product {
 
 	@Column(name = "status")
 	private Boolean status;
+	
+	@Column(name="photo")
+	private byte[] photo;
 
 	@ManyToOne()
 	@JoinColumn(name = "product_detail_id")
@@ -75,7 +78,5 @@ public class Product {
 	@JoinColumn(name = "product_size_id")
 	private ProductSize productSize;
 	
-	@OneToOne(mappedBy = "product", cascade = CascadeType.ALL)
-	private ProductPhoto productPhoto;
 
 }
