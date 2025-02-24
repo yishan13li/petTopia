@@ -44,8 +44,8 @@ public class ProductDetail {
 	@JoinColumn(name = "product_category_id")
 	private ProductCategory productCategory;
 	
-	@OneToMany(mappedBy = "productDetail", cascade = CascadeType.ALL)
-	private List<ProductPhoto> productPhoto = new ArrayList<>();
+//	@OneToMany(mappedBy = "productDetail", cascade = CascadeType.ALL)
+//	private List<ProductPhoto> productPhoto = new ArrayList<>();
 
 	
 }

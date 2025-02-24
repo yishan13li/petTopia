@@ -7,6 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -29,8 +30,8 @@ public class ProductPhoto {
 	@Column(name="photo")
 	private byte[] photo;
 	
-	@ManyToOne
-	@JoinColumn(name = "product_detail_id")
-	private ProductDetail productDetail;
+	@OneToOne
+	@JoinColumn(name = "product_id")
+	private Product product;
 	
 }

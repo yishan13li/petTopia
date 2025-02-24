@@ -1,10 +1,13 @@
 package petTopia.service.shop;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import petTopia.model.shop.Product;
 import petTopia.model.shop.ProductCategory;
@@ -97,7 +100,7 @@ public class ProductService {
         // 新增商品照片 (ProductPhoto)
         if (photos != null && !photos.isEmpty()) {
             for (ProductPhoto photo : photos) {
-                photo.setProductDetail(productDetail); // 設定關聯
+                photo.setProduct(product); // 設定關聯
             }
             productPhotoRepository.saveAll(photos); // 一次儲存所有照片
         }
@@ -107,6 +110,29 @@ public class ProductService {
 		
 	}
 
+	public ProductPhoto addProductPhotoByProductId(Integer productId, MultipartFile file) throws IOException {
+		Optional<Product> productOpt = productRepository.findById(productId);
+		if (productOpt.isPresent()) {
+			
+			ProductPhoto productPhoto = productPhotoRepository.findByProductId(productId);
+			
+			productPhoto.setProduct(productOpt.get());
+			productPhoto.setPhoto(file.getBytes());
+			
+			productPhotoRepository.save(productPhoto);
+			
+			return productPhoto;
+		}
+		
+		return null;
+	}
 	
+	public Product findFirstByProductDetailId(Integer productDetailId) {
+		Product product = productRepository.findFirstByProductDetailIdOrderByIdAsc(productDetailId);
+		if (product != null) {
+			return product;
+		}
+		return null;
+	}
 	
 }

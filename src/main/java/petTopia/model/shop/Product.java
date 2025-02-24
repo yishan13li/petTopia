@@ -18,6 +18,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -74,7 +75,7 @@ public class Product {
 	@JoinColumn(name = "product_size_id")
 	private ProductSize productSize;
 	
-//	@OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
-//	private List<ProductPhoto> productPhoto = new ArrayList<>();
+	@OneToOne(mappedBy = "product", cascade = CascadeType.ALL)
+	private ProductPhoto productPhoto;
 
 }
