@@ -1,8 +1,10 @@
-package petTopia.model.shop;
+package petTopia.repository.shop;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import petTopia.model.shop.ProductDetail;
 
 public interface ProductDetailRepository extends JpaRepository<ProductDetail, Integer>{
 

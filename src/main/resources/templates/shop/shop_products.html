@@ -381,7 +381,7 @@
     <div class="isotope-container row">
 
       <!-- 商品Card -->
-      <th:block th:each="productDetail : ${allProductDetail}">
+      <th:block th:each="productDetailDto : ${productDetailDtoList}">
         <div class="item cat col-md-4 col-lg-3 my-4">
           <!-- 商品左上字樣 -->
           <!-- <div class="z-1 position-absolute rounded-3 m-3 px-3 border border-dark-subtle">
@@ -390,13 +390,13 @@
           <div class="card position-relative">
             <!-- 商品圖片 -->
             <div>
-              <img th:src="@{/shop/products/api/getPhoto(productDetailId=${productDetail.id})}" alt="image"
-                class="img-fluid rounded-4">
+              <img th:src="@{/shop/products/api/getPhoto(productDetailId=${productDetailDto.productDetail.id})}"
+                alt="image" class="img-fluid rounded-4">
             </div>
 
             <div class="card-body p-0">
 
-              <h3 class="card-title pt-4 m-0">[[${productDetail.name}]]</h3>
+              <h3 class="card-title pt-4 m-0">[[${productDetailDto.productDetail.name}]]</h3>
 
               <div class="card-text">
                 <!-- 商品評價 星星 -->
@@ -409,12 +409,12 @@
                   5.0</span>
 
                 <!-- 商品價錢 -->
-                <h3 class="secondary-font text-primary">$------</h3>
+                <h3 class="secondary-font text-primary">$[[${productDetailDto.unitPrice}]]</h3>
 
                 <!-- 加入購物車 -->
                 <div class="d-flex flex-wrap mt-3">
                   <!-- 購物車按鈕 -->
-                  <a th:href="@{/shop/productDetail(productDetailId=${productDetail.id})}"
+                  <a th:href="@{/shop/productDetail(productDetailId=${productDetailDto.productDetail.id})}"
                     class="btn btn-light btn-sm me-3 px-4 pt-3 pb-3">
                     <h5 class="text-uppercase m-0">加入購物車</h5>
                   </a>

@@ -1,5 +1,6 @@
 package petTopia.controller.shop;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import petTopia.dto.shop.ProductDetailDto;
 import petTopia.model.shop.Product;
 import petTopia.model.shop.ProductDetail;
 import petTopia.service.shop.ProductDetailService;
@@ -32,12 +34,22 @@ public class ShopProductsController {
 	@GetMapping
 	public String showShopProducts(Model model) {
 		
-		//TODO: 獲取Product，從中選出最低價放到瀏覽頁面
-		
 		// 獲取商品資訊(ProductDetail)
-		List<ProductDetail> allProductDetail = productDetailService.findAll();
+		List<ProductDetail> productDetailList = productDetailService.findAll();
 		
-		model.addAttribute("allProductDetail", allProductDetail);
+		// 獲取ProductDetail一樣的所有Poduct，選出最低價
+		List<ProductDetailDto> productDetailDtoList = new ArrayList<ProductDetailDto>();
+		for (ProductDetail productDetail : productDetailList) {
+			
+			ProductDetailDto productDetailDto = new ProductDetailDto();
+			Product minPriceProduct = productService.findMinPriceProduct(productDetail.getId());
+			
+			productDetailDto.setProductDetail(productDetail);
+			productDetailDto.setUnitPrice(minPriceProduct.getUnitPrice());
+			productDetailDtoList.add(productDetailDto);
+		}
+		
+		model.addAttribute("productDetailDtoList", productDetailDtoList);
 		
 		return "shop/shop_products";
 	}

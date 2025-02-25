@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import petTopia.model.shop.ProductDetail;
-import petTopia.model.shop.ProductDetailRepository;
+import petTopia.repository.shop.ProductDetailRepository;
 
 
 @Service
