@@ -3,17 +3,21 @@ package petTopia.model.vendor_admin;
 import java.util.Date;
 import java.util.List;
 
+import org.hibernate.annotations.BatchSize;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -29,7 +33,7 @@ import lombok.ToString;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
+
 public class VendorActivity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -57,7 +61,7 @@ public class VendorActivity {
 	@Column(name = "is_registration_required", nullable = false)
 	private boolean isRegistrationRequired = false;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "activity_type_id", nullable = false)
 	private ActivityType activityType;
 
@@ -71,11 +75,17 @@ public class VendorActivity {
 	@Column(name = "address", nullable = false)
 	private String address;
 
-	@OneToMany(mappedBy = "vendorActivity", cascade = CascadeType.ALL, orphanRemoval = true)
+	@JsonIgnore
+	@OneToMany(mappedBy = "vendorActivity", cascade = CascadeType.ALL)
+	@BatchSize(size = 20)
 	private List<VendorActivityImages> images;
-
+	
+	@JsonIgnore
 	public List<VendorActivityImages> getVendorActivityImages() {
 		// TODO Auto-generated method stub
 		return images;
 	}
+
+	@OneToOne(mappedBy = "vendorActivity", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private ActivityPeopleNumber activityPeopleNumber;
 }

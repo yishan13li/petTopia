@@ -27,7 +27,7 @@ import lombok.ToString;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
+
 public class Vendor {
 
 	@Id

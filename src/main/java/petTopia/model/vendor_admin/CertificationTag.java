@@ -18,7 +18,7 @@ import lombok.ToString;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
+
 public class CertificationTag {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

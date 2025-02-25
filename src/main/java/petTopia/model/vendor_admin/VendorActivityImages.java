@@ -23,14 +23,13 @@ import lombok.ToString;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 public class VendorActivityImages {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     
     @JsonIgnore
-    @ManyToOne
+    @ManyToOne	
     @JoinColumn(name = "vendor_activity_id", nullable = false)
     private VendorActivity vendorActivity;
     
