@@ -2,6 +2,8 @@ package petTopia.model.user;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 import lombok.Data;
 
 @Entity
@@ -17,6 +19,7 @@ public class MemberBean {
     @Column(nullable = false)
     private String phone;
 
+    @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime birthdate;
 
     @Column(nullable = false)

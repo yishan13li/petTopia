@@ -116,6 +116,41 @@
 footer .search-bar {
     margin-top: 20px; /* 這裡加上 margin-top 調整搜尋列位置 */
 }
+
+        .verification-code-container {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin: 20px 0;
+            gap: 4px;
+        }
+
+        .verification-code-input {
+            width: calc((100% - 25px) / 6);
+            height: 40px;
+            max-width: 40px;
+            text-align: center;
+            font-size: 16px;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        .verification-code-input:focus {
+            outline: none;
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+
+        @media (max-width: 576px) {
+            .verification-code-input {
+                font-size: 14px;
+                height: 35px;
+            }
+        }
     </style>
 </head>
 

@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import petTopia.model.user.UsersBean;
 import petTopia.repository.user.UserRepository;
-import java.util.Optional;
+
 
 @Service
 @Transactional
@@ -35,27 +35,34 @@ public class MemberLoginService {
         return userRepository.save(user);
     }
 
+    public class AuthenticationException extends RuntimeException {
+        public AuthenticationException(String message) {
+            super(message);
+        }
+    }
+
     // 登入時驗證密碼
     public UsersBean memberLogin(String email, String password) {
-        try {
-            // 使用新的方法獲取用戶
-            Optional<UsersBean> userOpt = userRepository.findFirstByEmailOrderByIdDesc(email);
-            
-            if (userOpt.isPresent()) {
-                UsersBean user = userOpt.get();
-                // 驗證密碼
-                if (password.equals(user.getPassword())) {
-                    return user;
-                }
-            }
-            return null;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+        if (email == null || password == null) {
+            throw new IllegalArgumentException("Email和密碼不能為空");
         }
+
+        UsersBean user = userRepository.findByEmail(email);
+        if (user == null) {
+            throw new AuthenticationException("用戶不存在");
+        }
+        
+        if (passwordEncoder.matches(password, user.getPassword())) {
+            return user;
+        }
+        throw new AuthenticationException("密碼錯誤");
     }
 
     public UsersBean findByEmail(String email) {
         return userRepository.findByEmail(email);
+    }
+
+    public UsersBean findById(Integer id) {
+        return userRepository.findById(id).orElse(null);
     }
 } 

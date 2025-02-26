@@ -4,8 +4,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.util.Optional;
+import java.time.LocalDate;
 import petTopia.model.user.MemberBean;
+import petTopia.model.user.UsersBean;
 import petTopia.repository.user.MemberRepository;
+import petTopia.repository.user.UserRepository;
 
 @Service
 @Transactional
@@ -13,22 +17,52 @@ public class MemberService {
     @Autowired
     private MemberRepository memberRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Transactional
     public MemberBean createOrUpdateMember(MemberBean member) {
-        validateMemberInput(member);
-        member.setUpdatedDate(LocalDateTime.now());
-        
-        // 檢查是否已存在會員資料
-        boolean exists = memberRepository.existsById(member.getId());
-        if (!exists) {
-            member.setStatus(false);  // 新會員預設未認證
+        try {
+            validateMemberInput(member);
+    
+            // 確保用戶已存在於 `users` 表
+            UsersBean user = userRepository.findById(member.getId())
+                .orElseThrow(() -> new RuntimeException("用戶不存在"));
+            member.setUser(user);  // 關聯 `UsersBean`
+    
+            // 查詢 `member` 是否已存在
+            Optional<MemberBean> existingMemberOpt = memberRepository.findById(member.getId());
+    
+            if (existingMemberOpt.isPresent()) {
+                // 更新已存在的 `Member`
+                MemberBean existingMember = existingMemberOpt.get();
+                existingMember.setName(member.getName());
+                existingMember.setPhone(member.getPhone());
+                existingMember.setBirthdate(member.getBirthdate());
+                existingMember.setGender(member.getGender());
+                existingMember.setAddress(member.getAddress());
+                existingMember.setUpdatedDate(LocalDateTime.now());
+    
+                // 只在 `profilePhoto` 不為空時更新
+                if (member.getProfilePhoto() != null) {
+                    existingMember.setProfilePhoto(member.getProfilePhoto());
+                }
+    
+                return memberRepository.save(existingMember);
+            } else {
+                // **如果 `member` 不存在，則新增**
+                member.setStatus(false);
+                member.setUpdatedDate(LocalDateTime.now());
+                return memberRepository.save(member);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();  // 添加錯誤日誌
+            throw new RuntimeException("保存會員資料失敗: " + e.getMessage());
         }
-        
-        return memberRepository.save(member);
     }
 
-    public MemberBean getMemberById(Integer id) {
-        return memberRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("會員不存在"));
+    public MemberBean getMemberById(Integer userId) {
+        return memberRepository.findById(userId).orElse(null);
     }
 
     public MemberBean updateMember(MemberBean member) {
@@ -56,11 +90,28 @@ public class MemberService {
     }
 
     private void validateMemberInput(MemberBean member) {
+        // 確保必要的關聯存在
+        if (member.getUser() == null || member.getUser().getId() == null) {
+            throw new IllegalArgumentException("用戶關聯不能為空");
+        }
+        
+        // 確保ID匹配
+        if (!member.getId().equals(member.getUser().getId())) {
+            throw new IllegalArgumentException("用戶ID不匹配");
+        }
+        
         if (member.getName() == null || member.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("姓名不能為空");
         }
-        if (member.getPhone() == null || !member.getPhone().matches("^09\\d{8}$")) {
-            throw new IllegalArgumentException("手機號碼格式不正確");
+    }
+
+    public boolean verifyMember(Integer userId) {
+        MemberBean member = getMemberById(userId);
+        if (member != null) {
+            member.setStatus(true);  // 設置為已驗證
+            memberRepository.save(member);
+            return true;
         }
+        return false;
     }
 } 

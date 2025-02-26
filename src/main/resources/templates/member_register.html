@@ -132,27 +132,39 @@
             margin-top: 20px; /* 這裡加上 margin-top 調整搜尋列位置 */
         }
 
-        .verification-code-input {
-            width: 50px !important;
-            height: 50px;
-            font-size: 24px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            text-align: center;
-            margin: 0 5px;
-        }
-        
-        .verification-code-input:focus {
-            border-color: #80bdff;
-            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
-            outline: none;
-        }
-        
         .verification-code-container {
             display: flex;
-            justify-content: center;
-            gap: 10px;
+            justify-content: space-between;
+            width: 100%;
             margin: 20px 0;
+            padding: 0;
+        }
+
+        .verification-code-input {
+            width: 15%;
+            height: 60px;  /* 增加高度 */
+            text-align: center;
+            font-size: 20px;  /* 增加字体大小 */
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        .verification-code-input:focus {
+            outline: none;
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+
+        @media (max-width: 576px) {
+            .verification-code-input {
+                width: 15%;
+                height: 40px;  /* 移动端也相应增加高度 */
+                font-size: 18px;  /* 移动端也增加字体 */
+            }
         }
     </style>
 </head>
@@ -165,7 +177,7 @@
             <div class="row py-4 pb-0 pb-sm-4 align-items-center">
                 <div class="col-sm-4 col-lg-3 text-center text-sm-start">
                     <div class="main-logo d-flex align-items-center justify-content-center justify-content-sm-start">
-                        <a href="index.html" class="d-flex align-items-center text-decoration-none">
+                        <a th:href="@{/}" class="d-flex align-items-center text-decoration-none">
                             <img th:src="@{/user_static/images/logo.png}" alt="logo" class="img-fluid">
                             <h1 class="mb-0" style="font-size: 32px; 
                                                   margin-left: 15px; 
@@ -173,7 +185,7 @@
                                                   color: #2B4F76;
                                                   font-family: 'Noto Sans TC', sans-serif;
                                                   white-space: nowrap;
-                                                  writing-mode: horizontal-tb;">會員登入</h1>
+                                                  writing-mode: horizontal-tb;">會員註冊</h1>
                         </a>
                     </div>
                 </div>
