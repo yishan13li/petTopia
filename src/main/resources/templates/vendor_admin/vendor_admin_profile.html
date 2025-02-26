@@ -100,7 +100,8 @@ select.form-control {
 					<form method="post" enctype="multipart/form-data"
 						id="updateVendorForm">
 						<button class="btn btn-transparent profile-button"
-							onclick="window.location.href='index2.html'" type="button">返回首頁</button>
+							onclick="window.location.href='/vendor_admin/vendor_admin_activity'"
+							type="button">返回首頁</button>
 						<div class="row">
 							<div
 								class="col-md-4 border-right d-flex align-items-center justify-content-center">
@@ -133,10 +134,15 @@ select.form-control {
 										<div class="col-md-6">
 											<label>店家類別:</label> <select name="category"
 												class="form-control" id="category">
-												<option value="餐廳"
-													th:selected="${vendor.vendorCategory.categoryName == '餐廳'}">餐廳</option>
-												<option value="旅店"
-													th:selected="${vendor.vendorCategory.categoryName == '旅店'}">旅店</option>
+												<!-- 												<option value="餐廳" -->
+												<!-- 													th:selected="${vendor.vendorCategory.categoryName == '餐廳'}">餐廳</option> -->
+												<!-- 												<option value="旅店" -->
+												<!-- 													th:selected="${vendor.vendorCategory.categoryName == '旅店'}">旅店</option> -->
+
+
+												<option th:each="type : ${allcategory}"
+													th:value="${type.id}" th:text="${type.categoryName}"
+													th:selected="${type.id == vendor.vendorCategory.id}"></option>
 											</select><br />
 										</div>
 									</div>

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -48,6 +49,7 @@ public class VendorProfileController {
 		System.out.println(user.get().getUserId());
 		if (user.isPresent() && user.get().getUserRole() == UserRole.vendor) {
 			Optional<Vendor> vendorDetail = vendorServiceImpl.getVendorById(user.get().getUserId());
+			List<VendorCategory> allcategory = categoryRepository.findAll();
 			if (vendorDetail.isPresent()) {
 				System.out.println(vendorDetail.get().getId());
 				System.out.println(vendorDetail.get().getName());
@@ -55,6 +57,7 @@ public class VendorProfileController {
 				String vendorLogoImgBase64 = (vendor.getLogoImg() != null)
 						? "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(vendor.getLogoImg())
 						: null;
+				model.addAttribute("allcategory", allcategory);
 				model.addAttribute("user", user.get());
 				model.addAttribute("vendor", vendorDetail.get());
 				model.addAttribute("vendorLogoImgBase64", vendorLogoImgBase64);

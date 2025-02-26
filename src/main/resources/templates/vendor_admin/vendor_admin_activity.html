@@ -15,7 +15,12 @@
 	th:href="@{https://cdn.datatables.net/2.2.2/css/dataTables.dataTables.css}">
 <style type="text/css">
 .container {
-	max-width: 100%; /* 調整容器寬度 */
+	width: 95%; /* 調整成95%讓表格更寬 */
+	max-width: none; /* 移除最大寬度限制 */
+}
+
+.form-select {
+	width: 150px;
 }
 
 .imgact {
@@ -47,7 +52,30 @@ td.dt-type-numeric {
 }
 
 th.dt-type-numeric {
-	text-align: left !important; /* 讓所有數字欄位也置中 */
+	text-align: center !important; /* 讓所有數字欄位也置中 */
+}
+
+thead th {
+	text-align: center !important;
+	vertical-align: middle !important;
+}
+
+th {
+	white-space: nowrap; /* 防止標題換行 */
+	padding: 10px 20px;
+	white-space: nowrap; /* 增加內距 */
+}
+
+#eventTable {
+	width: 100%;
+	table-layout: fixed; /* 讓表格固定寬度 */
+}
+
+#eventTable th, #eventTable td {
+	text-align: center; /* 讓文字置中 */
+	white-space: nowrap; /* 防止自動換行，確保等比例縮小 */
+	overflow: hidden;
+	text-overflow: ellipsis; /* 文字超出時顯示省略號 */
 }
 
 /* td.pending { */
@@ -57,6 +85,9 @@ th.dt-type-numeric {
 /* td.approved { */
 /* 	color: green; */
 /* } */
+.btn-sm {
+	width: 50px;
+}
 </style>
 </head>
 
@@ -93,7 +124,7 @@ th.dt-type-numeric {
 					class="table table-bordered table-hover text-center">
 					<thead class="table-primary">
 						<tr>
-							<th>活動圖片</th>
+							<th>活動首圖</th>
 							<th>活動名稱</th>
 							<th>活動時間</th>
 							<th>地點</th>
@@ -130,7 +161,24 @@ th.dt-type-numeric {
         $('#eventTable').DataTable({
             destroy: true,
             autoWidth: false,
-            columnDefs: [{ targets: 4, type: "string" }]
+            columnDefs: [{ targets: 4, type: "string" }],
+        language: {
+            "processing": "處理中...",
+            "lengthMenu": "顯示 _MENU_ 筆資料",
+            "zeroRecords": "沒有找到相關資料",
+            "info": "顯示第 _START_ 到 _END_ 筆資料，共 _TOTAL_ 筆",
+            "infoEmpty": "目前沒有資料",
+            "infoFiltered": "(從 _MAX_ 筆資料過濾)",
+            "search": "搜尋：",
+            "paginate": {
+                "first": "第一頁",
+                "last": "最後一頁",
+                "next": "下一頁",
+                "previous": "上一頁"
+            },
+            "emptyTable": "目前表格內沒有資料",
+            "loadingRecords": "載入中...",
+        }
         });
 
         fetchEvents();
@@ -178,7 +226,7 @@ th.dt-type-numeric {
                     let firstImageUrl = imageIds.length > 0 ? `http://localhost:8080/photos/download?photoId=${imageIds[0]}` : '';
                     return [
                         `<img src="${firstImageUrl}" class="img-fluid rounded imgact" alt="活動圖片">`,
-                        `<a href="/vendor_admin/vendor_admin_activityDetail?id=${event.id}" class="text-decoration-none" style="cursor:pointer;">${event.name}</a>`, // 點擊名稱即可進入詳情頁
+                        `<a href="javascript:void(0);" class="event-name" data-id="${event.id}">${event.name}</a>`,  // 使用 `data-id` 儲存活動ID
                         `${formatDate(event.startTime)} - ${formatDate(event.endTime)}`,
                         event.address,
                         event.activityType.name,
@@ -196,9 +244,19 @@ th.dt-type-numeric {
 
         Promise.all(promises).then(rows => {
             rows.forEach(row => {
-                if (row) table.row.add(row);
+                if (row) {
+                    table.row.add(row);
+                }
             });
             table.draw();
+
+            // 綁定點擊事件
+            $('#eventTable tbody').on('click', 'tr', function() {
+                let activityId = $(this).find('.event-name').data('id');  // 使用 `data-id` 取得活動ID
+                if (activityId) {
+                    window.location.href = `/vendor_admin/vendor_admin_activityDetail?id=${activityId}`;
+                }
+            });
         });
     }
 

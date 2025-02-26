@@ -95,7 +95,7 @@ public class VendorActivitivityController {
 			List<VendorActivityImages> vendorActivityImageList = vendorActivity.getImages();
 			for (VendorActivityImages oneImage : vendorActivityImageList) {
 				Integer imageId = oneImage.getId();
-				vendorActivityImageIdList.add(imageId);	
+				vendorActivityImageIdList.add(imageId);
 			}
 			model.addAttribute("vendorActivity", vendorActivity);
 			model.addAttribute("vendorActivityImageIdList", vendorActivityImageIdList);
