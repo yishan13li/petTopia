@@ -7,11 +7,6 @@ import java.util.HashMap;
 
 @Controller
 public class RoutingController {
-    @GetMapping({"/index", "/"})
-    public String index() {
-        return "index"; // 不需要前綴斜杠
-    }
-    
     @GetMapping("/secure/login")
     public String login() {
         return "secure/login"; // 去掉前綴斜杠

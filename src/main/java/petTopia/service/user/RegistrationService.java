@@ -30,6 +30,10 @@ public class RegistrationService {
         user.setVerificationToken(token);
         user.setTokenExpiry(LocalDateTime.now().plusHours(24));
         
+        // 加密密碼
+        String encodedPassword = passwordEncoder.encode(user.getPassword());
+        user.setPassword(encodedPassword);
+        
         // 保存用戶
         usersRepository.save(user);
         

@@ -8,10 +8,14 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@300;400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="css/vendor.css">
-    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="/user_static/css/vendor.css">
+    <link rel="stylesheet" type="text/css" href="/user_static/style.css">
     
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <!-- 選項 1：使用最新的 Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- 或者選項 2：使用 Font Awesome 5 CDN -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
     <style>
         body {
             font-family: 'Comic Neue', cursive;
@@ -20,7 +24,7 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            background: url('images/background-img.png') no-repeat center center/cover;
+            background: url('/user_static/images/background-img.png') no-repeat center center/cover;
         }
         /* Header Styles */
         header {
@@ -48,42 +52,24 @@
     margin-right: 0;
 }
 .social-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background-color: white;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-        
-        .social-btn img {
-            width: 24px;
-            height: 24px;
-            margin-right: 10px;
-        }
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: white;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
 
-        .social-btn1 {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background-color: white;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-        
-        .social-btn1 img {
-            width: 36px;
-            height: 36px;
-            margin-right: 10px;
-        }
+.social-btn img {
+    width: 24px; /* 統一圖示大小 */
+    height: 24px;
+    margin-right: 10px;
+}
+
         .divider {
     display: flex;
     align-items: center;
@@ -142,7 +128,7 @@ footer .search-bar {
               <div class="col-sm-4 col-lg-3 text-center text-sm-start">
                   <div class="main-logo d-flex align-items-center justify-content-center justify-content-sm-start">
                       <a href="index.html" class="d-flex align-items-center text-decoration-none">
-                          <img src="images/logo.png" alt="logo" class="img-fluid">
+                          <img src="/user_static/images/logo.png" alt="logo" class="img-fluid">
                           <h1 class="mb-0" style="font-size: 32px; 
                                                 margin-left: 15px; 
                                               
@@ -164,7 +150,19 @@ footer .search-bar {
     <!-- Main Content -->
     <div class="login-container">
         <h2 class="mb-4">會員登入</h2>
-        <form th:action="@{/member_login/controller}" method="POST">
+        <div th:if="${param.success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            登入成功！即將跳轉至首頁...
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            帳號或密碼錯誤
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${param.logout}" class="alert alert-info alert-dismissible fade show" role="alert">
+            您已成功登出
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <form th:action="@{/member/login}" method="POST">
             <div class="mb-3">
                 <label for="email" class="form-label">電子郵件</label>
                 <input type="email" class="form-control" id="email" name="email" required>
@@ -177,12 +175,12 @@ footer .search-bar {
         </form>
         <div class="divider"><span>或</span></div>
         <a href="/oauth2/authorization/facebook" class="social-btn">
-            <img src="icon/Facebook_icon.png" alt="Facebook"> 使用 Facebook 登入
+            <img src="/user_static/icon/Facebook_icon.png" alt="Facebook"> 使用 Facebook 登入
         </a>
-        <a href="/oauth2/authorization/google" class="social-btn1">
-            <img src="icon/Google_icon.png" alt="Google"> 使用 Google 登入
+        <a href="/oauth2/authorization/google" class="social-btn">
+            <img src="/user_static/icon/Google_icon.png" alt="Google"> 使用 Google 登入
         </a>
-        <p class="text-center mt-3">還沒有帳號？ <a href="/member_register">註冊</a></p>
+        <p class="text-center mt-3">還沒有帳號？ <a href="/member/register">註冊</a></p>
     </div>
 
     <!-- Footer Section -->
@@ -193,7 +191,7 @@ footer .search-bar {
     
             <div class="col-md-3">
               <div class="footer-menu">
-                <img src="images/logo.png" alt="logo">
+                <img src="/user_static/images/logo.png" alt="logo">
                 <p class="blog-paragraph fs-6 mt-3">Subscribe to our newsletter to get updates about our grand offers.</p>
                 <div class="social-links">
                   <ul class="d-flex list-unstyled gap-2">
@@ -306,13 +304,66 @@ footer .search-bar {
       </div>
     
     
-      <script src="js/jquery-1.11.0.min.js"></script>
+      <script src="/user_static/js/jquery-1.11.0.min.js"></script>
       <script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
       <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe"
         crossorigin="anonymous"></script>
-      <script src="js/plugins.js"></script>
-      <script src="js/script.js"></script>
+      <script src="/user_static/js/plugins.js"></script>
+      <script src="/user_static/js/script.js"></script>
       <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
-    </body>
+      <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('success')) {
+            setTimeout(function() {
+                window.location.href = '/';
+            }, 2000);
+        }
+      </script>
+
+    <!-- 登入失敗模態框 -->
+    <div class="modal fade" id="loginFailedModal" tabindex="-1" aria-labelledby="loginFailedModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="loginFailedModalLabel">登入失敗</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    帳號或密碼錯誤，請重新輸入
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 確保 DOM 完全加載
+        document.addEventListener('DOMContentLoaded', function() {
+            // 檢查是否是登入失敗
+            var urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('error')) {
+                // 使用 Bootstrap 的方式初始化並顯示模態框
+                var myModal = new bootstrap.Modal(document.getElementById('loginFailedModal'), {
+                    keyboard: false
+                });
+                myModal.show();
+            }
+        });
+    </script>
+
+    <div class="d-none d-lg-flex align-items-end">
+        <ul class="d-flex justify-content-end list-unstyled m-0">
+            <li>
+                <a th:href="@{/member/profile}" class="mx-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M15.71 12.71a6 6 0 1 0-7.42 0a10 10 0 0 0-6.22 8.18a1 1 0 0 0 2 .22a8 8 0 0 1 15.9 0a1 1 0 0 0 1 .89h.11a1 1 0 0 0 .88-1.1a10 10 0 0 0-6.25-8.19ZM12 12a4 4 0 1 1 4-4a4 4 0 0 1-4 4Z"/>
+                    </svg>
+                </a>
+            </li>
+        </ul>
+    </div>
+</body>
 </html>

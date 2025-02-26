@@ -5,13 +5,14 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import petTopia.model.user.UsersBean;
 import petTopia.service.user.EmailService;
-import petTopia.service.user.MemberLoginService;
+import petTopia.service.user.RegistrationService;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,16 +23,15 @@ import java.util.Random;
 public class MemberRegisterController {
 
     @Autowired
-    private MemberLoginService memberService;
+    private RegistrationService registrationService;
 
     @Autowired
     private EmailService emailService;
 
     private Map<String, Map<String, Object>> verificationCodes = new HashMap<>();
 
-    @GetMapping("/member_register")
-    public String showRegisterPage(Model model) {
-        model.addAttribute("errors", new HashMap<String, String>());
+    @GetMapping("/register")
+    public String showRegisterForm(Model model) {
         return "member_register";
     }
 
@@ -48,12 +48,55 @@ public class MemberRegisterController {
             UsersBean newUser = new UsersBean();
             newUser.setEmail(email);
             newUser.setPassword(password);
-            memberService.register(newUser);
+            newUser.setUserRole(UsersBean.UserRole.MEMBER);
+            registrationService.register(newUser);
             return "redirect:/member_login?registered=true";
         } catch (Exception e) {
             errors.put("registerFailed", "註冊失敗：" + e.getMessage());
             return "member_register";
         }
+    }
+
+    @PostMapping("/api/register")
+    @ResponseBody
+    public Map<String, Object> apiRegister(@RequestBody Map<String, String> request) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            // 基本驗證
+            if (!request.get("password").equals(request.get("confirmPassword"))) {
+                response.put("success", false);
+                response.put("message", "密碼與確認密碼不符");
+                return response;
+            }
+
+            UsersBean newUser = new UsersBean();
+            newUser.setEmail(request.get("email"));
+            newUser.setPassword(request.get("password"));
+            newUser.setUserRole(UsersBean.UserRole.MEMBER);
+            
+            registrationService.register(newUser);
+            
+            response.put("success", true);
+            response.put("message", "註冊成功");
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+        }
+        
+        return response;
+    }
+
+    @PostMapping("/api/send-verification")
+    @ResponseBody
+    public Map<String, Object> apiSendVerificationCode(@RequestBody Map<String, String> request) {
+        return sendVerificationCode(request.get("email"));
+    }
+
+    @PostMapping("/api/verify-code")
+    @ResponseBody
+    public Map<String, Object> apiVerifyCode(@RequestBody Map<String, String> request) {
+        return verifyCode(request.get("email"), request.get("code"));
     }
 
     // 發送驗證碼
