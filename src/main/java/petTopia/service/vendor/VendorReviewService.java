@@ -1,0 +1,118 @@
+package petTopia.service.vendor;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import petTopia.dto.vendor.VendorReviewDto;
+import petTopia.model.user.Member;
+import petTopia.model.vendor.VendorReview;
+import petTopia.repository.user.MemberRepository;
+import petTopia.repository.vendor.VendorReviewRepository;
+
+@Service
+public class VendorReviewService {
+
+	@Autowired
+	private VendorReviewRepository vendorReviewRepository;
+
+	@Autowired
+	private MemberRepository memberRepository;
+
+	/* 尋找單一店家其所有的評分及留言 */
+	public List<VendorReview> findVendorReviewByVendorId(Integer vendorId) {
+		return vendorReviewRepository.findByVendorId(vendorId);
+	}
+
+	/* 新增或修改文字評論 */
+	public void addOrModifyVendorTextReview(Integer memberId, Integer vendorId, String content) {
+		VendorReview vendorReview = vendorReviewRepository.findByMemberIdAndVendorId(memberId, vendorId);
+
+		if (vendorReview == null) {
+
+			VendorReview newVendorReview = new VendorReview();
+			newVendorReview.setMemberId(memberId);
+			newVendorReview.setVendorId(vendorId);
+			newVendorReview.setReviewContent(content);
+			newVendorReview.setReviewTime(new Date());
+			vendorReviewRepository.save(newVendorReview);
+
+		} else {
+
+			vendorReview.setReviewContent(content);
+			vendorReview.setReviewTime(new Date());
+			vendorReviewRepository.save(vendorReview);
+
+		}
+	}
+
+	/* 新增或修改星星評分 */
+	public void addOrModifyVendorStarReview(Integer memberId, Integer vendorId, Integer ratingEnv, Integer ratingPrice,
+			Integer ratingService) {
+		VendorReview vendorReview = vendorReviewRepository.findByMemberIdAndVendorId(memberId, vendorId);
+
+		if (vendorReview == null) {
+
+			VendorReview newVendorReview = new VendorReview();
+			newVendorReview.setMemberId(memberId);
+			newVendorReview.setVendorId(vendorId);
+			newVendorReview.setRatingEnvironment(ratingEnv);
+			newVendorReview.setRatingPrice(ratingPrice);
+			newVendorReview.setRatingService(ratingService);
+			newVendorReview.setReviewTime(new Date());
+			vendorReviewRepository.save(newVendorReview);
+
+		} else {
+
+			vendorReview.setRatingEnvironment(ratingEnv);
+			vendorReview.setRatingPrice(ratingPrice);
+			vendorReview.setRatingService(ratingService);
+			vendorReview.setReviewTime(new Date());
+			vendorReviewRepository.save(vendorReview);
+
+		}
+	}
+
+	/* 將Member和VendorReview轉換成DTO */
+	public VendorReviewDto ConvertVendorReviewToDto(Member member, VendorReview review) {
+
+		VendorReviewDto dto = new VendorReviewDto();
+
+		/* 設定評價資訊 */
+		dto.setVendorId(review.getVendorId());
+		dto.setReviewTime(review.getReviewTime());
+		dto.setReviewContent(review.getReviewContent());
+		dto.setRatingEnvironment(review.getRatingEnvironment());
+		dto.setRatingPrice(review.getRatingPrice());
+		dto.setRatingService(review.getRatingService());
+
+		/* 設定會員資訊 */
+		dto.setMemberId(member.getId());
+		dto.setName(member.getName());
+		dto.setGender(member.isGender());
+		dto.setProfilePhoto(member.getProfilePhoto());
+
+		return dto;
+	}
+
+	/* 查詢某個vendorId所有評價之DTO */
+	public List<VendorReviewDto> getReviewListByVendorId(Integer vendorId) {
+		List<VendorReview> reviewList = vendorReviewRepository.findByVendorId(vendorId);
+
+		List<VendorReviewDto> dtoList = reviewList.stream().map(review -> {
+			Optional<Member> optional = memberRepository.findById(review.getMemberId());
+			if (optional.isEmpty()) {
+				return null;
+			}
+			Member member = optional.get();
+			return ConvertVendorReviewToDto(member, review);
+		}).collect(Collectors.toList());
+
+		return dtoList;
+	}
+
+}
