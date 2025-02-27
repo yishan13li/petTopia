@@ -67,20 +67,31 @@ public class OrderService {
 //	================================================
 	
 	//計算訂單總金額
-    public BigDecimal calculateOrderTotal(Member member, List<Cart> cartItems, Coupon coupon, Integer shippingCategoryId) {
-        // 計算購物車subtotal金額
+    public BigDecimal calculateOrderTotal(Integer memberId, Integer couponId, Integer shippingCategoryId) {
+    	//找到該member的購物車資訊
+    	List<Cart> cartItems = cartService.getCartItems(memberId);
+    	
+    	
+    	// 計算購物車subtotal金額
         BigDecimal subtotal = cartService.calculateTotalPrice(cartItems);
 
-        // 使用優惠券，算出的折扣金額
-        BigDecimal discountAmount = couponService.getDiscountAmountByCoupon(coupon, subtotal);
+        Coupon coupon = null;
+        BigDecimal discountAmount = BigDecimal.ZERO;
+
+        // 若有使用優惠券，算出的折扣金額
+        if (couponId != null) {
+            coupon = couponRepo.findById(couponId)
+                .orElseThrow(() -> new IllegalArgumentException("找不到對應的優惠券"));
+            discountAmount = couponService.getDiscountAmountByCoupon(coupon, subtotal);
+        }
 
         // 透過運送方式 ID 拿到對應的運費
-        BigDecimal shippingCost = shippingCategoryRepo.findById(shippingCategoryId)
+        BigDecimal shippingFee = shippingCategoryRepo.findById(shippingCategoryId)
                 .map(ShippingCategory::getShippingCost) 
                 .orElse(BigDecimal.ZERO); // 如果找不到運送方式，預設運費為 0
 
-        // 計算最終金額：小計 - 折扣 + 運費
-        BigDecimal orderTotal = subtotal.subtract(discountAmount).add(shippingCost);
+        // 計算最終金額：商品總金額 - 折扣 + 運費
+        BigDecimal orderTotal = subtotal.subtract(discountAmount).add(shippingFee);
 		return orderTotal;
     }
 
@@ -147,7 +158,7 @@ public class OrderService {
         //==================建立運送資訊================
         
         // 創建 ShippingAddress
-        ShippingAddress shippingAddress = shippingService.createShippingAddress(member, city, street, true);
+        ShippingAddress shippingAddress = shippingService.createShippingAddress(member, city, street);
         
         //取得配送方式 
         ShippingCategory shippingCategory = shippingCategoryRepo.findById(shippingCategoryId)

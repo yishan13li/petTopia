@@ -3,6 +3,7 @@ package petTopia.model.shop;
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
@@ -22,7 +23,7 @@ public class MemberCoupon {
     @EmbeddedId
     private MemberCouponId id; // 使用複合主鍵
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("memberId") // 這樣可以直接透過 memberId 取得會員
     @JoinColumn(name = "member_id", referencedColumnName = "id")
     private Member member;

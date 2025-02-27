@@ -149,17 +149,22 @@ public class CheckOutController2 {
         Integer shippingCategoryId = (Integer) checkoutData.get("shippingCategoryId");
         Integer paymentCategoryId = (Integer) checkoutData.get("paymentCategoryId");
         
+        // **根據購物車計算應付款金額，防止前端惡意修改**
+        BigDecimal calculatedTotalAmount = orderService.calculateOrderTotal(memberId, couponId, shippingCategoryId);
+        
         // **安全檢查 paymentAmount，貨到付款時允許為 null**
         BigDecimal paymentAmount = null;
         if (checkoutData.containsKey("paymentAmount") && checkoutData.get("paymentAmount") != null) {
             paymentAmount = new BigDecimal(checkoutData.get("paymentAmount").toString());
         }
 
-        // **如果是信用卡付款 (paymentCategoryId == 1)，但沒有提供金額，拋出錯誤**
-        if (paymentCategoryId == 1 && (paymentAmount == null || paymentAmount.compareTo(BigDecimal.ZERO) <= 0)) {
-            return ResponseEntity.badRequest().body(Map.of("error", "信用卡付款需要提供有效的付款金額"));
-        }   ///可能要設跳出支付頁面
-
+        // **檢查信用卡付款金額是否與訂單金額一致**
+        if (paymentCategoryId == 1) { // 1 = 信用卡付款
+        	if (paymentAmount == null || paymentAmount.compareTo(calculatedTotalAmount) != 0) {
+        		return ResponseEntity.badRequest().body(Map.of("error", "付款金額與訂單金額不符"));
+        	}
+        }
+        
         String street = (String) checkoutData.get("street");
         String city = (String) checkoutData.get("city");
         String receiverName = (String) checkoutData.get("receiverName");
@@ -167,6 +172,12 @@ public class CheckOutController2 {
         
         // 建立訂單
         Order order = orderService.createOrder(member, memberId, couponId, shippingCategoryId, paymentCategoryId, paymentAmount, street, city , receiverName, receiverPhone);
+        
+//        // **信用卡付款時，跳轉至支付頁面**
+//        if (paymentCategoryId == 1) {
+//            String paymentUrl = paymentService.generatePaymentUrl(order);
+//            return ResponseEntity.ok(Map.of("message", "請前往支付", "paymentUrl", paymentUrl));
+//        }
         
         return ResponseEntity.ok(Map.of("message", "訂單建立成功", "orderId", order.getId()));
     }
