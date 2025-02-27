@@ -6,11 +6,12 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import petTopia.model.user.MemberBean;
-import petTopia.service.user.MemberService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import petTopia.model.user.UsersBean;
 import petTopia.service.user.MemberLoginService;
+import petTopia.service.user.MemberService;
+
 import java.time.LocalDateTime;
 
 @Controller

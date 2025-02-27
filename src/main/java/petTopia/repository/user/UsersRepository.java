@@ -1,6 +1,7 @@
 package petTopia.repository.user;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import petTopia.model.user.UsersBean;
@@ -24,8 +25,10 @@ public interface UsersRepository extends JpaRepository<UsersBean, Integer> {
     
     // 根據角色查找用戶列表
     List<UsersBean> findByUserRole(UsersBean.UserRole userRole);
-
+    @Query("SELECT u FROM UsersBean u WHERE u.email = :email ORDER BY u.id DESC")
+    Optional<UsersBean> findFirstByEmailOrderByIdDesc(String email);
     public interface UserRepository extends JpaRepository<UsersBean, Integer> {
+
         // 修改查詢方法，需要同時用 email 和 role 來查詢
         Optional<UsersBean> findByEmailAndUserRole(String email, UsersBean.UserRole role);
         
@@ -33,3 +36,4 @@ public interface UsersRepository extends JpaRepository<UsersBean, Integer> {
         boolean existsByEmail(String email);
     }
 }
+

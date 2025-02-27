@@ -5,11 +5,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.time.LocalDate;
 import petTopia.model.user.MemberBean;
 import petTopia.model.user.UsersBean;
 import petTopia.repository.user.MemberRepository;
-import petTopia.repository.user.UserRepository;
+import petTopia.repository.user.UsersRepository;
 
 @Service
 @Transactional
@@ -18,7 +17,7 @@ public class MemberService {
     private MemberRepository memberRepository;
 
     @Autowired
-    private UserRepository userRepository;
+    private UsersRepository usersRepository;
 
     @Transactional
     public MemberBean createOrUpdateMember(MemberBean member) {
@@ -26,7 +25,7 @@ public class MemberService {
             validateMemberInput(member);
     
             // 確保用戶已存在於 `users` 表
-            UsersBean user = userRepository.findById(member.getId())
+            UsersBean user = usersRepository.findById(member.getId())
                 .orElseThrow(() -> new RuntimeException("用戶不存在"));
             member.setUser(user);  // 關聯 `UsersBean`
     

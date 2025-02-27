@@ -6,14 +6,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import petTopia.model.user.UsersBean;
-import petTopia.repository.user.UserRepository;
+import petTopia.repository.user.UsersRepository;
 
 
 @Service
 @Transactional
 public class MemberLoginService {
     @Autowired
-    private UserRepository userRepository;
+    private UsersRepository userRepository;
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
