@@ -1,8 +1,10 @@
 package petTopia.controller.shop;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -14,10 +16,12 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import petTopia.model.shop.Product;
+import petTopia.model.shop.ProductColor;
 import petTopia.model.shop.ProductDetail;
-import petTopia.repository.shop.ProductDetailRepository;
+import petTopia.model.shop.ProductSize;
 import petTopia.service.shop.ProductDetailService;
 import petTopia.service.shop.ProductService;
 
@@ -27,67 +31,196 @@ public class ShopProductDetailController {
 
 	@Autowired
 	private ProductService productService;
-	
+
 	@Autowired
 	private ProductDetailService productDetailService;
-	
+
 	// 商品詳情頁面
 	@GetMapping
-	public String showShopProductDetail(
-			@RequestParam Integer productDetailId, Model model) {
-		
+	public String showShopProductDetail(@RequestParam Integer productDetailId, Model model) {
+
 		// 獲取ProductDetail一樣的所有Poduct
 		List<Product> productList = productService.findByProductDetailId(productDetailId);
-		// 獲取productList內最低和最高價商品
-		Product minPriceProduct = productService.findMinPriceProduct(productDetailId);
-		Product maxPriceProduct = productService.findMaxPriceProduct(productDetailId);
 		
 		// 獲取商品資訊(ProductDetail)
 		ProductDetail productDetail = productDetailService.findByProductDetailId(productDetailId);
-		
+
 		// 獲取尺寸和顏色的List
-		List<String> sizeList = new ArrayList<String>();
-		List<String> colorList = new ArrayList<String>();
-		
-		for (Product product : productList) {
-			if (product.getProductSize() != null) {
-				sizeList.add(product.getProductSize().getName());
-			}
-			if (product.getProductColor() != null) {
-				colorList.add(product.getProductColor().getName());
+		List<ProductSize> sizeList = new ArrayList<ProductSize>();
+		List<ProductColor> colorList = new ArrayList<ProductColor>();
+		// 總庫存
+		Integer totalStockQuantity = 0;
+
+		if (productList != null) {
+			for (Product product : productList) {
+				
+				if (product.getProductSize() != null) {
+					sizeList.add(product.getProductSize());
+				}
+				if (product.getProductColor() != null) {
+					colorList.add(product.getProductColor());
+				}
+				
+				// 計算總庫存
+				totalStockQuantity += product.getStockQuantity();
+
 			}
 			
+			// 獲取productList內最低和最高價商品
+			Product minPriceProduct = productList.stream().min(Comparator.comparing(Product::getUnitPrice)).orElse(null);
+			Product maxPriceProduct = productList.stream().max(Comparator.comparing(Product::getUnitPrice)).orElse(null);
+
+			model.addAttribute("productList", productList);
+			model.addAttribute("sizeList", sizeList);
+			model.addAttribute("colorList", colorList);
+			model.addAttribute("minPriceProduct", minPriceProduct);
+			model.addAttribute("maxPriceProduct", maxPriceProduct);
+			model.addAttribute("productDetail", productDetail);
+			model.addAttribute("totalStockQuantity", totalStockQuantity);
 		}
-		
-		model.addAttribute("productList", productList);
-		model.addAttribute("sizeList", sizeList);
-		model.addAttribute("colorList", colorList);
-		model.addAttribute("minPriceProduct", minPriceProduct);
-		model.addAttribute("maxPriceProduct", maxPriceProduct);
-		model.addAttribute("productDetail", productDetail);
 		
 		return "shop/shop_product_detail";
 	}
-	
-	// 商品詳情頁面 => 獲取商品資訊的圖片 
+
+	// 商品詳情頁面 => 獲取商品資訊的圖片
 	@GetMapping("/api/getPhoto")
-	public ResponseEntity<?> getProductPhoto(
-			@RequestParam Integer productId) {
-		
+	public ResponseEntity<?> getProductPhoto(@RequestParam Integer productId) {
+
 		Product product = productService.findById(productId);
-		
+
 		byte[] photo = product.getPhoto();
-		
+
 		if (photo != null && photo.length != 0) {
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.IMAGE_JPEG);
-			
+
 			return new ResponseEntity<byte[]>(photo, headers, HttpStatus.OK);
 		}
-		
+
 		return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-		
+
+	}
+
+	// 商品詳情頁面 => 獲取確認商品規格的Product
+	@ResponseBody
+	@GetMapping("/api/getConfirmProductByDetailIdSizeIdColorId")
+	public ResponseEntity<?> getConfirmProduct(
+			@RequestParam Integer productDetailId, 
+			@RequestParam Integer productSizeId,
+			@RequestParam Integer productColorId, 
+			Model model) {
+
+		// 獲取確認商品規格的Product
+		Product product = productService.findByProductDetailIdAndSizeIdAndColorId(productDetailId, productSizeId, productColorId);
+
+		if (product != null) {
+
+			System.out.println(product.getId());
+			System.out.println(product.getProductDetail().getName());
+			
+			return new ResponseEntity<Product>(product, HttpStatus.OK);
+
+		}
+
+		return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+
 	}
 	
+	// 商品詳情頁面 => 依照點選的一個規格篩選Product
+	@ResponseBody
+	@GetMapping("/api/getProductByOption")
+	public ResponseEntity<?> getProductByOption(
+			@RequestParam Integer productDetailId, 
+			@RequestParam Integer optionId,
+			@RequestParam String optionName, 
+			Model model) {
+
+		Map<String, Object> responseData = new HashMap<>();
+
+		// 獲取當前商品詳情一樣的所有Poduct
+		List<Product> productList = null;
 		
+		// 總庫存
+		Integer totalStockQuantity = 0;
+
+		// 比對規格點選尺寸or顏色
+		if ("size".equals(optionName)) {
+			productList = productService.findByProductDetailIdAndSizeId(productDetailId, optionId);
+			System.out.println("size");
+		} else if ("color".equals(optionName)) {
+			productList = productService.findByProductDetailIdAndColorId(productDetailId, optionId);
+			System.out.println("color");
+		}
+
+		if (productList != null) {
+
+			for (Product product : productList) {
+				System.out.println(product.getId());
+				System.out.println(product.getProductDetail().getName());
+			}
+			
+			// 計算總庫存
+			for (Product product : productList) {
+				totalStockQuantity += product.getStockQuantity();
+			}
+						
+			// 獲取productList內最低和最高價商品
+			Product minPriceProduct = productList.stream().min(Comparator.comparing(Product::getUnitPrice))
+					.orElse(null);
+			Product maxPriceProduct = productList.stream().max(Comparator.comparing(Product::getUnitPrice))
+					.orElse(null);
+
+			responseData.put("productList", productList);
+			responseData.put("minPriceProduct", minPriceProduct);
+			responseData.put("maxPriceProduct", maxPriceProduct);
+			responseData.put("totalStockQuantity", totalStockQuantity);
+			
+			return new ResponseEntity<Map<String, Object>>(responseData, HttpStatus.OK);
+
+		}
+
+		return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+
+	}
+
+	// 商品詳情頁面 => 取消所有規格選項後重新獲得同商品詳情的Product
+	@ResponseBody
+	@GetMapping("/api/getProductByProductDetailId")
+	public ResponseEntity<?> getProductByProductDetailId(
+			@RequestParam Integer productDetailId, 
+			Model model) {
+
+		Map<String, Object> responseData = new HashMap<>();
+		
+		// 獲取ProductDetail一樣的所有Poduct
+		List<Product> productList = productService.findByProductDetailId(productDetailId);
+
+		// 總庫存
+		Integer totalStockQuantity = 0;
+
+		if (productList != null) {
+			// 計算總庫存
+			for (Product product : productList) {
+				totalStockQuantity += product.getStockQuantity();
+			}
+
+			// 獲取productList內最低和最高價商品
+			Product minPriceProduct = productList.stream().min(Comparator.comparing(Product::getUnitPrice))
+					.orElse(null);
+			Product maxPriceProduct = productList.stream().max(Comparator.comparing(Product::getUnitPrice))
+					.orElse(null);
+
+			responseData.put("productList", productList);
+			responseData.put("minPriceProduct", minPriceProduct);
+			responseData.put("maxPriceProduct", maxPriceProduct);
+			responseData.put("totalStockQuantity", totalStockQuantity);
+			
+			return new ResponseEntity<Map<String, Object>>(responseData, HttpStatus.OK);
+
+		}
+
+		return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+
+	}
+
 }

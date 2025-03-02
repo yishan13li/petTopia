@@ -8,6 +8,8 @@ import java.util.List;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -63,6 +65,7 @@ public class Product {
 	@Column(name = "status")
 	private Boolean status;
 	
+	@JsonIgnore
 	@Column(name="photo")
 	private byte[] photo;
 

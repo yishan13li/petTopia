@@ -66,6 +66,53 @@ public class ProductService {
 		return null;
 	}
 	
+	public List<Product> findByProductSizeId(Integer productSizeId){
+		List<Product> productList = productRepository.findByProductSizeId(productSizeId);
+		if (productList != null && productList.size() != 0) {
+			return productList;
+		}
+		
+		return null;
+	}
+	
+	public List<Product> findByProductColorId(Integer productColorId){
+		List<Product> productList = productRepository.findByProductColorId(productColorId);
+		if (productList != null && productList.size() != 0) {
+			return productList;
+		}
+		
+		return null;
+	}
+	
+	public List<Product> findByProductDetailIdAndSizeId(Integer productDetailId, Integer productSizeId){
+		List<Product> productList = productRepository.findByProductDetailIdAndProductSizeId(productDetailId, productSizeId);
+		if (productList != null && productList.size() != 0) {
+			return productList;
+		}
+		
+		return null;
+	}
+	
+	public List<Product> findByProductDetailIdAndColorId(Integer productDetailId, Integer productColorId){
+		List<Product> productList = productRepository.findByProductDetailIdAndProductColorId(productDetailId, productColorId);
+		if (productList != null && productList.size() != 0) {
+			return productList;
+		}
+		
+		return null;
+	}
+	
+	public Product findByProductDetailIdAndSizeIdAndColorId(
+			Integer productDetailId, 
+			Integer productSizeId, 
+			Integer productColorId) {
+		Product product = productRepository.findByProductDetailIdAndProductSizeIdAndProductColorId(productDetailId, productSizeId, productColorId);
+		if (product != null) {
+			return product;
+		}
+		return null;
+	}
+	
 	public Product findFirstByProductDetailId(Integer productDetailId) {
 		Product product = productRepository.findFirstByProductDetailIdOrderByIdAsc(productDetailId);
 		if (product != null) {
@@ -73,6 +120,8 @@ public class ProductService {
 		}
 		return null;
 	}
+	
+	
 	
 	public Product insertProduct(String name, String description, 
 			String categoryName, String colorName, String sizeName) {

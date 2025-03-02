@@ -4,15 +4,16 @@
 <head>
   <title>商品詳情頁</title>
   <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!-- <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="format-detection" content="telephone=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="author" content="">
   <meta name="keywords" content="">
-  <meta name="description" content="">
+  <meta name="description" content=""> -->
 
-  <link rel="icon" type="image/png" href="@{/user_static/images/favicon.png}">
+  <link rel="icon" type="image/png" th:href="@{/user_static/images/favicon.png}">
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.css" />
 
@@ -31,6 +32,7 @@
 
   <!-- 自訂外觀 -->
   <style>
+    /* form radio 外觀 */
     .form-check-input[type="radio"] {
       display: none;
     }
@@ -38,7 +40,7 @@
     .form-check-input[type="radio"]+.form-check-label {
       display: inline-block;
       padding: 10px 20px;
-      border: 2px solid #ccc;
+      border: 2px solid #5b5b5b;
       border-radius: 4px;
       text-align: center;
       cursor: pointer;
@@ -58,6 +60,19 @@
       /* 適用於 Firefox */
       -ms-user-select: none;
       /* 適用於 Internet Explorer / Edge */
+    }
+
+    /* 隱藏所有瀏覽器的數字上下箭頭 */
+    .no-spinner {
+      -moz-appearance: textfield;
+      /* Firefox */
+      appearance: textfield;
+    }
+
+    .no-spinner::-webkit-inner-spin-button,
+    .no-spinner::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
     }
   </style>
 
@@ -130,10 +145,10 @@
     </defs>
   </svg>
 
-  <!-- <div class="preloader-wrapper">
+  <div class="preloader-wrapper">
     <div class="preloader">
     </div>
-  </div> -->
+  </div>
 
   <div class="offcanvas offcanvas-end" data-bs-scroll="true" tabindex="-1" id="offcanvasCart" aria-labelledby="My Cart">
     <div class="offcanvas-header justify-content-center">
@@ -206,7 +221,7 @@
         <div class="col-sm-4 col-lg-3 text-center text-sm-start">
           <div class="main-logo">
             <a href="index.html">
-              <img src="../static/user_static/images/logo.png" alt="logo" class="img-fluid">
+              <img th:src="@{/user_static/images/logo.png}" alt="logo" class="img-fluid">
             </a>
           </div>
         </div>
@@ -383,7 +398,15 @@
           [[${productDetail.description}]]
         </p>
         <!-- 商品價錢 -->
-        <h4 class="text-primary">$[[${minPriceProduct.unitPrice}]] - $[[${maxPriceProduct.unitPrice}]]</h4>
+        <th:block th:if="${#lists.size(productList) == 1}">
+          <h4 class="show-product-price text-primary">$[[${#numbers.formatInteger(productList[0].unitPrice, 0)}]]</h4>
+        </th:block>
+        <th:block th:if="${#lists.size(productList) > 1}">
+          <h4 class="text-primary" id="show-product-price">$[[${#numbers.formatInteger(minPriceProduct.unitPrice, 0)}]]
+            -
+            $[[${#numbers.formatInteger(maxPriceProduct.unitPrice, 0)}]]</h4>
+        </th:block>
+
         <!-- 商品評分 -->
         <p>
           <!-- <strong>Rating:</strong> -->
@@ -394,34 +417,45 @@
         <!-- 尺寸選擇 -->
         <div class="mb-3">
 
-          <label class="form-label" th:if="${#lists.size(sizeList) > 0}">尺寸</label>
+          <th:block th:if="${#lists.size(sizeList) > 0}">
 
-          <th:block th:each="size, iterStat : ${sizeList}">
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="size" th:id="'size' + ${iterStat.count}"
-                value="${size}">
-              <label class="form-check-label no-select" th:for="'size' + ${iterStat.count}">
-                [[${size}]]
-              </label>
-            </div>
+            <label class="form-label">尺寸</label>
+
+            <th:block th:each="size, iterStat : ${sizeList}">
+              <div class="form-check">
+                <input class="size-radio form-check-input" type="radio" name="size" th:id="'size' + ${iterStat.count}"
+                  th:value="${size.id}" th:data-product-detail-id="${productDetail.id}">
+                <label class="form-check-label no-select" th:for="'size' + ${iterStat.count}">
+                  [[${size.name}]]
+                </label>
+              </div>
+            </th:block>
+
           </th:block>
+
 
         </div>
 
         <!-- 顏色選擇 -->
         <div class="mb-3">
 
-          <label class="form-label" th:if="${#lists.size(colorList) > 0}">顏色</label>
+          <th:block th:if="${#lists.size(colorList) > 0}">
 
-          <th:block th:each="color, iterStat : ${colorList}">
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="size" th:id="'color' + ${iterStat.count}"
-                value="${color}">
-              <label class="form-check-label no-select" th:for="'color' + ${iterStat.count}">
-                [[${color}]]
-              </label>
-            </div>
+            <label class="form-label">顏色</label>
+
+            <th:block th:each="color, iterStat : ${colorList}">
+              <div class="form-check">
+                <input class="color-radio form-check-input" type="radio" name="color"
+                  th:id="'color' + ${iterStat.count}" th:value="${color.id}"
+                  th:data-product-detail-id="${productDetail.id}">
+                <label class="form-check-label no-select" th:for="'color' + ${iterStat.count}">
+                  [[${color.name}]]
+                </label>
+              </div>
+            </th:block>
+
           </th:block>
+
 
         </div>
 
@@ -429,12 +463,12 @@
         <div class="d-flex align-items-center mb-3">
           <label class="form-label">數量</label>
           <button class="btn btn-outline-secondary ms-4">-</button>
-          <input type="number" class="form-control text-center mx-2" value="1" style="width: 60px;">
+          <input type="number" class="form-control text-center mx-2 no-spinner" value="1" style="width: 60px;">
           <button class="btn btn-outline-secondary">+</button>
-          <label class="form-label ms-3">還剩 - 件</label>
+          <label class="form-label ms-3" id="show-stock-quantity">還剩 [[${totalStockQuantity}]] 件</label>
         </div>
 
-        <button class="btn btn-primary w-100">加入購物車</button>
+        <button class="btn btn-primary w-100" id="add-to-cart-btn">加入購物車</button>
       </div>
     </div>
   </section>
@@ -562,26 +596,232 @@
     </div>
   </div>
 
-  <script src="js/jquery-1.11.0.min.js"></script>
+  <script th:src="@{/user_static/js/jquery-1.11.0.min.js}"></script>
   <script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe"
     crossorigin="anonymous"></script>
-  <script src="js/plugins.js"></script>
-  <script src="js/script.js"></script>
+  <script th:src="@{/user_static/js/plugins.js}"></script>
+  <script th:src="@{/user_static/js/script.js}"></script>
   <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
 
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
   <script>
-    document.querySelectorAll('input[type="radio"]').forEach(radio => {
-      radio.addEventListener('click', function () {
-        if (this.checked && this.dataset.wasChecked) {
-          this.checked = false; // 取消選擇
-          this.removeAttribute('data-was-checked');
-        } else {
-          this.dataset.wasChecked = true; // 標記為已選
+    const radios = document.querySelectorAll('input[type="radio"]');
+    const sizeRadios = document.querySelectorAll('input[type="radio"].size-radio');
+    const colorRadios = document.querySelectorAll('input[type="radio"].color-radio');
+
+    const addToCartBtn = document.querySelector("#add-to-cart-btn");
+
+    const showProductPrice = document.querySelector("#show-product-price");
+    const showStockQuantity = document.querySelector("#show-stock-quantity");
+
+    // Add Event Listener
+    radios.forEach(radio => {
+      radio.addEventListener('click', function (e) {
+        // e.preventDefault();
+
+        // 點擊自己時如果已選擇 變為 未選擇
+        if (this.checked && this.dataset.selected === "true") {
+          this.checked = false;
+          this.dataset.selected = "false";
+
+          onCancelOneOption(this);
+
+          // 檢查規格選項是否都未選擇
+          // radios要先轉換為陣列 使用Array.from(radios)或[...radios]
+          const isChecked = Array.from(radios).some(radio => {
+            if (radio.checked) {
+              return true;  // 終止 `some()`，並回傳 `true`
+            }
+            return false;
+          });
+
+          if (!isChecked) {
+            onCancelAllOption(this);
+          }
+
         }
+        else {
+          // 點擊選項 => 其他同名選項 變為 未選擇
+          radios.forEach(radio => {
+            if (radio !== this && radio.name === this.name) {
+              radio.checked = false;
+              radio.dataset.selected = "false";
+            }
+          });
+
+          // 點擊的選項變為 已選擇
+          this.checked = true;
+          this.dataset.selected = "true";
+
+          // 檢查規格選項是否都已選擇
+          // radios要先轉換為陣列 使用Array.from(radios)或[...radios]
+          let selectedSizeRadio;
+          let selectedColorRadio;
+          const isSizeChecked = Array.from(sizeRadios).some(radio => {
+            if (radio.checked) {
+              selectedSizeRadio = radio;
+              return true;  // 終止 `some()`，並回傳 `true`
+            }
+            return false;
+          });
+          const isColorChecked = Array.from(colorRadios).some(radio => {
+            if (radio.checked) {
+              selectedColorRadio = radio;
+              return true;  // 終止 `some()`，並回傳 `true`
+            }
+            return false;
+          });
+
+          if (isSizeChecked && isColorChecked)
+            onConfirmProduct(selectedSizeRadio, selectedColorRadio);
+          else
+            onSelectOneOption(this);
+
+        }
+
       });
     });
+
+    // 當所有規格都被選擇時，確認選定商品
+    // selectedRadio = 選擇的規格
+    // anotherRadios = 選擇除外的其他規格
+    function onConfirmProduct(selectedSizeRadio, selectedColorRadio) {
+
+      axios({
+        method: 'get',
+        url: 'http://localhost:8080/shop/productDetail/api/getConfirmProductByDetailIdSizeIdColorId?productDetailId=' + selectedSizeRadio.dataset.productDetailId + '&productSizeId=' + selectedSizeRadio.value + '&productColorId=' + selectedColorRadio.value,
+      })
+
+        .then(response => {
+          let product = response.data;
+
+          // 更改 價錢顯示
+          showProductPrice.textContent = `$${product.unitPrice}`;
+          // 更改 庫存顯示
+          showStockQuantity.textContent = `還剩 ${product.stockQuantity} 件`;
+
+        })
+
+        .catch(error => console.log(error));
+
+    }
+
+    // 當有單一規格被選擇時，過濾是否有符合該規格的顏色或尺寸，並切換為可點擊或不可點擊
+    // selectedRadio = 選擇的規格
+    // anotherRadios = 選擇除外的其他規格
+    function onSelectOneOption(selectedRadio) {
+      let anotherRadios;
+
+      if (selectedRadio.name === 'size')
+        anotherRadios = colorRadios;
+      else if (selectedRadio.name === 'color')
+        anotherRadios = sizeRadios;
+
+      axios({
+        method: 'get',
+        url: 'http://localhost:8080/shop/productDetail/api/getProductByOption?productDetailId=' + selectedRadio.dataset.productDetailId + '&optionId=' + selectedRadio.value + '&optionName=' + selectedRadio.name,
+      })
+        .then(response => {
+          let productList = response.data.productList;
+          let minPriceProduct = response.data.minPriceProduct;
+          let maxPriceProduct = response.data.maxPriceProduct;
+          let totalStockQuantity = response.data.totalStockQuantity;
+
+          // 更改 價錢顯示
+          if (Number(minPriceProduct.unitPrice) === Number(maxPriceProduct.unitPrice))
+            showProductPrice.textContent = `$${minPriceProduct.unitPrice}`;
+          else
+            showProductPrice.textContent = `$${minPriceProduct.unitPrice} - $${maxPriceProduct.unitPrice}`;
+
+          // 更改 庫存顯示
+          showStockQuantity.textContent = `還剩 ${totalStockQuantity} 件`;
+
+          anotherRadios.forEach(anotherRadio => {
+            // 先將全部設為不能點擊
+            anotherRadio.disabled = true;
+
+            for (let i = 0; i < productList.length; i++) {
+              // 有符合尺寸的顏色規格才能點擊
+              if (selectedRadio.name === "size") {
+                if (Number(anotherRadio.value) === productList[i].productColor.id) {
+                  anotherRadio.disabled = false;
+                  break;
+                }
+              }
+              // 有符合顏色的尺寸規格才能點擊
+              else if (selectedRadio.name === "color") {
+                if (Number(anotherRadio.value) === productList[i].productSize.id) {
+                  anotherRadio.disabled = false;
+                  break;
+                }
+              }
+
+            }
+
+          });
+
+        })
+
+        .catch(error => console.log(error));
+
+    }
+
+    // 當有規格選項被取消時，重置選項狀態，如果還有規格被選取則執行onSelectOneOption()
+    // selectedRadio = 選擇的規格
+    // anotherRadios = 選擇除外的其他規格
+    function onCancelOneOption(selectedRadio) {
+      let anotherRadios;
+
+      if (selectedRadio.name === 'size')
+        anotherRadios = colorRadios;
+      else if (selectedRadio.name === 'color')
+        anotherRadios = sizeRadios;
+
+      // 當取消已選擇的選項，將除選擇外的規格選項更改為可以點擊的狀態
+      anotherRadios.forEach(anotherRadio => {
+        anotherRadio.disabled = false;
+
+        // 如果還有規格被選擇時執行onSelectOneOption()
+        if (anotherRadio.checked) {
+          onSelectOneOption(anotherRadio);
+        }
+
+      });
+
+
+
+    }
+
+    // 當所有規格選項被取消時，重置頁面顯示內容
+    // selectedRadio = 選擇的規格
+    function onCancelAllOption(selectedRadio) {
+      console.log("onCancelAllOption");
+      // 重新設置未選擇規格前的商品詳情頁面
+      axios({
+        method: 'get',
+        url: 'http://localhost:8080/shop/productDetail/api/getProductByProductDetailId?productDetailId=' + selectedRadio.dataset.productDetailId,
+      })
+
+        .then(response => {
+          let productList = response.data.productList;
+          let minPriceProduct = response.data.minPriceProduct;
+          let maxPriceProduct = response.data.maxPriceProduct;
+          let totalStockQuantity = response.data.totalStockQuantity;
+
+          // 更改 價錢顯示
+          showProductPrice.textContent = `$${minPriceProduct.unitPrice} - $${maxPriceProduct.unitPrice}`;
+          // 更改 庫存顯示
+          showStockQuantity.textContent = `還剩 ${totalStockQuantity} 件`;
+
+        })
+
+        .catch(error => console.log(error));
+    }
+
+
   </script>
 
 </body>
