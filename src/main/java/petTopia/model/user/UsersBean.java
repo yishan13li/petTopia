@@ -46,6 +46,8 @@ public class UsersBean {
     @Min(0) @Max(1)  
     private Integer adminLevel = 0;
 
+    @Column(name = "provider", length = 20)
+    private String provider = "LOCAL";  // LOCAL 或 GOOGLE
 
     public enum UserRole {
         MEMBER,

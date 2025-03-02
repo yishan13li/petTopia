@@ -206,14 +206,19 @@ footer .search-bar {
                 <label for="password" class="form-label">密碼</label>
                 <input type="password" class="form-control" id="password" name="password" required>
             </div>
-            <button type="submit" class="btn btn-primary w-100">登入</button>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary btn-block">登入</button>
+            </div>
+            
+            <div class="mt-3 text-center">
+                <a href="/oauth2/authorization/google" class="btn btn-danger btn-block">
+                    <i class="fab fa-google"></i> 使用 Google 帳號登入
+                </a>
+            </div>
         </form>
         <div class="divider"><span>或</span></div>
         <a href="/oauth2/authorization/facebook" class="social-btn">
             <img src="/user_static/icon/Facebook_icon.png" alt="Facebook"> 使用 Facebook 登入
-        </a>
-        <a href="/oauth2/authorization/google" class="social-btn">
-            <img src="/user_static/icon/Google_icon.png" alt="Google"> 使用 Google 登入
         </a>
         <p class="text-center mt-3">還沒有帳號？ <a href="/member/register">註冊</a></p>
     </div>

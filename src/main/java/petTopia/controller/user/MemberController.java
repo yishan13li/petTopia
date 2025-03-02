@@ -136,16 +136,4 @@ public class MemberController {
         }
         return "redirect:/";
     }
-
-    @GetMapping("/logout")
-    public String logout(HttpSession session, RedirectAttributes redirectAttributes) {
-        // 清除session中的用戶信息
-        session.invalidate();
-        
-        // 添加登出成功消息（可選）
-        redirectAttributes.addFlashAttribute("message", "已成功登出");
-        
-        // 重定向到首頁
-        return "redirect:/index";
-    }
 }

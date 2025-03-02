@@ -1,6 +1,7 @@
 package petTopia.repository.user;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import petTopia.model.user.MemberBean;
 import java.util.List;
@@ -16,4 +17,7 @@ public interface MemberRepository extends JpaRepository<MemberBean, Integer> {
     
     // 根據姓名模糊查詢
     List<MemberBean> findByNameContaining(String name);
+
+    @Query("SELECT m FROM MemberBean m JOIN m.user u WHERE u.email = ?1")
+    MemberBean findByEmail(String email);
 } 
