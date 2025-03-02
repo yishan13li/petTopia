@@ -129,7 +129,7 @@
               <!-- 從會員資料填充縣市 -->
               <option id="cityOption"></option>
             </select>
-            <input type="text" class="form-control ms-3" id="address" placeholder="請輸入收件地址" required
+            <input type="text" class="form-control ms-3" id="street" placeholder="請輸入收件地址" required
               style="height: 40px; flex-grow: 1;">
           </div>
 
@@ -315,76 +315,151 @@
   <script th:src="@{/user_static/js/city.js}"></script>
   <script th:src="@{/user_static/js/coupon.js}"></script>
 
-<script>
-  // 填充會員資訊到收件欄位
-  function fillWithMemberInfo() {
-    const memberName = document.getElementById('memberData').getAttribute('data-name');
-    const memberPhone = document.getElementById('memberData').getAttribute('data-phone');
-    const memberAddress = document.getElementById('memberData').getAttribute('data-address');
+  <script>
+    // 填充會員資訊到收件欄位
+    function fillWithMemberInfo() {
+      const memberName = document.getElementById('memberData').getAttribute('data-name');
+      const memberPhone = document.getElementById('memberData').getAttribute('data-phone');
+      const memberAddress = document.getElementById('memberData').getAttribute('data-address');
 
-    let memberCity = '';
-    let memberStreet = memberAddress;
+      let memberCity = '';
+      let memberStreet = memberAddress;
 
-    const cityKeyword = ['縣', '市', '島'];
-    let cityIndex = -1;
+      const cityKeyword = ['縣', '市', '島'];
+      let cityIndex = -1;
 
-    for (let keyword of cityKeyword) {
-      cityIndex = memberAddress.indexOf(keyword);
-      if (cityIndex !== -1) break;
+      for (let keyword of cityKeyword) {
+        cityIndex = memberAddress.indexOf(keyword);
+        if (cityIndex !== -1) break;
+      }
+
+      if (cityIndex !== -1) {
+        memberCity = memberAddress.substring(0, cityIndex + 1);
+        memberStreet = memberAddress.substring(cityIndex + 1).trim();
+      }
+
+      document.getElementById("name").value = memberName;
+      document.getElementById("phone").value = memberPhone;
+      document.getElementById("city").value = memberCity;
+      document.getElementById("street").value = memberStreet;
+
     }
 
-    if (cityIndex !== -1) {
-      memberCity = memberAddress.substring(0, cityIndex + 1);
-      memberStreet = memberAddress.substring(cityIndex + 1).trim();
+    // 填充最近一次訂單地址
+    function fillWithLastOrderAddress() {
+      const lastAddressData = document.getElementById('lastAddressData');
+      const lastCity = lastAddressData.getAttribute('data-city');
+      const lastStreet = lastAddressData.getAttribute('data-street');
+
+      if (document.getElementById("sameAddress").checked) {
+        document.getElementById("city").value = lastCity;
+        document.getElementById("street").value = lastStreet;
+      } else {
+
+      }
+
     }
 
-    document.getElementById("name").value = memberName;
-    document.getElementById("phone").value = memberPhone;
-    document.getElementById("city").value = memberCity;
-    document.getElementById("address").value = memberStreet;
+    // 監控欄位是否更動，若有變更則取消勾選框
+    function monitorChanges() {
+      const nameField = document.getElementById("name");
+      const phoneField = document.getElementById("phone");
+      const cityField = document.getElementById("city");
+      const addressField = document.getElementById("street");
+      const sameMemberCheckBox = document.getElementById("sameMember");
+      const sameAddressCheckBox = document.getElementById("sameAddress");
 
-    // 勾選會員資料勾選框
-    document.getElementById("fillMemberInfo").checked = true;
-  }
+      // 檢查是否有變動，若有變動則取消 "同會員資訊" 和 "同收件地址" 勾選框
+      nameField.addEventListener('input', () => {
+        sameMemberCheckBox.checked = false;
+        document.getElementById("sameMember").checked = false;  // 取消 "同會員資訊" 勾選框
+      });
+      phoneField.addEventListener('input', () => {
+        sameMemberCheckBox.checked = false;
+        document.getElementById("sameMember").checked = false;  // 取消 "同會員資訊" 勾選框
+      });
+      cityField.addEventListener('input', () => {
+        sameMemberCheckBox.checked = false; // 取消 "同會員資訊" 勾選框
+        sameAddressCheckBox.checked = false; // 取消 "同收件地址" 勾選框
+      });
+      addressField.addEventListener('input', () => {
+        sameMemberCheckBox.checked = false; // 取消 "同會員資訊" 勾選框
+        sameAddressCheckBox.checked = false; // 取消 "同收件地址" 勾選框
+      });
 
-  // 填充最近一次訂單地址
-  function fillWithLastOrderAddress() {
-    const lastAddressData = document.getElementById('lastAddressData');
-    const lastCity = lastAddressData.getAttribute('data-city');
-    const lastStreet = lastAddressData.getAttribute('data-street');
+  	// 監控 "同會員資訊" 勾選框
+  	sameMemberCheckBox.addEventListener('change', () => {
+  	  if (!sameMemberCheckBox.checked) {
+  	    // 當取消選取 "同會員資訊" 時
+  	    if (document.getElementById("sameAddress").checked) {
+  	      // 如果 "同收件地址" 被勾選，則保持地址為訂單地址
+  	      fillWithLastOrderAddress(); // 呼叫函式來填充最近的訂單地址
+  	    } else {
+  	      // 如果 "同收件地址" 沒有勾選，則清空地址欄位
+  	      document.getElementById("city").value = "";
+  	      document.getElementById("street").value = "";
+  	    }
+  	} else {
+  	   // 當 "同會員資訊" 被勾選時，檢查會員地址和訂單地址是否相同
+  	   const memberCity = document.getElementById("city").value;
+  	   const memberStreet = document.getElementById("street").value;
+  	   const lastCity = document.getElementById('lastAddressData').getAttribute('data-city');
+  	   const lastStreet = document.getElementById('lastAddressData').getAttribute('data-street');
+  	   
+  	   // 如果會員地址和最近的訂單地址不同，取消 "同收件地址" 勾選框
+  	   if (memberCity !== lastCity || memberStreet !== lastStreet) {
+  	     document.getElementById("sameAddress").checked = false;
+  	   }
+  	 }
+  	});
 
-    if (document.getElementById("sameAddress").checked) {
-      document.getElementById("city").value = lastCity;
-      document.getElementById("address").value = lastStreet;
-    } else {
-      document.getElementById("city").value = "";
-      document.getElementById("address").value = "";
+
+  	// 監控 "同收件地址" 勾選框
+  	sameAddressCheckBox.addEventListener('change', () => {
+  	  if (!sameAddressCheckBox.checked) {
+  	    // 當取消選取 "同收件地址" 時
+  	    if (document.getElementById("sameMember").checked) {
+  	      // 如果 "同會員資訊" 被勾選，則填充會員資訊到地址欄位
+  	      const memberName = document.getElementById('memberData').getAttribute('data-name');
+  	      const memberPhone = document.getElementById('memberData').getAttribute('data-phone');
+  	      const memberAddress = document.getElementById('memberData').getAttribute('data-address');
+
+  	      let memberCity = '';
+  	      let memberStreet = memberAddress;
+
+  	      const cityKeyword = ['縣', '市', '島'];
+  	      let cityIndex = -1;
+
+  	      for (let keyword of cityKeyword) {
+  	        cityIndex = memberAddress.indexOf(keyword);
+  	        if (cityIndex !== -1) break;
+  	      }
+
+  	      if (cityIndex !== -1) {
+  	        memberCity = memberAddress.substring(0, cityIndex + 1);
+  	        memberStreet = memberAddress.substring(cityIndex + 1).trim();
+  	      }
+
+  	      // 填充會員資訊到地址欄位
+  	      document.getElementById("city").value = memberCity;
+  	      document.getElementById("street").value = memberStreet;
+  	    } else {
+  	      // 如果 "同會員資訊" 沒有勾選，則清空地址欄位
+  	      document.getElementById("city").value = "";
+  	      document.getElementById("street").value = "";
+  	    }
+  	  }
+  	});
+
     }
 
-    // 勾選最近訂單地址勾選框
-    document.getElementById("fillLastOrderAddress").checked = true;
-  }
+    // 初始化監控
+    window.onload = function() {
+      monitorChanges();
+    };
 
-  // 監控欄位是否更動，若有變更則取消勾選框
-  function monitorChanges() {
-    const nameField = document.getElementById("name");
-    const phoneField = document.getElementById("phone");
-    const cityField = document.getElementById("city");
-    const addressField = document.getElementById("address");
-
-    // 檢查是否有變動
-    nameField.addEventListener('input', () => document.getElementById("fillMemberInfo").checked = false);
-    phoneField.addEventListener('input', () => document.getElementById("fillMemberInfo").checked = false);
-    cityField.addEventListener('input', () => document.getElementById("sameAddress").checked = false);
-    addressField.addEventListener('input', () => document.getElementById("sameAddress").checked = false);
-  }
-
-  // 初始化監控
-  window.onload = function() {
-    monitorChanges();
-  };
-</script>
-
+  </script>
+  
 </body>
 
 </html>

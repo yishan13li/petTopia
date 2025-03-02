@@ -1,5 +1,7 @@
 package petTopia.model.shop;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
@@ -24,6 +26,7 @@ public class MemberCoupon {
     private MemberCouponId id; // 使用複合主鍵
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     @MapsId("memberId") // 這樣可以直接透過 memberId 取得會員
     @JoinColumn(name = "member_id", referencedColumnName = "id")
     private Member member;

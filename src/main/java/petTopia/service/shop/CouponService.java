@@ -25,7 +25,7 @@ public class CouponService {
 	    private MemberCouponRepository memberCouponRepo;
 	 	
 	 	@Autowired
-	 	private OrderRepository orderRepo;
+	 	private CouponRepository couponRepo;
 
 	    // 用來更新每個會員的優惠券使用次數
 	    public void updateCouponUsageCount(Integer memberId) {
@@ -36,7 +36,7 @@ public class CouponService {
 	        Map<Integer, Integer> couponUsageCountMap = new HashMap<>();
 	        
 	        // 查詢該會員所有訂單中使用的優惠券次數
-	        List<Object[]> usageCounts = orderRepo.countCouponsUsageByMemberId(memberId);
+	        List<Object[]> usageCounts = couponRepo.countCouponsUsageByMemberId(memberId);
 	        
 	        // 轉換查詢結果並存入 Map 中
 	        for (Object[] result : usageCounts) {

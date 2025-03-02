@@ -1,11 +1,13 @@
 package petTopia.controller.shop;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -51,7 +53,7 @@ public class CheckOutController {
     @Autowired
     private PaymentCategoryRepository paymentCategoryRepo;
     
-    @GetMapping("/shop/checkout")
+    @GetMapping("/th/shop/checkout")
     public String checkoutPage(HttpSession session, Model model) {
         // 從 session 取得 userId 和 member 資訊
         Member member = (Member) session.getAttribute("member");
@@ -106,6 +108,14 @@ public class CheckOutController {
         model.addAttribute("lastAddress", lastShippingAddress);
         model.addAttribute("shippingCategories", shippingCategories);
         return "shop/shop_checkout";
+    }
+    
+    @GetMapping("/shop/checkout2")
+    public String checkoutPage2(HttpSession session, Model model) {
+        Member member = (Member) session.getAttribute("member");
+        Integer memberId = member.getId();
+        model.addAttribute("member", member);
+        return "shop/shop_checkout_api";
     }
     
 }

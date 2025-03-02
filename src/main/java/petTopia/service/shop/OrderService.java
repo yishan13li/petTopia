@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
+import petTopia.dto.shop.OrderSummaryDto;
 import petTopia.model.shop.Cart;
 import petTopia.model.shop.Coupon;
 import petTopia.model.shop.Order;
@@ -65,35 +66,37 @@ public class OrderService {
 	@Autowired
 	private OrderDetailService orderDetailService;
 //	================================================
+
 	
-	//計算訂單總金額
-    public BigDecimal calculateOrderTotal(Integer memberId, Integer couponId, Integer shippingCategoryId) {
-    	//找到該member的購物車資訊
-    	List<Cart> cartItems = cartService.getCartItems(memberId);
-    	
-    	
-    	// 計算購物車subtotal金額
-        BigDecimal subtotal = cartService.calculateTotalPrice(cartItems);
+	public OrderSummaryDto calculateOrderSummary(Integer memberId, Integer couponId, Integer shippingCategoryId) {
+	    // 找到購物車內容
+	    List<Cart> cartItems = cartService.getCartItems(memberId);
 
-        Coupon coupon = null;
-        BigDecimal discountAmount = BigDecimal.ZERO;
+	    // 計算商品總金額
+	    BigDecimal subtotal = cartService.calculateTotalPrice(cartItems);
 
-        // 若有使用優惠券，算出的折扣金額
-        if (couponId != null) {
-            coupon = couponRepo.findById(couponId)
-                .orElseThrow(() -> new IllegalArgumentException("找不到對應的優惠券"));
-            discountAmount = couponService.getDiscountAmountByCoupon(coupon, subtotal);
-        }
+	    // 計算折扣
+	    BigDecimal discountAmount = BigDecimal.ZERO;
+	    if (couponId != null) {
+	        Coupon coupon = couponRepo.findById(couponId)
+	            .orElseThrow(() -> new IllegalArgumentException("找不到對應的優惠券"));
+	        discountAmount = couponService.getDiscountAmountByCoupon(coupon, subtotal);
+	    }
 
-        // 透過運送方式 ID 拿到對應的運費
-        BigDecimal shippingFee = shippingCategoryRepo.findById(shippingCategoryId)
-                .map(ShippingCategory::getShippingCost) 
-                .orElse(BigDecimal.ZERO); // 如果找不到運送方式，預設運費為 0
+	    // 取得運費（允許 null，預設 0）
+	    BigDecimal shippingFee = BigDecimal.ZERO;
+	    if (shippingCategoryId != null) {
+	        shippingFee = shippingCategoryRepo.findById(shippingCategoryId)
+	            .map(ShippingCategory::getShippingCost)
+	            .orElse(BigDecimal.ZERO);
+	    }
+	    
+	    // 計算最終總金額
+	    BigDecimal orderTotal = subtotal.subtract(discountAmount).add(shippingFee);
 
-        // 計算最終金額：商品總金額 - 折扣 + 運費
-        BigDecimal orderTotal = subtotal.subtract(discountAmount).add(shippingFee);
-		return orderTotal;
-    }
+	    // 回傳 DTO
+	    return new OrderSummaryDto(subtotal, discountAmount, shippingFee, orderTotal);
+	}
 
     
     //新增訂單
@@ -207,6 +210,8 @@ public class OrderService {
 
         return order;
     }
+    
+    //單一訂單詳情
     
 //    @Transactional
 //    public void cancelOrder(Integer orderId) {

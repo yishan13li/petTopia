@@ -1,18 +1,22 @@
 package petTopia.controller.shop;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpSession;
+import petTopia.dto.shop.OrderSummaryDto;
 import petTopia.model.shop.Cart;
 import petTopia.model.shop.Coupon;
 import petTopia.model.shop.Order;
@@ -31,7 +35,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 
 @RestController
-@RequestMapping("/api/shop")
+@RequestMapping("/shop")
 public class CheckOutController2 {
 
     @Autowired
@@ -52,6 +56,42 @@ public class CheckOutController2 {
     @Autowired
     private OrderService orderService;
 
+    @GetMapping("/checkout")
+    public ResponseEntity<Object> getCheckoutInfo(HttpSession session) {
+        Member member = (Member) session.getAttribute("member");
+        if (member == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "請先登入"));
+        }
+        
+        Integer memberId = member.getId();
+        List<Cart> cartItems = cartService.getCartItems(memberId);
+        BigDecimal subtotal = cartService.calculateTotalPrice(cartItems);
+        List<ShippingCategory> shippingCategories = shippingCategoryRepo.findAll();
+        List<PaymentCategory> paymentCategories = paymentCategoryRepo.findAll();
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("cartItems", cartItems.isEmpty() ? Collections.emptyList() : cartItems);
+        response.put("subtotal", subtotal);
+        response.put("shippingCategories", shippingCategories);
+        response.put("paymentCategories", paymentCategories);
+        
+        return ResponseEntity.ok(response);
+    }
+    
+    @GetMapping("/member")
+    public ResponseEntity<Object> getMemberInfo(HttpSession session) {
+        Member member = (Member) session.getAttribute("member");
+        
+        // 如果會員資訊不存在，返回錯誤訊息
+        if (member == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                 .body(Map.of("message", "未找到會員資料"));
+        }
+
+        // 若會員資料存在，返回該會員資訊
+        return ResponseEntity.ok(member);
+    }
+    
     @GetMapping("/cart")
     public ResponseEntity<Object> getCartItems(HttpSession session) {
         Member member = (Member) session.getAttribute("member");
@@ -67,8 +107,8 @@ public class CheckOutController2 {
         Member member = (Member) session.getAttribute("member");
         Integer memberId = member.getId();
         List<Cart> cartItems = cartService.getCartItems(memberId);
-        BigDecimal total = cartService.calculateTotalPrice(cartItems);
-        return ResponseEntity.ok(Map.of("total", total));
+        BigDecimal subtotal = cartService.calculateTotalPrice(cartItems);
+        return ResponseEntity.ok(Map.of("subtotal", subtotal));
     }
 
     @GetMapping("/shipping/address")
@@ -92,11 +132,11 @@ public class CheckOutController2 {
         Member member = (Member) session.getAttribute("member");
         Integer memberId = member.getId();
         List<Cart> cartItems = cartService.getCartItems(memberId);
-        BigDecimal total = cartService.calculateTotalPrice(cartItems);
+        BigDecimal subtotal = cartService.calculateTotalPrice(cartItems);
 
         // 更新優惠券使用次數
         couponService.updateCouponUsageCount(memberId);
-        Map<String, List<Coupon>> couponsMap = couponService.getCouponsByAmount(memberId, total);
+        Map<String, List<Coupon>> couponsMap = couponService.getCouponsByAmount(memberId, subtotal);
 
         List<Coupon> availableCoupons = couponsMap.get("available");
         List<Coupon> notMeetCoupons = couponsMap.get("notMeet");
@@ -113,31 +153,18 @@ public class CheckOutController2 {
         return ResponseEntity.ok(paymentCategories);
     }
     
-    @GetMapping("/checkout")
-    public ResponseEntity<Object> checkoutPage(HttpSession session) {
-        Member member = (Member) session.getAttribute("member");
-
-        List<Cart> cartItems = cartService.getCartItems(member.getId());
-        BigDecimal total = cartService.calculateTotalPrice(cartItems);
-        ShippingAddress lastShippingAddress = shippingAddressRepo.findByMemberAndIsCurrent(member, true);
-        List<ShippingCategory> shippingCategories = shippingCategoryRepo.findAll();
-        Map<String, List<Coupon>> couponsMap = couponService.getCouponsByAmount(member.getId(), total);
-        List<PaymentCategory> paymentCategories = paymentCategoryRepo.findAll();
-
-        Map<String, Object> responseData = Map.of(
-            "paymentCategories", paymentCategories,
-            "availableCoupons", couponsMap.get("available"),
-            "notMeetCoupons", couponsMap.get("notMeet"),
-            "member", member,
-            "cartItems", cartItems,
-            "total", total,
-            "lastAddress", lastShippingAddress,
-            "shippingCategories", shippingCategories
-        );
-
-        return ResponseEntity.ok(responseData);
+    @GetMapping("/calculate-order-summary")
+    public ResponseEntity<OrderSummaryDto> calculateOrderSummary(
+    	HttpSession session,
+        @RequestParam(required = false) Integer couponId,
+        @RequestParam(required = false) Integer shippingCategoryId
+    ) {
+    	Member member = (Member) session.getAttribute("member");
+    	Integer memberId = member.getId();
+        OrderSummaryDto summary = orderService.calculateOrderSummary(memberId, couponId, shippingCategoryId);
+        return ResponseEntity.ok(summary);
     }
-
+    
     @PostMapping("/checkout")
     @ResponseBody
     public ResponseEntity<?> processCheckout(@RequestBody Map<String, Object> checkoutData, HttpSession session)  {
@@ -150,8 +177,9 @@ public class CheckOutController2 {
         Integer paymentCategoryId = (Integer) checkoutData.get("paymentCategoryId");
         
         // **根據購物車計算應付款金額，防止前端惡意修改**
-        BigDecimal calculatedTotalAmount = orderService.calculateOrderTotal(memberId, couponId, shippingCategoryId);
-        
+        OrderSummaryDto orderSummary = orderService.calculateOrderSummary(memberId, couponId, shippingCategoryId);
+        BigDecimal calculatedTotalAmount = orderSummary.getOrderTotal(); // 取得訂單總金額
+           
         // **安全檢查 paymentAmount，貨到付款時允許為 null**
         BigDecimal paymentAmount = null;
         if (checkoutData.containsKey("paymentAmount") && checkoutData.get("paymentAmount") != null) {
