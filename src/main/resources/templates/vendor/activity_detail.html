@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org/">
 
 <head>
   <title>PetTopia</title>
@@ -164,74 +164,7 @@
     </defs>
   </svg>
 
-  <div class="preloader-wrapper">
-    <div class="preloader">
-    </div>
-  </div>
 
-  <div class="offcanvas offcanvas-end" data-bs-scroll="true" tabindex="-1" id="offcanvasCart" aria-labelledby="My Cart">
-    <div class="offcanvas-header justify-content-center">
-      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body">
-      <div class="order-md-last">
-        <h4 class="d-flex justify-content-between align-items-center mb-3">
-          <span class="text-primary">Your cart</span>
-          <span class="badge bg-primary rounded-circle pt-2">3</span>
-        </h4>
-        <ul class="list-group mb-3">
-          <li class="list-group-item d-flex justify-content-between lh-sm">
-            <div>
-              <h6 class="my-0">Grey Hoodie</h6>
-              <small class="text-body-secondary">Brief description</small>
-            </div>
-            <span class="text-body-secondary">$12</span>
-          </li>
-          <li class="list-group-item d-flex justify-content-between lh-sm">
-            <div>
-              <h6 class="my-0">Dog Food</h6>
-              <small class="text-body-secondary">Brief description</small>
-            </div>
-            <span class="text-body-secondary">$8</span>
-          </li>
-          <li class="list-group-item d-flex justify-content-between lh-sm">
-            <div>
-              <h6 class="my-0">Soft Toy</h6>
-              <small class="text-body-secondary">Brief description</small>
-            </div>
-            <span class="text-body-secondary">$5</span>
-          </li>
-          <li class="list-group-item d-flex justify-content-between">
-            <span class="fw-bold">Total (USD)</span>
-            <strong>$20</strong>
-          </li>
-        </ul>
-
-        <button class="w-100 btn btn-primary btn-lg" type="submit">Continue to checkout</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="offcanvas offcanvas-end" data-bs-scroll="true" tabindex="-1" id="offcanvasSearch"
-    aria-labelledby="Search">
-    <div class="offcanvas-header justify-content-center">
-      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body">
-
-      <div class="order-md-last">
-        <h4 class="text-primary text-uppercase mb-3">
-          Search
-        </h4>
-        <div class="search-bar border rounded-2 border-dark-subtle">
-          <form id="search-form" class="text-center d-flex align-items-center" action="" method="">
-            <input type="text" class="form-control border-0 bg-transparent" placeholder="Search Here" />
-            <iconify-icon icon="tabler:search" class="fs-4 me-3"></iconify-icon>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <header>
     <div class="container py-2">
@@ -356,6 +289,7 @@
   </header>
 
 
+
   <!-- 主內容開始 -->
 
   <section id="banner">
@@ -363,18 +297,16 @@
       <div class="swiper main-swiper">
         <div class="swiper-wrapper">
 
-
           <div class="swiper-slide py-5">
             <div class="row banner-content align-items-center">
               <div class="img-wrapper col-md-5">
                 <img src="images/blog1.jpg" class="img-fluid">
               </div>
               <div class="content-wrapper col-md-7 p-5 mb-5" style="background: #F9F3EC;">
-                <h2 class="banner-title display-1 fw-normal"><b>貓狗時代</b></h2>
-                <div class="secondary-font text-primary text-uppercase mb-4">
-                  由台中市寵物商業同業公會、社團法人台中市獸醫師公會主辦，立委莊競程服務處、新平里辦公處等協辦的「友善寵物新世界、寵愛汪喵伴長輩」活動，現場除有免費犬貓健診諮詢外，還有超級可愛的毛孩變裝秀，包括聖誕裝、醫生裝、國王裝、格格裝等，以及毛孩義剪基礎美容，吸引約200組汪喵家庭親子與毛小孩一同前來參加，讓新平公園樂鬧滾滾。
+                <h2 class="banner-title display-1 fw-normal" th:text="${activity.name}"><b>活動名稱</b></h2>
+                <div class="secondary-font text-primary text-uppercase mb-4" th:text="${activity.description}">活動詳情
                 </div>
-                <div>瀏覽人數：5566</div>
+                <div th:text="'瀏覽人數 ： '+${activity.numberVisitor}">瀏覽人數</div>
                 <div class="d-flex">
                   <div class="d-flex flex-wrap mt-3">
                     <a class="btn btn-primary btn-1g text-uppercase fs-5 rounded-4 me-4">
@@ -412,6 +344,8 @@
 
   <!-- 主內容結束 -->
 
+
+
   <!--Google Maps-->
   <section style="display: flex; justify-content: center; ">
     <div class="rounded-4" style="background-color: #F9F3EC; padding: 20px">
@@ -423,6 +357,8 @@
   </section>
   <br>
   <!--Google Maps-->
+
+
 
   <!-- 行事曆開始 -->
 
@@ -436,6 +372,8 @@
     <div>-- 行事曆結束 --</div>
   </div>
   <!-- 行事曆結束 -->
+
+
 
   <!-- 留言區開始 -->
 
@@ -454,8 +392,8 @@
             <div class="image-container">
 
               <img class="img-fluid rounded-4" src="images/blog1.jpg" alt="alternative">
-            </div> <!-- end of image-container -->
-          </div> <!-- end of col -->
+            </div>
+          </div>
           <div class="col-lg-9">
             <div class="text-container" style="padding-top: 20px">
               <h2><b>丹尼爾</b></h2>
@@ -471,44 +409,11 @@
                   刪除
                 </a>
               </div>
-            </div> <!-- end of text-container -->
-          </div> <!-- end of col -->
-        </div> <!-- end of row -->
-      </div> <!-- end of container -->
-    </div> <!-- end of basic-2 -->
-  </section>
-  <br>
-
-  <section>
-    <div id="services" class="comment">
-      <div class="container rounded-3" style="background-color: #F9F3EC; padding: 20px">
-        <div class="row">
-          <div class="col-lg-3">
-            <div class="image-container">
-
-              <img class="img-fluid rounded-4" src="images/blog2.jpg" alt="alternative">
-            </div> <!-- end of image-container -->
-          </div> <!-- end of col -->
-          <div class="col-lg-9">
-            <div class="text-container" style="padding-top: 20px">
-              <h2><b>金冬天</b></h2>
-              <p><b>發表時間：2025-02-10 10:39:20</b></p>
-              <p>我是第二段文字。</p>
-
-              <div class="d-flex flex-wrap mt-3">
-                <a class="btn btn-outline-dark btn-1g text-uppercase fs-5 rounded-4 me-4"
-                  onclick="rewriteComment(this)">
-                  修改
-                </a>
-                <a class="btn btn-outline-dark btn-lg text-uppercase fs-5 rounded-4 me-4" onclick="deleteComment(this)">
-                  刪除
-                </a>
-              </div>
-            </div> <!-- end of text-container -->
-          </div> <!-- end of col -->
-        </div> <!-- end of row -->
-      </div> <!-- end of container -->
-    </div> <!-- end of basic-2 -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </section>
   <br>
 
@@ -658,8 +563,6 @@
 
         </div>
       </div>
-      <!-- / products-carousel -->
-
 
     </div>
   </section>
@@ -729,6 +632,8 @@
 
   <!-- 分享視窗-END -->
 
+
+
   <!-- 留言修改視窗-START -->
 
   <div class="overlay comment-rewrite">
@@ -763,7 +668,8 @@
     }
 
     function shareOnFacebook() {
-      const url = encodeURIComponent(window.location.href); // 取得當前網址
+      const url = encodeURIComponent(window.location.origin + window.location.pathname); // 取得當前網址
+      console.log(url);
       window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank'); // _blank為另開分頁
     }
 
@@ -774,6 +680,8 @@
 
 
     /* 分享-END */
+
+
 
     /* 留言修改刪除-START */
 
@@ -832,7 +740,6 @@
   <script src="js/script.js"></script>
   <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
 
-  <!-- swiper.js -->
   <script src="js/swiper.js"></script>
 
 </body>

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 import petTopia.dto.vendor.VendorReviewDto;
 import petTopia.model.vendor.Vendor;
+import petTopia.service.vendor.VendorLikeService;
 import petTopia.service.vendor.VendorReviewService;
 import petTopia.service.vendor.VendorService;
 
@@ -23,6 +24,9 @@ public class VendorController {
 
 	@Autowired
 	private VendorReviewService vendorReviewService;
+	
+	@Autowired
+	private VendorLikeService vendorLikeService;
 
 	@GetMapping("/vendor")
 	public String vendorHome(Model model) {
@@ -67,5 +71,11 @@ public class VendorController {
 
 		return "/vendor/vendor_detail.html";
 	}
-
+	
+	@PostMapping("/vendor/give_vendor_like")
+	public String giveVendorLike(Integer memberId, Integer vendorId) {
+		vendorLikeService.addOrCancelVendorLike(memberId, vendorId);
+		
+		return "/vendor/vendor_detail.html";
+	}
 }

@@ -376,9 +376,8 @@
 
             <div class="card position-relative">
 
-              <a th:href="@{'/vendor/detail/' + ${vendor.id}}"><img
-                  th:src="'data:image/jpeg;base64,' + ${vendor.logoImgBase64}" class="img-fluid rounded-4"
-                  alt="image"></a>
+              <a th:href="@{'/vendor/detail/' + ${vendor.id}}"><img th:src="${vendor.logoImgBase64}"
+                  class="img-fluid rounded-4" alt="image"></a>
 
               <div class="card-body p-0">
 
@@ -406,25 +405,6 @@
 
 
   <!-- 主內容結束 -->
-
-
-
-  <!-- 測試 -->
-
-  <div class="container">
-    <div>這邊測試用</div>
-    <th:block th:each="vendor : ${vendorList}">
-      <table>
-        <tr>
-          <td th:text="${vendor.id}"></td>
-          <td th:text="${vendor.name}"></td>
-          <td th:text="${vendor.description}"></td>
-        </tr>
-      </table>
-    </th:block>
-  </div>
-
-  <!-- 測試 -->
 
 
   <footer>

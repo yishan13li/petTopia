@@ -25,7 +25,8 @@ public class VendorReviewService {
 
 	/* 尋找單一店家其所有的評分及留言 */
 	public List<VendorReview> findVendorReviewByVendorId(Integer vendorId) {
-		return vendorReviewRepository.findByVendorId(vendorId);
+		List<VendorReview> vendorReviewList = vendorReviewRepository.findByVendorId(vendorId);
+		return vendorReviewList;
 	}
 
 	/* 新增或修改文字評論 */
@@ -63,7 +64,7 @@ public class VendorReviewService {
 			newVendorReview.setRatingEnvironment(ratingEnv);
 			newVendorReview.setRatingPrice(ratingPrice);
 			newVendorReview.setRatingService(ratingService);
-			newVendorReview.setReviewTime(new Date());
+//			newVendorReview.setReviewTime(new Date());
 			vendorReviewRepository.save(newVendorReview);
 
 		} else {
@@ -71,7 +72,7 @@ public class VendorReviewService {
 			vendorReview.setRatingEnvironment(ratingEnv);
 			vendorReview.setRatingPrice(ratingPrice);
 			vendorReview.setRatingService(ratingService);
-			vendorReview.setReviewTime(new Date());
+//			vendorReview.setReviewTime(new Date());
 			vendorReviewRepository.save(vendorReview);
 
 		}
