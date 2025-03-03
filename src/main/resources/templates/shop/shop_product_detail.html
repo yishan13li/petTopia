@@ -656,20 +656,20 @@
           this.checked = true;
           this.dataset.selected = "true";
 
-          // 檢查規格選項是否都已選擇
+          // 檢查規格選項是否已選擇
           // radios要先轉換為陣列 使用Array.from(radios)或[...radios]
           let selectedSizeRadio;
           let selectedColorRadio;
-          const isSizeChecked = Array.from(sizeRadios).some(radio => {
-            if (radio.checked) {
-              selectedSizeRadio = radio;
+          const isSizeChecked = Array.from(sizeRadios).some(sizeRadio => {
+            if (sizeRadio.checked) {
+              selectedSizeRadio = sizeRadio;
               return true;  // 終止 `some()`，並回傳 `true`
             }
             return false;
           });
-          const isColorChecked = Array.from(colorRadios).some(radio => {
-            if (radio.checked) {
-              selectedColorRadio = radio;
+          const isColorChecked = Array.from(colorRadios).some(colorRadio => {
+            if (colorRadio.checked) {
+              selectedColorRadio = colorRadio;
               return true;  // 終止 `some()`，並回傳 `true`
             }
             return false;
@@ -689,6 +689,13 @@
     // selectedRadio = 選擇的規格
     // anotherRadios = 選擇除外的其他規格
     function onConfirmProduct(selectedSizeRadio, selectedColorRadio) {
+
+      // 除了選擇的規格以外的選項都禁止點擊
+      radios.forEach(radio => {
+        if (!radio.checked) {
+          radio.disabled = true;
+        }
+      });
 
       axios({
         method: 'get',
