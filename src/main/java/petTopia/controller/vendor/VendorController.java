@@ -78,4 +78,10 @@ public class VendorController {
 		
 		return "/vendor/vendor_detail.html";
 	}
+	
+	@PostMapping("/vendor/delete_review")
+	public String deleteReview(Integer memberId, Integer vendorId) {
+		vendorReviewService.deleteReviewByMemberIdAndVendorId(memberId, vendorId);
+		return "/vendor/vendor_detail.html"; 
+	}
 }

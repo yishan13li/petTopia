@@ -9,8 +9,8 @@ import petTopia.model.vendor.VendorActivityReview;
 public interface VendorActivityReviewRepository extends JpaRepository<VendorActivityReview, Integer> {
 	
 	/* 尋找單一活動其所有的評論 */
-	public List<VendorActivityReview> findByActivityId(Integer activityId);
+	public List<VendorActivityReview> findByVendorActivityId(Integer activityId);
 	
 	/* 尋找單一會員對單一活動的評論 */
-	public VendorActivityReview findByMemberIdAndActivityId(Integer memberId,Integer activityId);
+	public VendorActivityReview findByMemberIdAndVendorActivityId(Integer memberId,Integer activityId);
 }

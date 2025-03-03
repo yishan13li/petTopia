@@ -1,10 +1,14 @@
 package petTopia.model.vendor;
 
 import java.util.Date;
+import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import lombok.Getter;
@@ -17,11 +21,11 @@ import lombok.Setter;
 @Entity
 @Table(name = "vendor")
 public class Vendor {
-	
+
 	@Id
 	@Column(name = "id")
 	private Integer id;
-	
+
 	@Column(name = "name")
 	private String name;
 
@@ -72,7 +76,10 @@ public class Vendor {
 
 	@Column(name = "vendor_level")
 	private String vendorLevel;
-	
+
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "vendor", cascade = CascadeType.ALL)
+	private List<VendorActivityReview> reviewList;
+
 	/* 使用Transient防止被序列化，但要於Service層賦值 */
 	@Transient
 	private String logoImgBase64;

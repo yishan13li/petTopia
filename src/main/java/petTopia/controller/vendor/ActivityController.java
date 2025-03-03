@@ -5,8 +5,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 
 import petTopia.model.vendor.VendorActivity;
+import petTopia.service.vendor.VendorActivityReviewService;
 import petTopia.service.vendor.VendorActivityService;
 
 @Controller
@@ -14,6 +16,9 @@ public class ActivityController {
 	
 	@Autowired
 	private VendorActivityService vendorActivityService;
+	
+	@Autowired
+	private VendorActivityReviewService vendorActivityReviewService;
 	
 	@GetMapping("/activity")
 	public String activityHome() {
@@ -29,5 +34,12 @@ public class ActivityController {
 		model.addAttribute("activity", activity);
 		
 		return "/vendor/activity_detail.html";
+	}
+	
+	@PostMapping("/activity/give_review")
+	public String giveReview(Integer memberId, Integer activityId, String context) {
+		vendorActivityReviewService.addOrModifyActivityReview(memberId, activityId, context);
+
+		return "/vendor/vendor_detail.html"; 
 	}
 }

@@ -64,7 +64,6 @@ public class VendorReviewService {
 			newVendorReview.setRatingEnvironment(ratingEnv);
 			newVendorReview.setRatingPrice(ratingPrice);
 			newVendorReview.setRatingService(ratingService);
-//			newVendorReview.setReviewTime(new Date());
 			vendorReviewRepository.save(newVendorReview);
 
 		} else {
@@ -72,7 +71,6 @@ public class VendorReviewService {
 			vendorReview.setRatingEnvironment(ratingEnv);
 			vendorReview.setRatingPrice(ratingPrice);
 			vendorReview.setRatingService(ratingService);
-//			vendorReview.setReviewTime(new Date());
 			vendorReviewRepository.save(vendorReview);
 
 		}
@@ -114,6 +112,12 @@ public class VendorReviewService {
 		}).collect(Collectors.toList());
 
 		return dtoList;
+	}
+	
+	public void deleteReviewByMemberIdAndVendorId(Integer memberId, Integer vendorId) {
+		VendorReview vendorReview = vendorReviewRepository.findByMemberIdAndVendorId(memberId, vendorId);
+		Integer reviewId = vendorReview.getId();
+		vendorReviewRepository.deleteById(reviewId);
 	}
 
 }
