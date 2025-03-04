@@ -7,12 +7,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
-public class PaymentResponse {
-	
-    private boolean success;
+@NoArgsConstructor
+public class PaymentInfoDto {
+    private String paymentCategory;
     private BigDecimal paymentAmount;
+    private String paymentStatus;
 }

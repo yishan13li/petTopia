@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpSession;
-import petTopia.dto.shop.OrderSummaryDto;
+import petTopia.dto.shop.OrderSummaryAmoutDto;
 import petTopia.model.shop.Cart;
 import petTopia.model.shop.Coupon;
 import petTopia.model.shop.Order;
@@ -154,14 +154,14 @@ public class CheckOutController2 {
     }
     
     @GetMapping("/calculate-order-summary")
-    public ResponseEntity<OrderSummaryDto> calculateOrderSummary(
+    public ResponseEntity<OrderSummaryAmoutDto> calculateOrderSummary(
     	HttpSession session,
         @RequestParam(required = false) Integer couponId,
         @RequestParam(required = false) Integer shippingCategoryId
     ) {
     	Member member = (Member) session.getAttribute("member");
     	Integer memberId = member.getId();
-        OrderSummaryDto summary = orderService.calculateOrderSummary(memberId, couponId, shippingCategoryId);
+        OrderSummaryAmoutDto summary = orderService.calculateOrderSummary(memberId, couponId, shippingCategoryId);
         return ResponseEntity.ok(summary);
     }
     
@@ -177,7 +177,7 @@ public class CheckOutController2 {
         Integer paymentCategoryId = (Integer) checkoutData.get("paymentCategoryId");
         
         // **根據購物車計算應付款金額，防止前端惡意修改**
-        OrderSummaryDto orderSummary = orderService.calculateOrderSummary(memberId, couponId, shippingCategoryId);
+        OrderSummaryAmoutDto orderSummary = orderService.calculateOrderSummary(memberId, couponId, shippingCategoryId);
         BigDecimal calculatedTotalAmount = orderSummary.getOrderTotal(); // 取得訂單總金額
            
         // **安全檢查 paymentAmount，貨到付款時允許為 null**

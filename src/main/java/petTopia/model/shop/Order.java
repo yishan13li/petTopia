@@ -1,6 +1,7 @@
 package petTopia.model.shop;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -12,11 +13,14 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import petTopia.dto.shop.PaymentInfoDto;
+import petTopia.dto.shop.ShippingInfoDto;
 import petTopia.model.user.Member;
 
 @Getter
@@ -67,4 +71,8 @@ public class Order {
     
     @OneToOne(mappedBy = "order")
     private Payment payment;
+    
+    @OneToMany(mappedBy =  "order")
+    private List<OrderDetail> orderDetails;
+    
 }

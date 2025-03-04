@@ -7,7 +7,8 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import petTopia.dto.shop.PaymentResponse;
+import petTopia.dto.shop.PaymentInfoDto;
+import petTopia.dto.shop.PaymentResponseDto;
 import petTopia.model.shop.Order;
 import petTopia.model.shop.Payment;
 import petTopia.model.shop.PaymentCategory;
@@ -24,6 +25,13 @@ public class PaymentService {
     @Autowired
     private PaymentStatusRepository paymentStatusRepo;
 
+    public PaymentInfoDto getPaymentInfoDto(Order order) {
+    	PaymentInfoDto paymentInfoDto = new PaymentInfoDto();
+    	paymentInfoDto.setPaymentAmount(order.getPayment().getPaymentAmount());
+    	paymentInfoDto.setPaymentCategory(order.getPayment().getPaymentCategory().getName());
+    	paymentInfoDto.setPaymentStatus(order.getPayment().getPaymentStatus().getName());
+    	return paymentInfoDto;
+    }
     // 處理信用卡支付
     public boolean processCreditCardPayment(Order order,PaymentCategory paymentCategory, BigDecimal paymentAmount) {
 
@@ -31,7 +39,7 @@ public class PaymentService {
         BigDecimal orderTotal = order.getTotalAmount();
         
         // 呼叫信用卡API，回傳支付結果 & 付款金額
-        PaymentResponse paymentResponse = creditCardAPI(orderTotal);
+        PaymentResponseDto paymentResponse = creditCardAPI(orderTotal);
 
         Payment payment = new Payment();
         payment.setOrder(order);
@@ -52,13 +60,13 @@ public class PaymentService {
     }
 
  // 虛擬信用卡支付API
-    private PaymentResponse creditCardAPI(BigDecimal paymentAmount) {
+    private PaymentResponseDto creditCardAPI(BigDecimal paymentAmount) {
         // 假設的支付模擬，實際應該與第三方平台交互
         boolean success = paymentAmount.compareTo(BigDecimal.ZERO) > 0;  // 如果金額大於 0 返回 true
         BigDecimal paidAmount = success ? paymentAmount : BigDecimal.ZERO;  // 若支付成功，返回應付金額，否則為0
         
         // 回傳一個 PaymentResponse 物件，包含支付狀態與金額
-        return new PaymentResponse(success,paidAmount);
+        return new PaymentResponseDto(success,paidAmount);
     }
 
 

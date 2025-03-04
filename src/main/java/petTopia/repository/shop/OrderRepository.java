@@ -13,5 +13,4 @@ public interface OrderRepository extends JpaRepository<petTopia.model.shop.Order
 
 	List<Order> findByMemberId(Integer memberId);
 	
-	Order findByIdAndMemberId(Integer orderId,Integer memberId);
 }

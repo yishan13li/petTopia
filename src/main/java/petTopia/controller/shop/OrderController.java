@@ -8,12 +8,12 @@ import jakarta.servlet.http.HttpSession;
 @Controller
 public class OrderController {
 
-    @GetMapping("/shop/orderHistory")
+    @GetMapping("/th/shop/orderHistory")
     public String orderHistoryPage(HttpSession session) {
         return "shop/shop_orderHistory";
     }
     
-    @GetMapping("/shop/orderHistory/detail")
+    @GetMapping("/th/shop/orderHistory/detail")
     public String orderHistoryDetailPage(HttpSession session) {
         return "shop/shop_orderHistory_detail";
     }

@@ -11,7 +11,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderSummaryDto {
+public class OrderSummaryAmoutDto {
 
 	 	private BigDecimal subtotal;   // 商品總金額
 	    private BigDecimal discountAmount;   // 折扣金額

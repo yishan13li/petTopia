@@ -6,6 +6,8 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import petTopia.dto.shop.ShippingInfoDto;
+import petTopia.model.shop.Order;
 import petTopia.model.shop.Shipping;
 import petTopia.model.shop.ShippingAddress;
 import petTopia.model.shop.ShippingCategory;
@@ -22,6 +24,16 @@ public class ShippingService {
     @Autowired
     private ShippingAddressRepository shippingAddressRepo;
 
+    public ShippingInfoDto getShippingInfoDto(Order order) {
+    	ShippingInfoDto shippingInfoDto = new ShippingInfoDto();
+    	shippingInfoDto.setReceiverName(order.getShipping().getReceiverName());
+    	shippingInfoDto.setReceiverPhone(order.getShipping().getReceiverPhone());
+    	shippingInfoDto.setStreet(order.getShipping().getShippingAddress().getStreet());
+    	shippingInfoDto.setCity(order.getShipping().getShippingAddress().getCity());
+    	shippingInfoDto.setShippingCategory(order.getShipping().getShippingCategory().getName());
+    	return shippingInfoDto;
+    }
+    
     public ShippingAddress createShippingAddress(Member member, String city, String street) {
     	
         // 1. 檢查會員是否已經有相同的地址
