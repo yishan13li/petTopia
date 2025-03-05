@@ -462,9 +462,10 @@
         <!-- 購買數量 -->
         <div class="d-flex align-items-center mb-3">
           <label class="form-label">數量</label>
-          <button class="btn btn-outline-secondary ms-4">-</button>
-          <input type="number" class="form-control text-center mx-2 no-spinner" value="1" style="width: 60px;">
-          <button class="btn btn-outline-secondary">+</button>
+          <button class="btn btn-outline-secondary ms-4" id="decrease-btn">-</button>
+          <input type="number" class="form-control text-center mx-2 no-spinner" id="add-product-input" value="1"
+            style="width: 60px;">
+          <button class="btn btn-outline-secondary" id="increase-btn">+</button>
           <label class="form-label ms-3" id="show-stock-quantity">還剩 [[${totalStockQuantity}]] 件</label>
         </div>
 
@@ -617,7 +618,12 @@
     const showProductPrice = document.querySelector("#show-product-price");
     const showStockQuantity = document.querySelector("#show-stock-quantity");
 
+    const decreaseBtn = document.querySelector("#decrease-btn");
+    const increaseBtn = document.querySelector("#increase-btn");
+    const addProductInput = document.querySelector("#add-product-input");
+
     // Add Event Listener
+    // radios
     radios.forEach(radio => {
       radio.addEventListener('click', function (e) {
         // e.preventDefault();

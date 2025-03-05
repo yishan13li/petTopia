@@ -47,10 +47,10 @@ public class Product {
 	@Column(name = "id")
 	private Integer id;
 
-	@Column(name = "stock_quantity")
+	@Column(name = "stock_quantity", nullable = false)
 	private Integer stockQuantity;
 
-	@Column(name = "unit_price")
+	@Column(name = "unit_price", nullable = false)
 	private BigDecimal unitPrice;
 
 	@Column(name = "discount_price")
@@ -62,7 +62,7 @@ public class Product {
 	@Column(name = "created_time")
 	private Date createdTime;
 
-	@Column(name = "status")
+	@Column(name = "status", nullable = false)
 	private Boolean status;
 	
 	@JsonIgnore
@@ -70,7 +70,7 @@ public class Product {
 	private byte[] photo;
 
 	@ManyToOne()
-	@JoinColumn(name = "product_detail_id")
+	@JoinColumn(name = "product_detail_id", nullable = false)
 	private ProductDetail productDetail;
 
 	@ManyToOne()

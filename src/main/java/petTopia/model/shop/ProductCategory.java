@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -31,11 +32,11 @@ public class ProductCategory {
 	@Column(name="id")
 	private Integer id;
 	
-	@Column(name="name", unique = true)
+	@Column(name="name", unique = true, nullable = false)
 	private String name;
 	
 	@JsonIgnore
-	@OneToMany(mappedBy = "productCategory", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "productCategory", fetch = FetchType.LAZY)
     private List<ProductDetail> productDetails = new ArrayList<>();
 	
 }

@@ -54,10 +54,10 @@ public class ShopProductDetailController {
 		if (productList != null) {
 			for (Product product : productList) {
 				
-				if (product.getProductSize() != null) {
+				if (product.getProductSize() != null && !sizeList.contains(product.getProductSize())) {
 					sizeList.add(product.getProductSize());
 				}
-				if (product.getProductColor() != null) {
+				if (product.getProductColor() != null && !colorList.contains(product.getProductColor())) {
 					colorList.add(product.getProductColor());
 				}
 				
