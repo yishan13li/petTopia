@@ -9,6 +9,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -32,7 +33,6 @@ import petTopia.repository.shop.ShippingCategoryRepository;
 import petTopia.repository.shop.ShippingAddressRepository;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-
 
 @RestController
 @RequestMapping("/shop")
@@ -70,6 +70,7 @@ public class CheckOutController2 {
         List<PaymentCategory> paymentCategories = paymentCategoryRepo.findAll();
         
         Map<String, Object> response = new HashMap<>();
+        response.put("member", member);
         response.put("cartItems", cartItems.isEmpty() ? Collections.emptyList() : cartItems);
         response.put("subtotal", subtotal);
         response.put("shippingCategories", shippingCategories);
@@ -77,6 +78,29 @@ public class CheckOutController2 {
         
         return ResponseEntity.ok(response);
     }
+
+    
+//    @GetMapping("/checkout")   for th+json
+//    public ResponseEntity<Object> getCheckoutInfo(HttpSession session) {
+//        Member member = (Member) session.getAttribute("member");
+//        if (member == null) {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "請先登入"));
+//        }
+//        
+//        Integer memberId = member.getId();
+//        List<Cart> cartItems = cartService.getCartItems(memberId);
+//        BigDecimal subtotal = cartService.calculateTotalPrice(cartItems);
+//        List<ShippingCategory> shippingCategories = shippingCategoryRepo.findAll();
+//        List<PaymentCategory> paymentCategories = paymentCategoryRepo.findAll();
+//        
+//        Map<String, Object> response = new HashMap<>();
+//        response.put("cartItems", cartItems.isEmpty() ? Collections.emptyList() : cartItems);
+//        response.put("subtotal", subtotal);
+//        response.put("shippingCategories", shippingCategories);
+//        response.put("paymentCategories", paymentCategories);
+//        
+//        return ResponseEntity.ok(response);
+//    }
     
     @GetMapping("/member")
     public ResponseEntity<Object> getMemberInfo(HttpSession session) {
