@@ -42,4 +42,10 @@ public class ActivityController {
 
 		return "/vendor/vendor_detail.html"; 
 	}
+	
+	@PostMapping("/activity/delete_review")
+	public String deleteReview(Integer memberId, Integer activityId) {
+		vendorActivityReviewService.deleteReviewByMemberIdAndVendorId(memberId, activityId);
+		return "/vendor/vendor_detail.html"; 
+	}
 }

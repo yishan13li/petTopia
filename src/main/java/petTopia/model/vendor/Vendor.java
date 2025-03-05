@@ -79,8 +79,12 @@ public class Vendor {
 
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "vendor", cascade = CascadeType.ALL)
 	private List<VendorActivityReview> reviewList;
-
-	/* 使用Transient防止被序列化，但要於Service層賦值 */
+	
+	
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "vendor", cascade = CascadeType.ALL)
+	private List<VendorImages> VendorImages;
+	
+	/* 使用Transient防止被序列化，用於Service層賦值 */
 	@Transient
 	private String logoImgBase64;
 }

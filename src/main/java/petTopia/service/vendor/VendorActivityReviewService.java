@@ -57,6 +57,12 @@ public class VendorActivityReviewService {
 			review.setReviewTime(new Date());
 			vendorActivityReviewRepository.save(review);
 		}
-		
+	}
+	
+	/* 刪除某成員對某活動之評論及評分 */
+	public void deleteReviewByMemberIdAndVendorId(Integer memberId, Integer activityId) {
+		VendorActivityReview review = vendorActivityReviewRepository.findByMemberIdAndVendorActivityId(memberId, activityId);
+		Integer reviewId = review.getId();
+		vendorActivityReviewRepository.deleteById(reviewId);
 	}
 }

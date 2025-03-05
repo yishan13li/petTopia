@@ -114,6 +114,7 @@ public class VendorReviewService {
 		return dtoList;
 	}
 	
+	/* 刪除某成員對某店家之評論及評分 */
 	public void deleteReviewByMemberIdAndVendorId(Integer memberId, Integer vendorId) {
 		VendorReview vendorReview = vendorReviewRepository.findByMemberIdAndVendorId(memberId, vendorId);
 		Integer reviewId = vendorReview.getId();
