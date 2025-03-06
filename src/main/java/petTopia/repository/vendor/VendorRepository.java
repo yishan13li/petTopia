@@ -9,4 +9,9 @@ import petTopia.model.vendor.Vendor;
 public interface VendorRepository extends JpaRepository<Vendor, Integer> {
 	
 	public List<Vendor> findByVendorCategoryId(Integer vendorCategoryId);
+	
+	public List<Vendor> findByNameContaining(String name);
+	
+	public List<Vendor> findByDescriptionContaining(String description);
+
 }

@@ -391,6 +391,19 @@
 
   <!-- 主體結束 -->
 
+  <!-- 店家圖片列表開始 -->
+
+  <th:block th:each="image : ${imageList}">
+
+    <img th:src="${image.imageBase64}" class="img-fluid rounded-4" alt="image"
+      style="max-width: 500px; max-height: 300px">
+
+  </th:block>
+
+
+
+  <!-- 店家圖片列表結束 -->
+
   <!--Google Maps-->
   <section style="display: flex; justify-content: center; ">
     <div class="rounded-4" style="background-color: #F9F3EC; padding: 20px">
@@ -418,7 +431,8 @@
           <div class="row">
             <div class="col-lg-3">
               <div class="image-container">
-                <img class="img-fluid rounded-4" th:src="${review.profilePhotoBase64}" alt="alternative">
+                <img class="img-fluid rounded-4" th:src="${review.profilePhotoBase64}" alt="alternative"
+                  style="max-width: 200px; max-height: 200px">
               </div>
             </div>
 
@@ -468,10 +482,8 @@
             <!-- <div class="z-1 position-absolute rounded-3 m-3 px-3 border border-dark-subtle">New</div> -->
 
             <div class="card position-relative">
-
               <a th:href="@{'/vendor/detail/' + ${vendor.id}}"><img th:src="${vendor.logoImgBase64}"
-                  class="img-fluid rounded-4" alt="image"></a>
-
+                  class="img-fluid rounded-4" alt="image" style="max-width: 200px; max-height: 200px"></a>
               <div class="card-body p-0">
 
                 <a th:href="@{'/vendor/detail/' + ${vendor.id}}">

@@ -3,6 +3,7 @@ package petTopia.controller.vendor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -43,7 +44,7 @@ public class ActivityController {
 		return "/vendor/vendor_detail.html"; 
 	}
 	
-	@PostMapping("/activity/delete_review")
+	@DeleteMapping("/activity/delete_review")
 	public String deleteReview(Integer memberId, Integer activityId) {
 		vendorActivityReviewService.deleteReviewByMemberIdAndVendorId(memberId, activityId);
 		return "/vendor/vendor_detail.html"; 

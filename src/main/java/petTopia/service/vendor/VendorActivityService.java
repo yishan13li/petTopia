@@ -1,8 +1,5 @@
 package petTopia.service.vendor;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.net.URLConnection;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,18 +30,4 @@ public class VendorActivityService {
 		return null;
 	}
 	
-    /* 讀取檔案之MimeType */
-	public static String getMimeType(byte[] imageBytes) {
-		try {
-			ByteArrayInputStream inputStream = new ByteArrayInputStream(imageBytes);
-			String mimeType = URLConnection.guessContentTypeFromStream(inputStream);
-			
-			inputStream.close();
-			
-			return mimeType;
-
-		} catch (IOException e) {
-			return "image/jpg";
-		}
-	}
 }

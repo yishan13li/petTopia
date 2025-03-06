@@ -3,11 +3,15 @@ package petTopia.model.vendor;
 import java.util.Date;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
@@ -52,9 +56,10 @@ public class Vendor {
 
 	@Column(name = "status")
 	private boolean status;
-
-	@Column(name = "vendor_category_id")
-	private Integer vendorCategoryId;
+	
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "vendor_category_id")
+	private VendorCategory vendorCategory;
 
 	@Column(name = "registration_date")
 	private Date registrationDate;
@@ -76,13 +81,14 @@ public class Vendor {
 
 	@Column(name = "vendor_level")
 	private String vendorLevel;
-
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "vendor", cascade = CascadeType.ALL)
-	private List<VendorActivityReview> reviewList;
 	
-	
+	@JsonIgnore
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "vendor", cascade = CascadeType.ALL)
-	private List<VendorImages> VendorImages;
+	private List<VendorActivityReview> reviews;
+	
+	@JsonIgnore
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "vendor", cascade = CascadeType.ALL)
+	private List<VendorImages> vendorImages;
 	
 	/* 使用Transient防止被序列化，用於Service層賦值 */
 	@Transient

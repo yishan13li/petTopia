@@ -26,16 +26,12 @@ public class VendorImages {
 	@Column(name = "id")
 	private Integer id;
 
-//	@Column(name = "vendor_id")
-//	private Integer vendorId;
-//	private Integer Vendor_id;
-
-	@Column(name = "image")
-	private byte[] image;
-
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "vendor_id")
 	private Vendor vendor;
+
+	@Column(name = "image")
+	private byte[] image;
 
 	/* 使用Transient防止被序列化，用於Service層賦值 */
 	@Transient

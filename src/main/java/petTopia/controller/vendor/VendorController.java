@@ -1,17 +1,20 @@
 package petTopia.controller.vendor;
 
-import java.util.Base64;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import petTopia.dto.vendor.VendorReviewDto;
 import petTopia.model.vendor.Vendor;
+import petTopia.model.vendor.VendorImages;
+import petTopia.service.vendor.VendorImagesService;
 import petTopia.service.vendor.VendorLikeService;
 import petTopia.service.vendor.VendorReviewService;
 import petTopia.service.vendor.VendorService;
@@ -27,6 +30,9 @@ public class VendorController {
 	
 	@Autowired
 	private VendorLikeService vendorLikeService;
+	
+	@Autowired
+	private VendorImagesService vendorImagesService;
 
 	@GetMapping("/vendor")
 	public String vendorHome(Model model) {
@@ -42,8 +48,6 @@ public class VendorController {
 
 		/* 該店家資料之賦值 */
 		Vendor vendor = vendorService.findVendorById(vendorId);
-		String logoImgString = Base64.getEncoder().encodeToString(vendor.getLogoImg());
-		vendor.setLogoImgBase64(logoImgString);
 		model.addAttribute("vendor", vendor);
 
 		/* 所有店家資料之賦值 */
@@ -53,6 +57,10 @@ public class VendorController {
 		/* 該店家評論之賦值 */
 		List<VendorReviewDto> reviewList = vendorReviewService.getReviewListByVendorId(vendorId);
 		model.addAttribute("reviewList", reviewList);
+		
+		/* 該店家所有圖片賦值 */
+		List<VendorImages> imageList = vendorImagesService.findImagesByVendorId(vendorId);
+		model.addAttribute("imageList",imageList);
 
 		return "/vendor/vendor_detail.html";
 	}
@@ -79,9 +87,23 @@ public class VendorController {
 		return "/vendor/vendor_detail.html";
 	}
 	
-	@PostMapping("/vendor/delete_review")
+	@DeleteMapping("/vendor/delete_review")
 	public String deleteReview(Integer memberId, Integer vendorId) {
 		vendorReviewService.deleteReviewByMemberIdAndVendorId(memberId, vendorId);
 		return "/vendor/vendor_detail.html"; 
+	}
+	
+	@ResponseBody
+	@GetMapping("/vendor/find_by_category")
+	public List<Vendor> findVendorByCategory(Integer categoryId) {
+		List<Vendor> vendorList = vendorService.findVendorByCategoryId(categoryId);
+		return vendorList;
+	}
+	
+	@ResponseBody
+	@GetMapping("/vendor/find_by_keyword")
+	public List<Vendor> findVendorByKeyword(String keyword) {
+		List<Vendor> vendorList = vendorService.findVendorByNameOrDescription(keyword);
+		return vendorList;
 	}
 }

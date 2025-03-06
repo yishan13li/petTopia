@@ -5,8 +5,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -28,4 +28,8 @@ public class VendorActivityImages {
 	
 	@Column(name="image")
 	private byte[] image;
+	
+	/* 使用Transient防止被序列化，用於Service層賦值 */
+	@Transient
+	private String imageBase64;
 }

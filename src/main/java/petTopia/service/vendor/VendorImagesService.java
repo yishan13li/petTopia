@@ -17,7 +17,7 @@ public class VendorImagesService {
 	private VendorImagesRepository vendorImagesRepository;
 
 	/* 設定Base64 */
-	public List<VendorImages> findImagesByVendor(Integer vendorId) {
+	public List<VendorImages> findImagesByVendorId(Integer vendorId) {
 		List<VendorImages> imageList = vendorImagesRepository.findByVendorId(vendorId);
 		for (VendorImages images : imageList) {
 			byte[] imageByte = images.getImage();

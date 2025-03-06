@@ -3,7 +3,6 @@ package petTopia.util;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URLConnection;
-import java.util.Base64;
 
 public class ImageConverter {
 	
