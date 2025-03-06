@@ -10,8 +10,8 @@ import jakarta.validation.constraints.Min;
 import lombok.Data;
 
 @Entity
-@Table(name = "users") 
-@Data  
+@Table(name = "users")
+@Data
 public class UsersBean {
 
     @Id
@@ -21,10 +21,10 @@ public class UsersBean {
 
     @Column(nullable = false)
     @JsonIgnore
-    private String password; 
+    private String password;
 
     @Column(nullable = false)
-    private String email; 
+    private String email;
 
     @Column(name = "user_role", nullable = false, length = 50)
     @Enumerated(EnumType.STRING)
@@ -43,11 +43,12 @@ public class UsersBean {
     private Boolean isSuperAdmin = false;
 
     @Column(name = "admin_level")
-    @Min(0) @Max(1)  
+    @Min(0)
+    @Max(1)
     private Integer adminLevel = 0;
 
     @Column(name = "provider", length = 20)
-    private String provider = "LOCAL";  // LOCAL 或 GOOGLE
+    private String provider = "LOCAL"; // LOCAL 或 GOOGLE
 
     public enum UserRole {
         MEMBER,
@@ -55,7 +56,8 @@ public class UsersBean {
         ADMIN
     }
 
-    public UsersBean() {}
+    public UsersBean() {
+    }
 
     public UsersBean(String password, String email, UserRole userRole) {
         this.password = password;
@@ -72,12 +74,13 @@ public class UsersBean {
     }
 
     // 權限管理
-    private static final Set<String> ADMIN_PERMISSIONS = 
-        Set.of(Permissions.USER_MANAGE, Permissions.COUPON_MANAGE);
+    private static final Set<String> ADMIN_PERMISSIONS = Set.of(Permissions.USER_MANAGE, Permissions.COUPON_MANAGE);
 
     public boolean hasPermission(String permission) {
-        if (!isAdmin()) return false;
-        if (isSuperAdmin()) return true;
+        if (!isAdmin())
+            return false;
+        if (isSuperAdmin())
+            return true;
         return ADMIN_PERMISSIONS.contains(permission);
     }
 
@@ -96,8 +99,10 @@ public class UsersBean {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         UsersBean usersBean = (UsersBean) o;
         return Objects.equals(id, usersBean.id);
     }
@@ -108,7 +113,7 @@ public class UsersBean {
     }
 
     public static final class Permissions {
-        public static final String USER_MANAGE = "USER_MANAGE";      
-        public static final String COUPON_MANAGE = "COUPON_MANAGE";  
+        public static final String USER_MANAGE = "USER_MANAGE";
+        public static final String COUPON_MANAGE = "COUPON_MANAGE";
     }
 }
