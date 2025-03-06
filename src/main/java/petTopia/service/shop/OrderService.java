@@ -241,7 +241,7 @@ public class OrderService {
     //將訂單的商品細節轉成orderItem
     public OrderItemDto getOrderItemDto(OrderDetail orderDetail) {
     	OrderItemDto orderItemDto = new OrderItemDto();
-    	orderItemDto.setProductPhoto(orderDetail.getProduct().getProductPhoto().getPhoto());
+    	orderItemDto.setProductPhoto(orderDetail.getProduct().getPhoto());
     	orderItemDto.setProductName(orderDetail.getProduct().getProductDetail().getName());
     	orderItemDto.setProductSize(orderDetail.getProduct().getProductSize().getName());
     	orderItemDto.setProductColor(orderDetail.getProduct().getProductColor().getName());

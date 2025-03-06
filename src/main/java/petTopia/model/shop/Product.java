@@ -55,6 +55,5 @@ public class Product {
     @Column(name = "status", nullable = false)
     private Boolean status = false; // 默認上下架狀態為 "未上架"
     
-    @OneToOne(mappedBy = "product")
-    private ProductPhoto productPhoto;  // 每個商品有一張照片
+    private byte[] photo;  // 每個商品有一張照片
 }

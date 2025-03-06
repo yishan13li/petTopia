@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import petTopia.model.shop.ProductColor;
-import petTopia.model.shop.ProductPhoto;
 import petTopia.model.shop.ProductSize;
 
 @NoArgsConstructor
