@@ -2,6 +2,7 @@ package petTopia.service.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,40 +18,80 @@ import java.util.Map;
 @Transactional
 public class MemberLoginService extends BaseUserService {
     @Autowired
-    private UsersRepository userRepository;
-
-    @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
+    private UsersRepository usersRepository;
 
     @Autowired
     private MemberRepository memberRepository;
 
-    public Map<String, Object> registerMember(String email, String password) {
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    public Map<String, Object> registerMember(UsersBean user, MemberBean member) {
         Map<String, Object> result = new HashMap<>();
         
         try {
-            // 創建基本用戶並獲取 user_id
-            UsersBean user = createBaseUser(email, password, UsersBean.UserRole.MEMBER);
+            // 1. 檢查是否已註冊為會員
+            UsersBean existingMember = usersRepository.findByEmailAndUserRole(
+                user.getEmail(), 
+                UsersBean.UserRole.MEMBER
+            );
             
-            // 創建會員資料
-            MemberBean member = new MemberBean();
-            member.setId(user.getId());  // 使用相同的 ID
-            member.setStatus(false);     // 預設未驗證
-            member.setUpdatedDate(LocalDateTime.now());
+            if (existingMember != null) {
+                result.put("success", false);
+                result.put("message", "此 email 已註冊為會員");
+                return result;
+            }
+
+            // 2. 加密密碼
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
             
-            // 保存會員資料
-            MemberBean savedMember = memberRepository.save(member);
+            // 3. 保存用戶信息
+            UsersBean savedUser = usersRepository.save(user);
             
-            // 發送驗證郵件
-            emailService.sendVerificationEmail(email, user.getVerificationToken());
+            // 4. 設置會員信息
+            member.setId(savedUser.getId());
+            member.setUser(savedUser);
+            
+            // 5. 保存會員信息
+            memberRepository.save(member);
             
             result.put("success", true);
-            result.put("userId", user.getId());
-            result.put("memberId", savedMember.getId());
+            result.put("message", "註冊成功");
+            result.put("userId", savedUser.getId());
             
         } catch (Exception e) {
             result.put("success", false);
-            result.put("error", e.getMessage());
+            result.put("message", "註冊失敗：" + e.getMessage());
+        }
+        
+        return result;
+    }
+
+    public Map<String, Object> memberLogin(String email, String password) {
+        Map<String, Object> result = new HashMap<>();
+        
+        try {
+            UsersBean user = usersRepository.findByEmailAndUserRole(email, UsersBean.UserRole.MEMBER);
+            
+            if (user == null) {
+                result.put("success", false);
+                result.put("message", "會員帳號不存在");
+                return result;
+            }
+            
+            if (!passwordEncoder.matches(password, user.getPassword())) {
+                result.put("success", false);
+                result.put("message", "密碼錯誤");
+                return result;
+            }
+            
+            result.put("success", true);
+            result.put("message", "登入成功");
+            result.put("user", user);
+            
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", "登入失敗：" + e.getMessage());
         }
         
         return result;
@@ -62,20 +103,11 @@ public class MemberLoginService extends BaseUserService {
         }
     }
 
-    // 登入時驗證密碼
-    public UsersBean memberLogin(String email, String password) {
-        UsersBean user = findByEmail(email);
-        if (user == null || user.getUserRole() != UsersBean.UserRole.MEMBER) {
-            return null;
-        }
-        return passwordEncoder.matches(password, user.getPassword()) ? user : null;
-    }
-
     public UsersBean findByEmail(String email) {
-        return userRepository.findByEmail(email);
+        return usersRepository.findByEmail(email);
     }
 
     public UsersBean findById(Integer id) {
-        return userRepository.findById(id).orElse(null);
+        return usersRepository.findById(id).orElse(null);
     }
 } 

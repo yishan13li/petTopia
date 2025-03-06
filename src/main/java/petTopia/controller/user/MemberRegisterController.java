@@ -13,10 +13,13 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import petTopia.model.user.UsersBean;
 import petTopia.service.user.EmailService;
 import petTopia.service.user.RegistrationService;
+import petTopia.service.user.MemberLoginService;
+import petTopia.model.user.MemberBean;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.time.LocalDateTime;
 
 @Controller
 @RequestMapping("/member")
@@ -27,6 +30,9 @@ public class MemberRegisterController {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private MemberLoginService memberService;
 
     private Map<String, Map<String, Object>> verificationCodes = new HashMap<>();
 
@@ -46,15 +52,25 @@ public class MemberRegisterController {
         model.addAttribute("errors", errors);
 
         try {
+            // 1. 創建用戶基本信息
             UsersBean newUser = new UsersBean();
             newUser.setEmail(email);
             newUser.setPassword(password);
             newUser.setUserRole(UsersBean.UserRole.MEMBER);
+
+            // 2. 創建會員信息
+            MemberBean newMember = new MemberBean();
+            newMember.setUpdatedDate(LocalDateTime.now());
+
+            // 3. 使用 MemberLoginService 處理註冊
+            Map<String, Object> result = memberService.registerMember(newUser, newMember);
             
-            registrationService.register(newUser);
-            
-            // 註冊成功後重定向到登入頁面，並帶上成功訊息
-            return "redirect:/member/login?registered=true";
+            if ((Boolean) result.get("success")) {
+                return "redirect:/member/login?registered=true";
+            } else {
+                errors.put("registerFailed", (String) result.get("message"));
+                return "member/register";
+            }
             
         } catch (Exception e) {
             errors.put("registerFailed", "註冊失敗：" + e.getMessage());

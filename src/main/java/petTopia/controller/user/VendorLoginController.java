@@ -59,26 +59,17 @@ public class VendorLoginController {
         try {
             logger.debug("開始驗證使用者資訊");  // 新增日誌
             // **3. 驗證使用者**
-            UsersBean user = vendorService.vendorLogin(email, password);
+            Map<String, Object> loginResult = vendorService.vendorLogin(email, password);
 
-            if (user == null) {
-                logger.warn("登入失敗 - 使用者不存在或密碼錯誤 - 電子郵件: {}", email);  // 新增日誌
-                errors.put("loginFailed", "電子郵件或密碼錯誤");
+            if (!(Boolean) loginResult.get("success")) {
+                logger.warn("登入失敗 - {} - 電子郵件: {}", loginResult.get("message"), email);
+                errors.put("loginFailed", (String) loginResult.get("message"));
                 model.addAttribute("errors", errors);
                 return "vendor/login";
             }
 
-            logger.debug("使用者角色檢查 - 角色: {}", user.getUserRole());  // 新增日誌
-            // **4. 確認是否為商家用戶**
-            if (user.getUserRole() != UsersBean.UserRole.VENDOR) {
-                logger.warn("登入失敗 - 非商家帳號 - 電子郵件: {}", email);  // 新增日誌
-                errors.put("loginFailed", "此帳號不是商家帳號");
-                model.addAttribute("errors", errors);
-                return "vendor/login";
-            }
-
-            logger.info("登入成功 - 使用者ID: {}", user.getId());  // 修改這裡，使用 getUserId()
-            // **5. 登入成功，將用戶存入 session**
+            UsersBean user = (UsersBean) loginResult.get("user");
+            logger.info("商家登入成功 - 使用者ID: {}", user.getId());
             session.setAttribute("loggedInUser", user);
 
             // **6. 重定向至商家首頁**

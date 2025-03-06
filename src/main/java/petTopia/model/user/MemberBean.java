@@ -10,7 +10,7 @@ import lombok.Data;
 public class MemberBean {
 
 	 @Id
-	    private Integer id;  // 保持 id 為主鍵
+	    private Integer id;  // 與 user id 相同
 
 	    @OneToOne
 	    @JoinColumn(name = "id", referencedColumnName = "id")  
@@ -37,8 +37,9 @@ public class MemberBean {
     @Column(nullable = false)
     private Boolean status = false;  // 預設為未認證 (0)
 
+
     @Column(name = "updated_date")
-    private LocalDateTime updatedDate = LocalDateTime.now();
+    private LocalDateTime updatedDate;
 
     // 這裡不需要額外的 user_id 外鍵欄位，因為 id 已經作為外鍵連結
     // 不需要額外的 @ManyToOne 或 @JoinColumn

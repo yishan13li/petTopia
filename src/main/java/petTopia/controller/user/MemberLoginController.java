@@ -59,26 +59,17 @@ public class MemberLoginController {
         try {
             logger.debug("開始驗證會員資訊");
             // 3. 驗證使用者
-            UsersBean user = memberService.memberLogin(email, password);
+            Map<String, Object> loginResult = memberService.memberLogin(email, password);
 
-            if (user == null) {
-                logger.warn("登入失敗 - 會員不存在或密碼錯誤 - 電子郵件: {}", email);
-                errors.put("loginFailed", "電子郵件或密碼錯誤");
+            if (!(Boolean) loginResult.get("success")) {
+                logger.warn("登入失敗 - {} - 電子郵件: {}", loginResult.get("message"), email);
+                errors.put("loginFailed", (String) loginResult.get("message"));
                 model.addAttribute("errors", errors);
                 return "member/login";
             }
 
-            logger.debug("使用者角色檢查 - 角色: {}", user.getUserRole());
-            // 4. 確認是否為會員用戶
-            if (user.getUserRole() != UsersBean.UserRole.MEMBER) {
-                logger.warn("登入失敗 - 非會員帳號 - 電子郵件: {}", email);
-                errors.put("loginFailed", "此帳號不是會員帳號");
-                model.addAttribute("errors", errors);
-                return "member/login";
-            }
-
+            UsersBean user = (UsersBean) loginResult.get("user");
             logger.info("會員登入成功 - 使用者ID: {}", user.getId());
-            // 5. 登入成功，將用戶存入 session
             session.setAttribute("loggedInUser", user);
 
             // 6. 重定向至會員首頁

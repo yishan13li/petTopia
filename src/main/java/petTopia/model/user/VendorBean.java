@@ -12,11 +12,13 @@ import lombok.Data;
 public class VendorBean {
 
     @Id
-    private Integer id; // 保持 id 為主鍵
+    @Column(name = "id")
+    private Integer id;  // 不使用 @GeneratedValue，因為要與 user id 相同
 
-    @OneToOne
-    @JoinColumn(name = "id", referencedColumnName = "id")
-    private UsersBean user; // 用這個屬性來建立與 UsersBean 的關聯
+    @OneToOne(fetch = FetchType.LAZY)
+    @MapsId  // 重要：使用 user 的 id 作為 vendor 的 id
+    @JoinColumn(name = "id")
+    private UsersBean user;
 
     private String name;
     private String description;
@@ -40,13 +42,13 @@ public class VendorBean {
     private Boolean status = false;
 
     @Column(name = "vendor_category_id")
-    private int vendorCategoryId;
+    private Integer vendorCategoryId = 1;  // 預設分類
 
     @Column(name = "registration_date")
-    private LocalDateTime registrationDate = LocalDateTime.now();
+    private LocalDateTime registrationDate;
 
     @Column(name = "updated_date")
-    private LocalDateTime updatedDate = LocalDateTime.now();
+    private LocalDateTime updatedDate;
 
     @Column(name = "event_count")
     private int eventCount;
