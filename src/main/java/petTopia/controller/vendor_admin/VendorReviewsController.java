@@ -1,6 +1,7 @@
 package petTopia.controller.vendor_admin;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import jakarta.transaction.Transactional;
 import petTopia.model.vendor_admin.ReviewPhoto;
 import petTopia.model.vendor_admin.VendorReviews;
 import petTopia.repository.vendor_admin.ReviewPhotoRepository;
@@ -46,14 +46,12 @@ public class VendorReviewsController {
 
 	@ResponseBody
 	@GetMapping("/api/vendor_admin/reviews/{vendorId}")
-	public ResponseEntity<List<VendorReviews>> getVendorReviewsByVendorId(@PathVariable Integer vendorId) {
-		List<VendorReviews> reviews = vendorReviewsService.getReviewsByVendorId(vendorId);
-
-		if (!reviews.isEmpty()) {
-			return ResponseEntity.ok(reviews);
+	public ResponseEntity<?> getAllReviews() {
+		List<VendorReviews> reviews = vendorReviewsRepository.findAll();
+		if (reviews.isEmpty()) {
+			return ResponseEntity.ok(Collections.emptyList()); // ✅ 返回空数组 []
 		}
-
-		return ResponseEntity.status(404).body(null);
+		return ResponseEntity.ok(reviews);
 	}
 
 	// 取得店家的所有評論

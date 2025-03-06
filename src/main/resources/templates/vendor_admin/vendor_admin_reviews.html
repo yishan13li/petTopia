@@ -124,22 +124,32 @@
             const tableBody = document.getElementById('reviewsTable');
             tableBody.innerHTML = '';
             
-            ratingsData.reviews.forEach((review, index) => {
-                const avgRating = ((review.ratingEnvironment + review.ratingPrice + review.ratingService) / 3).toFixed(1);
-                const formattedDate = formatReviewDate(review.reviewTime); // 格式化日期
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${review.memberId}</td>
-                    <td>${formattedDate}</td>
-                    <td>${review.reviewContent}</td>
-                    <td>⭐ (${avgRating})</td>
-                    <td>
-                        <button class="btn btn-danger btn-sm" onclick="deleteReview(event, ${index})">刪除</button>
-                    </td>
+            if (ratingsData.reviews.length === 0) {
+                // ✅ 如果沒有評論，顯示「暫無評論」
+                const noDataRow = document.createElement('tr');
+                noDataRow.innerHTML = `
+                    <td colspan="5" style="text-align: center;">暫無評論</td>
                 `;
-                row.onclick = (event) => toggleReviewDetails(event, row, review, index);
-                tableBody.appendChild(row);
-            });
+                tableBody.appendChild(noDataRow);
+            } else {
+                // ✅ 正常顯示評論
+                ratingsData.reviews.forEach((review, index) => {
+                    const avgRating = ((review.ratingEnvironment + review.ratingPrice + review.ratingService) / 3).toFixed(1);
+                    const formattedDate = formatReviewDate(review.reviewTime); // 格式化日期
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${review.memberId}</td>
+                        <td>${formattedDate}</td>
+                        <td>${review.reviewContent}</td>
+                        <td>⭐ (${avgRating})</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="deleteReview(event, ${review.id})">刪除</button>
+                        </td>
+                    `;
+                    row.onclick = (event) => toggleReviewDetails(event, row, review, index);
+                    tableBody.appendChild(row);
+                });
+            }
         }
         
         function formatReviewDate(dateString) {
@@ -197,10 +207,23 @@
             row.insertAdjacentElement('afterend', detailRow);
         }
 
-        function deleteReview(event, index) {
-            event.stopPropagation();
-            ratingsData.reviews.splice(index, 1);
-            updateReviews();
+        function deleteReview(event, reviewId) {
+            event.stopPropagation(); // 防止點擊事件觸發父元素
+
+            if (!confirm("確定要刪除此評論嗎？")) {
+                return;
+            }
+
+            axios.delete(`/api/vendor_admin/review/delete/${reviewId}`)
+                .then(response => {
+                    alert("刪除成功"); // 刪除成功訊息
+                    console.log("刪除成功:", response.data);
+                    fetchReviews(); // 重新載入評論列表
+                })
+                .catch(error => {
+                    console.error("刪除失敗:", error);
+                    alert("刪除評論失敗");
+                });
         }
         
         function searchReviews() {
