@@ -32,10 +32,11 @@ public class MemberRegisterController {
 
     @GetMapping("/register")
     public String showRegisterForm(Model model) {
-        return "member_register";
+        model.addAttribute("errors", new HashMap<String, String>());
+        return "member/register";
     }
 
-    @PostMapping("/member_register/controller")
+    @PostMapping("/register")
     public String processRegister(
             @RequestParam(required = false) String email,
             @RequestParam(required = false) String password,
@@ -49,11 +50,15 @@ public class MemberRegisterController {
             newUser.setEmail(email);
             newUser.setPassword(password);
             newUser.setUserRole(UsersBean.UserRole.MEMBER);
+            
             registrationService.register(newUser);
-            return "redirect:/member_login?registered=true";
+            
+            // 註冊成功後重定向到登入頁面，並帶上成功訊息
+            return "redirect:/member/login?registered=true";
+            
         } catch (Exception e) {
             errors.put("registerFailed", "註冊失敗：" + e.getMessage());
-            return "member_register";
+            return "member/register";
         }
     }
 

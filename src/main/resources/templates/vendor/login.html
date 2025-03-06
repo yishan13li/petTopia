@@ -182,7 +182,7 @@ footer .search-bar {
 			<p th:if="${errors.containsKey('loginFailed')}" th:text="${errors.get('loginFailed')}"></p>
 			<p th:if="${errors.containsKey('systemError')}" th:text="${errors.get('systemError')}"></p>
 		</div>
-		<form th:action="@{/vendor_login/controller}" method="POST">
+		<form th:action="@{/vendor/login}" method="POST">
 			<input type="hidden" name="_csrf" th:value="${_csrf?.token}"/>
 			<div class="mb-3">
 				<label for="email" class="form-label">電子郵件</label>
@@ -218,7 +218,7 @@ footer .search-bar {
 			<img src="/user_static/icon/Google_icon.png" alt="Google"> 使用 Google 登入
 		</button>
 		<div class="text-center mt-3">
-			<p>還沒有帳號？ <a href="/vendor_register">註冊</a></p>
+			<p>還沒有帳號？ <a th:href="@{/vendor/register}">註冊</a></p>
 		</div>
 	</div>
 

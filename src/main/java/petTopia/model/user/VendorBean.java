@@ -1,6 +1,8 @@
 package petTopia.model.user;
 
 import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
 import java.util.Date;
 import lombok.Data;
 
@@ -40,13 +42,11 @@ public class VendorBean {
     @Column(name = "vendor_category_id")
     private int vendorCategoryId;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "registration_date")
-    private Date registrationDate = new Date();
+    private LocalDateTime registrationDate = LocalDateTime.now();
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "updated_date")
-    private Date updatedDate = new Date();
+    private LocalDateTime updatedDate = LocalDateTime.now();
 
     @Column(name = "event_count")
     private int eventCount;
@@ -62,4 +62,20 @@ public class VendorBean {
 
     @Column(name = "vendor_level")
     private String vendorLevel;
+
+    public void setRegistrationDate(LocalDateTime registrationDate) {
+        this.registrationDate = registrationDate;
+    }
+
+    public void setUpdatedDate(LocalDateTime updatedDate) {
+        this.updatedDate = updatedDate;
+    }
+
+    public void setStatus(Boolean status) {
+        this.status = status;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
 }

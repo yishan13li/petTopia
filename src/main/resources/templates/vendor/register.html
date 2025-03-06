@@ -176,7 +176,7 @@
   <!-- Main Content -->
   <div class="register-container">
       <h2 class="mb-4">商家註冊</h2>
-      <form th:action="@{/vendor/vendor_register/controller}" method="post" id="registerForm">
+      <form th:action="@{/vendor/register}" method="POST" id="registerForm">
           <div class="form-group">
               <label for="email">電子郵件</label>
               <input type="email" id="email" name="email" class="form-control" required>
@@ -196,7 +196,7 @@
           </div>
 
           <div class="form-group">
-              <label for="password">密碼</label>
+              <label for="password">密碼</label>ㄊ
               <input type="password" id="password" name="password" class="form-control" required>
               <div class="error" th:if="${errors != null && errors.containsKey('password')}" 
                    th:text="${errors.get('password')}"></div>
@@ -218,7 +218,7 @@
       <a href="/oauth2/authorization/google" class="social-btn1">
           <img src="/user_static/icon/Google_icon.png" alt="Google"> 使用 Google 註冊
       </a>
-      <p class="text-center mt-3">已有帳號？ <a href="login.jsp">登入</a></p>
+      <p class="text-center mt-3">已有帳號？ <a th:href="@{/vendor/login}">登入</a></p>
       
   </div>
   

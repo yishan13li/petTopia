@@ -5,14 +5,17 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import petTopia.model.user.UsersBean;
+import petTopia.model.user.VendorBean;
 import petTopia.service.user.EmailService;
 import petTopia.service.user.VendorLoginService;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -27,90 +30,106 @@ public class VendorRegisterController {
     @Autowired
     private EmailService emailService;
 
-    // 存儲驗證碼的 Map (email -> {code, timestamp})
     private Map<String, Map<String, Object>> verificationCodes = new HashMap<>();
 
-    @GetMapping("/vendor_register")
-    public String showRegisterPage(Model model) {
+    @GetMapping("/register")
+    public String showRegisterForm(Model model) {
         model.addAttribute("errors", new HashMap<String, String>());
-        return "vendor_register";
+        return "vendor/register";
     }
 
-    @PostMapping("/vendor_register/controller")
+    @PostMapping("/register")
     public String processRegister(
             @RequestParam(required = false) String email,
             @RequestParam(required = false) String password,
-            @RequestParam(required = false) String confirmPassword,
-            @RequestParam(required = false) String verificationCode,
             Model model) {
-
+        
         Map<String, String> errors = new HashMap<>();
         model.addAttribute("errors", errors);
 
-        // 驗證 email
-        if (email == null || email.trim().isEmpty()) {
-            errors.put("email", "請輸入電子郵件");
-        } else if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
-            errors.put("email", "請輸入有效的電子郵件格式");
-        }
-
-        // 驗證密碼
-        if (password == null || password.trim().isEmpty()) {
-            errors.put("password", "請輸入密碼");
-        } else if (password.length() < 6) {
-            errors.put("password", "密碼長度至少需要6個字符");
-        }
-
-        // 驗證確認密碼
-        if (confirmPassword == null || confirmPassword.trim().isEmpty()) {
-            errors.put("confirmPassword", "請再次輸入密碼");
-        } else if (!confirmPassword.equals(password)) {
-            errors.put("confirmPassword", "兩次輸入的密碼不一致");
-        }
-
-        // 驗證驗證碼
-        Map<String, Object> codeData = verificationCodes.get(email);
-        if (codeData == null || !((String) codeData.get("code")).equals(verificationCode)) {
-            errors.put("verificationCode", "驗證碼無效或已過期");
-            return "vendor_register";
-        }
-
-        // 檢查郵箱是否已被註冊
-        if (vendorService.findByEmail(email) != null) {
-            errors.put("email", "此郵箱已被註冊");
-            return "vendor_register";
-        }
-
-        // 如果有錯誤，返回註冊頁面
-        if (!errors.isEmpty()) {
-            return "vendor_register";
-        }
-
         try {
-            // 創建新用戶
+            // 1. 創建用戶基本信息
             UsersBean newUser = new UsersBean();
             newUser.setEmail(email);
             newUser.setPassword(password);
-            newUser.setUserRole(UsersBean.UserRole.VENDOR); // 設置為商家角色
+            newUser.setUserRole(UsersBean.UserRole.VENDOR);
 
-            // 調用 service 層進行註冊
-            UsersBean registeredUser = vendorService.register(newUser);
+            // 2. 創建商家信息
+            VendorBean newVendor = new VendorBean();
+            newVendor.setRegistrationDate(LocalDateTime.now());
+            newVendor.setUpdatedDate(LocalDateTime.now());
+            newVendor.setStatus(false);
+            newVendor.setVendorCategoryId(1);  // 設置預設分類為1
 
-            if (registeredUser != null) {
-                // 註冊成功，重定向到登入頁面
-                return "redirect:/vendor_login?registered=true";
+            // 3. 使用 VendorLoginService 處理註冊
+            Map<String, Object> result = vendorService.registerVendor(newUser, newVendor);
+            
+            if ((Boolean) result.get("success")) {
+                return "redirect:/vendor/login?registered=true";
             } else {
-                errors.put("registerFailed", "註冊失敗，請稍後再試");
-                return "vendor_register";
+                errors.put("registerFailed", (String) result.get("message"));
+                return "vendor/register";
+            }
+            
+        } catch (Exception e) {
+            errors.put("registerFailed", "註冊失敗：" + e.getMessage());
+            return "vendor/register";
+        }
+    }
+
+    @PostMapping("/api/register")
+    @ResponseBody
+    public Map<String, Object> apiRegister(@RequestBody Map<String, String> request) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            // 基本驗證
+            if (!request.get("password").equals(request.get("confirmPassword"))) {
+                response.put("success", false);
+                response.put("message", "密碼與確認密碼不符");
+                return response;
             }
 
+            UsersBean newUser = new UsersBean();
+            newUser.setEmail(request.get("email"));
+            newUser.setPassword(request.get("password"));
+            newUser.setUserRole(UsersBean.UserRole.VENDOR);
+            
+            // 2. 創建商家信息
+            VendorBean newVendor = new VendorBean();
+            newVendor.setRegistrationDate(LocalDateTime.now());
+            newVendor.setUpdatedDate(LocalDateTime.now());
+            newVendor.setStatus(false);
+            newVendor.setVendorCategoryId(1);  // 設置預設分類為1
+
+            // 3. 使用 VendorLoginService 處理註冊
+            Map<String, Object> result = vendorService.registerVendor(newUser, newVendor);
+            
+            if ((Boolean) result.get("success")) {
+                response.put("success", true);
+                response.put("message", "註冊成功");
+            } else {
+                response.put("success", false);
+                response.put("message", (String) result.get("message"));
+            }
         } catch (Exception e) {
-            errors.put("systemError", "系統發生錯誤，請稍後再試");
-            return "vendor_register";
-        } finally {
-            // 註冊完成後清除驗證碼
-            verificationCodes.remove(email);
+            response.put("success", false);
+            response.put("message", e.getMessage());
         }
+        
+        return response;
+    }
+
+    @PostMapping("/api/send-verification")
+    @ResponseBody
+    public Map<String, Object> apiSendVerificationCode(@RequestBody Map<String, String> request) {
+        return sendVerificationCode(request.get("email"));
+    }
+
+    @PostMapping("/api/verify-code")
+    @ResponseBody
+    public Map<String, Object> apiVerifyCode(@RequestBody Map<String, String> request) {
+        return verifyCode(request.get("email"), request.get("code"));
     }
 
     // 發送驗證碼
@@ -141,7 +160,7 @@ public class VendorRegisterController {
         
         return response;
     }
-    
+
     // 驗證驗證碼
     @PostMapping("/verify-code")
     @ResponseBody

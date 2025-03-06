@@ -200,7 +200,7 @@
     <!-- Main Content -->
     <div class="register-container">
         <h2 class="mb-4 text-center">會員註冊</h2>
-        <form th:action="@{/member/member_register/controller}" method="POST">
+        <form th:action="@{/member/register}" method="POST">
             <div class="mb-3">
                 <label for="email" class="form-label">電子郵件</label>
                 <input type="email" class="form-control" id="email" name="email" required>
@@ -222,7 +222,7 @@
         <a href="/oauth2/authorization/google" class="social-btn1">
             <img th:src="@{/user_static/icon/Google_icon.png}" alt="Google"> 使用 Google 註冊
         </a>
-        <p class="text-center mt-3">已有帳號？ <a href="/member_login">登入</a></p>
+        <p class="text-center mt-3">已有帳號？ <a th:href="@{/member/login}">登入</a></p>
         
     </div>
     

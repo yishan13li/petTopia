@@ -9,7 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import jakarta.servlet.http.HttpSession;
 import petTopia.model.user.UsersBean;
@@ -19,20 +19,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Controller
+@RequestMapping("/vendor")
 public class VendorLoginController {
     private static final Logger logger = LoggerFactory.getLogger(VendorLoginController.class);
 
     @Autowired
     private VendorLoginService vendorService;
 
-    @GetMapping("/vendor_login")
+    @GetMapping("/login")
     public String showLoginPage(Model model) {
         // 初始化 errors map
         model.addAttribute("errors", new HashMap<String, String>());
-        return "vendor_login";
+        return "vendor/login";
     }
 
-    @PostMapping("/vendor_login/controller")
+    @PostMapping("/login")
     public String processLogin(@RequestParam(required = false) String email, 
                              @RequestParam(required = false) String password,
                              Model model,
@@ -52,7 +53,7 @@ public class VendorLoginController {
         // **2. 如果有錯誤，立即返回**
         if (!errors.isEmpty()) {
             model.addAttribute("errors", errors);
-            return "vendor_login";
+            return "vendor/login";
         }
 
         try {
@@ -64,7 +65,7 @@ public class VendorLoginController {
                 logger.warn("登入失敗 - 使用者不存在或密碼錯誤 - 電子郵件: {}", email);  // 新增日誌
                 errors.put("loginFailed", "電子郵件或密碼錯誤");
                 model.addAttribute("errors", errors);
-                return "vendor_login";
+                return "vendor/login";
             }
 
             logger.debug("使用者角色檢查 - 角色: {}", user.getUserRole());  // 新增日誌
@@ -73,7 +74,7 @@ public class VendorLoginController {
                 logger.warn("登入失敗 - 非商家帳號 - 電子郵件: {}", email);  // 新增日誌
                 errors.put("loginFailed", "此帳號不是商家帳號");
                 model.addAttribute("errors", errors);
-                return "vendor_login";
+                return "vendor/login";
             }
 
             logger.info("登入成功 - 使用者ID: {}", user.getId());  // 修改這裡，使用 getUserId()
@@ -87,7 +88,7 @@ public class VendorLoginController {
             logger.error("登入過程發生異常 - 電子郵件: {} - 錯誤訊息: {}", email, e.getMessage(), e);  // 改進錯誤日誌
             errors.put("systemError", "系統發生錯誤，請稍後再試");
             model.addAttribute("errors", errors);
-            return "vendor_login";
+            return "vendor/login";
         }
     }
 }
