@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -18,23 +19,34 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import petTopia.model.shop.Cart;
 import petTopia.model.shop.Product;
 import petTopia.model.shop.ProductColor;
 import petTopia.model.shop.ProductDetail;
 import petTopia.model.shop.ProductSize;
+import petTopia.model.user.Member;
+import petTopia.service.shop.CartService;
 import petTopia.service.shop.ProductDetailService;
 import petTopia.service.shop.ProductService;
+import petTopia.service.user.MemberService;
+
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
 
 @Controller
 @RequestMapping("/shop/productDetail")
 public class ShopProductDetailController {
 
 	@Autowired
+	private MemberService memberService;
+	@Autowired
 	private ProductService productService;
-
 	@Autowired
 	private ProductDetailService productDetailService;
-
+	@Autowired
+	private CartService cartService;
+	
 	// 商品詳情頁面
 	@GetMapping
 	public String showShopProductDetail(@RequestParam Integer productDetailId, Model model) {
@@ -83,6 +95,7 @@ public class ShopProductDetailController {
 	}
 
 	// 商品詳情頁面 => 獲取商品資訊的圖片
+	@ResponseBody
 	@GetMapping("/api/getPhoto")
 	public ResponseEntity<?> getProductPhoto(@RequestParam Integer productId) {
 
@@ -111,7 +124,7 @@ public class ShopProductDetailController {
 			Model model) {
 
 		// 獲取確認商品規格的Product
-		Product product = productService.findByProductDetailIdAndSizeIdAndColorId(productDetailId, productSizeId, productColorId);
+		Product product = productService.getConfirmProduct(productDetailId, productSizeId, productColorId);
 
 		if (product != null) {
 
@@ -126,7 +139,7 @@ public class ShopProductDetailController {
 
 	}
 	
-	// 商品詳情頁面 => 依照點選的一個規格篩選Product
+	// 商品詳情頁面 => 選擇一個規格後篩選Product
 	@ResponseBody
 	@GetMapping("/api/getProductByOption")
 	public ResponseEntity<?> getProductByOption(
@@ -137,7 +150,7 @@ public class ShopProductDetailController {
 
 		Map<String, Object> responseData = new HashMap<>();
 
-		// 獲取當前商品詳情一樣的所有Poduct
+		// 獲取當前商品詳情一樣的所有Product
 		List<Product> productList = null;
 		
 		// 總庫存
@@ -223,4 +236,36 @@ public class ShopProductDetailController {
 
 	}
 
+	// 商品詳情頁面 => 加入購物車
+	@ResponseBody
+	@PostMapping("/api/addProductToCart")
+	public ResponseEntity<?> addProductToCart(
+			@RequestParam Integer memberId, 
+			@RequestParam Integer productDetailId, 
+			@RequestParam Optional<Integer> productSizeId,
+			@RequestParam Optional<Integer> productColorId, 
+			@RequestParam Integer quantity) {
+
+		//TODO: 檢查購物車該商品數量是否大於庫存，前端顯示庫存的地方要用庫存扣除購物車內已經選擇的數量
+		
+		Member member = null;
+		Optional<Member> memberOpt = memberService.findById(memberId);
+		if (memberOpt.isPresent())
+			member = memberOpt.get();
+			
+		Product product = productService.getConfirmProduct(
+				productDetailId, productSizeId.orElse(null), productColorId.orElse(null));
+		
+		if (member != null && product != null) {
+			// 商品加入購物車
+			Cart cart = cartService.addProductToCart(member, product, quantity);
+			
+			return new ResponseEntity<Cart>(cart, HttpStatus.OK);
+		}
+		
+		return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		
+	}
+	
+	
 }

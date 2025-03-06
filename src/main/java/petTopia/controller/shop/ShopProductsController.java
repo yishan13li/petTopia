@@ -42,7 +42,7 @@ public class ShopProductsController {
 		for (ProductDetail productDetail : productDetailList) {
 			
 			ProductDetailDto productDetailDto = new ProductDetailDto();
-			Product minPriceProduct = productService.findMinPriceProduct(productDetail.getId());
+			Product minPriceProduct = productService.getMinPriceProduct(productDetail.getId());
 			
 			productDetailDto.setProductDetail(productDetail);
 			productDetailDto.setUnitPrice(minPriceProduct.getUnitPrice());

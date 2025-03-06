@@ -3,6 +3,8 @@ package petTopia.repository.shop;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import petTopia.model.shop.Product;
 
@@ -21,6 +23,10 @@ public interface ProductRepository extends JpaRepository<Product, Integer>{
 	public List<Product> findByProductDetailIdAndProductSizeId(Integer productDetailId, Integer productSizeId);
 	public List<Product> findByProductDetailIdAndProductColorId(Integer productDetailId, Integer productColorId);
 	
-	public Product findByProductDetailIdAndProductSizeIdAndProductColorId(Integer productDetailId, Integer productSizeId, Integer productColorId);
+
+	public Product findByProductDetailIdAndProductSizeIdAndProductColorId(
+		    Integer productDetailId,
+		    Integer productSizeId,
+		    Integer productColorId);
 	
 }

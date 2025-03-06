@@ -50,7 +50,7 @@ public class ProductService {
 		return null;
 	}
 	
-	public Product findMinPriceProduct(Integer productDetailId) {
+	public Product getMinPriceProduct(Integer productDetailId) {
 		Product product = productRepository.findFirstByProductDetailIdOrderByUnitPriceAsc(productDetailId);
 		if (product != null) {
 			return product;
@@ -58,7 +58,7 @@ public class ProductService {
 		return null;
 	}
 	
-	public Product findMaxPriceProduct(Integer productDetailId) {
+	public Product getMaxPriceProduct(Integer productDetailId) {
 		Product product = productRepository.findFirstByProductDetailIdOrderByUnitPriceDesc(productDetailId);
 		if (product != null) {
 			return product;
@@ -102,7 +102,7 @@ public class ProductService {
 		return null;
 	}
 	
-	public Product findByProductDetailIdAndSizeIdAndColorId(
+	public Product getConfirmProduct(
 			Integer productDetailId, 
 			Integer productSizeId, 
 			Integer productColorId) {
@@ -125,6 +125,7 @@ public class ProductService {
 	
 	public Product insertProduct(String name, String description, 
 			String categoryName, String colorName, String sizeName) {
+		//FIXME: 還未完成
 		
 		// 檢查或創建商品分類 (ProductCategory)
         ProductCategory productCategory = productCategoryRepository.findByName(categoryName);
