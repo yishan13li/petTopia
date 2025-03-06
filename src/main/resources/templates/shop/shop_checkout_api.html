@@ -394,7 +394,7 @@
   	  if (checkoutData) {
   	    renderCheckoutData(checkoutData);
   	  } else {
-  	    axios.get("/shop/checkout")
+  	    axios.get("/shop/checkout2")
   	      .then(response => {
   	        checkoutData = response.data; // 保存後端返回的整合資料
   	        renderCheckoutData(checkoutData);

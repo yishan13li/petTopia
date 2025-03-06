@@ -369,11 +369,17 @@ public class OrderService {
         // 訂單狀態 or 付款狀態
         if (orderStatus != null && !orderStatus.isEmpty()) {
             Predicate statusPredicate;
+            
+            // 訂單狀態查詢
             if (orderStatus.equals("已付款") || orderStatus.equals("待付款")) {
-                statusPredicate = criteriaBuilder.equal(root.get("paymentStatus").get("name"), orderStatus);
+                // 首先加入對 payment 的左聯結
+                Join<Order, Payment> paymentJoin = root.join("payment", JoinType.LEFT);
+                statusPredicate = criteriaBuilder.equal(paymentJoin.get("paymentStatus").get("name"), orderStatus);
             } else {
+                // 查詢訂單狀態
                 statusPredicate = criteriaBuilder.equal(root.get("orderStatus").get("name"), orderStatus);
             }
+            
             predicates.add(statusPredicate);
         }
 

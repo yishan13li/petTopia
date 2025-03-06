@@ -1,6 +1,5 @@
 package petTopia.controller.shop;
 
-import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 
@@ -81,9 +80,9 @@ public class OrderController2 {
             List<OrderHistoryDto> orderHistoryList = orderService.getOrderHistoryFilter(
                     memberId, orderStatus, startDate, endDate, keyword);
 
-            // 若查無訂單，返回 404
+            // 若查無訂單，返回 204
             if (orderHistoryList.isEmpty()) {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
 
             // 返回成功的訂單歷史紀錄

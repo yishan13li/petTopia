@@ -1,6 +1,7 @@
 package petTopia.model.shop;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -50,7 +51,7 @@ public class Product {
     private BigDecimal discountPrice;
     
     @Column(name = "created_time", nullable = false)
-    private java.time.LocalDateTime createdTime = java.time.LocalDateTime.now();
+    private Date createdTime;
     
     @Column(name = "status", nullable = false)
     private Boolean status = false; // 默認上下架狀態為 "未上架"

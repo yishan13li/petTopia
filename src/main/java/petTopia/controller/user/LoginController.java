@@ -36,7 +36,7 @@ public class LoginController {
     }
 
     // 處理登入請求
-    @PostMapping("/login2")  //th
+    @PostMapping("/login2")  //純th
     public String handleLogin(@RequestParam String email, 
                               @RequestParam String password,
                               Model model,
@@ -70,7 +70,7 @@ public class LoginController {
         return "login";  // 登入失敗，重新顯示登入頁
     }
     
-//    @PostMapping("/login")  //json
+//    @PostMapping("/login")  //th+json
 //    public String handleLogin(@RequestBody Map<String, String> loginData, Model model, HttpSession httpSession) {
 //
 //        // 從請求體中提取 email 和 password
@@ -105,7 +105,7 @@ public class LoginController {
 //        return "login";  // 登入失敗，重新顯示登入頁
 //    }
 
-    @PostMapping("/login")
+    @PostMapping("/login")  //純json
     public ResponseEntity<Object> handleLogin(@RequestBody Map<String, String> loginData, HttpSession httpSession) {
 
         // 取得 email 和 password

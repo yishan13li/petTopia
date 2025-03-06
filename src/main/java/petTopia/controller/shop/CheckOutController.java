@@ -53,7 +53,7 @@ public class CheckOutController {
     @Autowired
     private PaymentCategoryRepository paymentCategoryRepo;
     
-    @GetMapping("/th/shop/checkout")
+    @GetMapping("/th/shop/checkout")   //純th
     public String checkoutPage(HttpSession session, Model model) {
         // 從 session 取得 userId 和 member 資訊
         Member member = (Member) session.getAttribute("member");
@@ -110,11 +110,11 @@ public class CheckOutController {
         return "shop/shop_checkout";
     }
     
-    @GetMapping("/shop/checkout2")
+    @GetMapping("/th/shop/checkout2")   //th+json
     public String checkoutPage2(HttpSession session, Model model) {
         Member member = (Member) session.getAttribute("member");
         Integer memberId = member.getId();
-        model.addAttribute("member", member);
+        model.addAttribute("member", memberId);
         return "shop/shop_checkout_api";
     }
     

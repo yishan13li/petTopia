@@ -1,5 +1,7 @@
 package petTopia.model.shop;
 
+import java.util.Date;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -40,6 +42,6 @@ public class ProductReview {
     private String reviewDescription;
     
     @Column(name = "review_time", nullable = false)
-    private java.time.LocalDateTime reviewTime = java.time.LocalDateTime.now();
+    private Date reviewTime;
     
 }

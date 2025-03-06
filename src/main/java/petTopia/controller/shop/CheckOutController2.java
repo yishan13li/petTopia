@@ -80,27 +80,27 @@ public class CheckOutController2 {
     }
 
     
-//    @GetMapping("/checkout")   for th+json
-//    public ResponseEntity<Object> getCheckoutInfo(HttpSession session) {
-//        Member member = (Member) session.getAttribute("member");
-//        if (member == null) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "請先登入"));
-//        }
-//        
-//        Integer memberId = member.getId();
-//        List<Cart> cartItems = cartService.getCartItems(memberId);
-//        BigDecimal subtotal = cartService.calculateTotalPrice(cartItems);
-//        List<ShippingCategory> shippingCategories = shippingCategoryRepo.findAll();
-//        List<PaymentCategory> paymentCategories = paymentCategoryRepo.findAll();
-//        
-//        Map<String, Object> response = new HashMap<>();
-//        response.put("cartItems", cartItems.isEmpty() ? Collections.emptyList() : cartItems);
-//        response.put("subtotal", subtotal);
-//        response.put("shippingCategories", shippingCategories);
-//        response.put("paymentCategories", paymentCategories);
-//        
-//        return ResponseEntity.ok(response);
-//    }
+    @GetMapping("/checkout2")   //for th+json
+    public ResponseEntity<Object> getCheckoutInfo2(HttpSession session) {
+        Member member = (Member) session.getAttribute("member");
+        if (member == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "請先登入"));
+        }
+        
+        Integer memberId = member.getId();
+        List<Cart> cartItems = cartService.getCartItems(memberId);
+        BigDecimal subtotal = cartService.calculateTotalPrice(cartItems);
+        List<ShippingCategory> shippingCategories = shippingCategoryRepo.findAll();
+        List<PaymentCategory> paymentCategories = paymentCategoryRepo.findAll();
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("cartItems", cartItems.isEmpty() ? Collections.emptyList() : cartItems);
+        response.put("subtotal", subtotal);
+        response.put("shippingCategories", shippingCategories);
+        response.put("paymentCategories", paymentCategories);
+        
+        return ResponseEntity.ok(response);
+    }
     
     @GetMapping("/member")
     public ResponseEntity<Object> getMemberInfo(HttpSession session) {
@@ -116,25 +116,6 @@ public class CheckOutController2 {
         return ResponseEntity.ok(member);
     }
     
-    @GetMapping("/cart")
-    public ResponseEntity<Object> getCartItems(HttpSession session) {
-        Member member = (Member) session.getAttribute("member");
-        Integer memberId = member.getId();
-        List<Cart> cartItems = cartService.getCartItems(memberId);
-        return cartItems.isEmpty()
-            ? ResponseEntity.ok(Map.of("message", "您的購物車是空的，請先選擇商品"))
-            : ResponseEntity.ok(cartItems);
-    }
-
-    @GetMapping("/cart/total")
-    public ResponseEntity<Object> getCartTotal(HttpSession session) {
-        Member member = (Member) session.getAttribute("member");
-        Integer memberId = member.getId();
-        List<Cart> cartItems = cartService.getCartItems(memberId);
-        BigDecimal subtotal = cartService.calculateTotalPrice(cartItems);
-        return ResponseEntity.ok(Map.of("subtotal", subtotal));
-    }
-
     @GetMapping("/shipping/address")
     public ResponseEntity<Object> getShippingAddress(HttpSession session) {
         Member member = (Member) session.getAttribute("member");
@@ -144,13 +125,7 @@ public class CheckOutController2 {
         }
         return ResponseEntity.ok(lastShippingAddress);
     }
-
-    @GetMapping("/shipping/categories")
-    public ResponseEntity<Object> getShippingCategories() {
-        List<ShippingCategory> shippingCategories = shippingCategoryRepo.findAll();
-        return ResponseEntity.ok(shippingCategories);
-    }
-
+    
     @GetMapping("/coupons")
     public ResponseEntity<Object> getCoupons(HttpSession session) {
         Member member = (Member) session.getAttribute("member");
@@ -169,24 +144,6 @@ public class CheckOutController2 {
             "availableCoupons", availableCoupons,
             "notMeetCoupons", notMeetCoupons
         ));
-    }
-
-    @GetMapping("/payment/categories")
-    public ResponseEntity<Object> getPaymentCategories() {
-        List<PaymentCategory> paymentCategories = paymentCategoryRepo.findAll();
-        return ResponseEntity.ok(paymentCategories);
-    }
-    
-    @GetMapping("/calculate-order-summary")
-    public ResponseEntity<OrderSummaryAmoutDto> calculateOrderSummary(
-    	HttpSession session,
-        @RequestParam(required = false) Integer couponId,
-        @RequestParam(required = false) Integer shippingCategoryId
-    ) {
-    	Member member = (Member) session.getAttribute("member");
-    	Integer memberId = member.getId();
-        OrderSummaryAmoutDto summary = orderService.calculateOrderSummary(memberId, couponId, shippingCategoryId);
-        return ResponseEntity.ok(summary);
     }
     
     @PostMapping("/checkout")
@@ -233,4 +190,53 @@ public class CheckOutController2 {
         
         return ResponseEntity.ok(Map.of("message", "訂單建立成功", "orderId", order.getId()));
     }
+    
+//    @GetMapping("/cart")
+//    public ResponseEntity<Object> getCartItems(HttpSession session) {
+//        Member member = (Member) session.getAttribute("member");
+//        Integer memberId = member.getId();
+//        List<Cart> cartItems = cartService.getCartItems(memberId);
+//        return cartItems.isEmpty()
+//            ? ResponseEntity.ok(Map.of("message", "您的購物車是空的，請先選擇商品"))
+//            : ResponseEntity.ok(cartItems);
+//    }
+//
+//    @GetMapping("/cart/total")
+//    public ResponseEntity<Object> getCartTotal(HttpSession session) {
+//        Member member = (Member) session.getAttribute("member");
+//        Integer memberId = member.getId();
+//        List<Cart> cartItems = cartService.getCartItems(memberId);
+//        BigDecimal subtotal = cartService.calculateTotalPrice(cartItems);
+//        return ResponseEntity.ok(Map.of("subtotal", subtotal));
+//    }
+//
+//
+//
+//    @GetMapping("/shipping/categories")
+//    public ResponseEntity<Object> getShippingCategories() {
+//        List<ShippingCategory> shippingCategories = shippingCategoryRepo.findAll();
+//        return ResponseEntity.ok(shippingCategories);
+//    }
+//
+//
+//
+//    @GetMapping("/payment/categories")
+//    public ResponseEntity<Object> getPaymentCategories() {
+//        List<PaymentCategory> paymentCategories = paymentCategoryRepo.findAll();
+//        return ResponseEntity.ok(paymentCategories);
+//    }
+//    
+//    @GetMapping("/calculate-order-summary")
+//    public ResponseEntity<OrderSummaryAmoutDto> calculateOrderSummary(
+//    	HttpSession session,
+//        @RequestParam(required = false) Integer couponId,
+//        @RequestParam(required = false) Integer shippingCategoryId
+//    ) {
+//    	Member member = (Member) session.getAttribute("member");
+//    	Integer memberId = member.getId();
+//        OrderSummaryAmoutDto summary = orderService.calculateOrderSummary(memberId, couponId, shippingCategoryId);
+//        return ResponseEntity.ok(summary);
+//    }
+    
+
 }
