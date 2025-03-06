@@ -185,7 +185,7 @@ th {
     });
 
     function fetchEvents() {
-        axios.get('http://localhost:8080/api/vendor/activity/1')
+        axios.get('http://localhost:8080/api/vendor_admin/activity/1')
             .then(response => {
                 console.log(response.data);
                 window.allEvents = response.data; //有活動數據存入 window.allEvents 變數，方便後續篩選使用

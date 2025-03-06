@@ -16,16 +16,16 @@ import jakarta.servlet.http.HttpSession;
 import petTopia.model.vendor_admin.User;
 import petTopia.model.vendor_admin.UserRole;
 import petTopia.model.vendor_admin.Vendor;
-import petTopia.service.vendor_admin.UserServiceImpl;
-import petTopia.service.vendor_admin.VendorServiceImpl;
+import petTopia.service.vendor_admin.UserService;
+import petTopia.service.vendor_admin.VendorService;
 
 @Controller
 public class LoginSystemController {
 	@Autowired
-	private UserServiceImpl userServiceImpl;
+	private UserService userServiceImpl;
 
 	@Autowired
-	private VendorServiceImpl vendorServiceImpl;
+	private VendorService vendorServiceImpl;
 
 	@GetMapping("/loginsystemmain.controller")
 	public String processMainAction() {

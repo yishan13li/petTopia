@@ -12,4 +12,6 @@ public interface VendorActivityImagesRepository extends JpaRepository<VendorActi
 
 //	@Query("SELECT vavi.id FROM VendorActivity vav JOIN vav.vendorActivityImages vavi WHERE vav.id = :vendorActivityId ORDER BY vavi.id ASC")
 //	Optional<VendorActivityImages> findFirstByVendorActivityId(Integer vendorActivityId);
+	
+	void deleteAllByIdIn(List<Integer> ids);
 }

@@ -62,8 +62,6 @@ input, textarea, select {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 10px;
-	/*             overflow-x: auto; */
-	/*             max-height: 200px; */
 }
 
 .image-upload img {
@@ -105,72 +103,39 @@ input, textarea, select {
 .full-width {
 	width: 100% !important;
 }
-</style>
-<script>
-function addImage() {
-    if (document.body.classList.contains('delete-mode')) return;
 
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.multiple = true;
-    input.onchange = function(event) {
-        const files = event.target.files;
-        if (files.length > 0) {
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.dataset.file = file;  // 保存文件数据
-                    img.onclick = () => toggleSelection(img);
-                    document.querySelector('.image-upload').insertBefore(img, document.querySelector('.add-image'));
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-    };
-    input.click();
+.image-preview {
+	position: relative;
+	display: inline-block;
 }
 
-        function toggleSelection(img) {
-            if (document.body.classList.contains('delete-mode')) {
-                img.classList.toggle('selected');
-            }
-        }
+.preview-image {
+	width: 100px;
+	height: 100px;
+	object-fit: cover;
+	border-radius: 5px;
+	border: 1px solid #ccc;
+}
 
-        function toggleDeleteMode() {
-            document.body.classList.toggle('delete-mode');
-        }
+.delete-btn {
+	position: absolute;
+	top: 5px;
+	right: 5px;
+	background: red;
+	color: white;
+	border: none;
+	padding: 5px;
+	cursor: pointer;
+	font-size: 12px;
+}
 
-        function deleteSelectedImages() {
-            document.querySelectorAll('.image-upload img.selected').forEach(img => img.remove());
-            document.body.classList.remove('delete-mode');
-        }
-    </script>
+#sendBtn {
+	align-items: right;
+}
+</style>
 </head>
 <body>
-	<!--*******************
-        Preloader start
-    ********************-->
-	<div id="preloader">
-		<div class="sk-three-bounce">
-			<div class="sk-child sk-bounce1"></div>
-			<div class="sk-child sk-bounce2"></div>
-			<div class="sk-child sk-bounce3"></div>
-		</div>
-	</div>
-	<!--*******************
-        Preloader end
-    ********************-->
-
-
-	<!--**********************************
-        Main wrapper start
-    ***********************************-->
 	<div id="main-wrapper">
-
 		<div th:replace="~{layout/vendor_admin_header}"></div>
 		<div class="content-body">
 			<div class="container">
@@ -178,22 +143,18 @@ function addImage() {
 					onclick="window.location.href='/vendor_admin/vendor_admin_activity'"
 					type="button">返回</button>
 				<h2>活動詳情</h2>
-				<!-- 				onsubmit="event.preventDefault(); submitForm();" -->
-				<form id="activity_form">
-
+				<form id="activity_form" method="POST" enctype="multipart/form-data">
 					<div class="form-row">
-						<!-- 														要去抓登入者的id -->
-						<input type="hidden" name="vendor_id" value="1" />
+						<input type="hidden" name="vendor_id" value="1" /> <input
+							type="hidden" name="activity_id" th:value="${vendorActivity.id}" />
 						<div class="form-group">
 							<label>活動名稱:</label> <input type="text" name="activity_name"
 								id="activity_name" value="" required="required"
 								th:value="${vendorActivity.name}">
 						</div>
 						<div class="form-group">
-							<label>活動類型:</label>
-							<!-- 							 <input type="text" name="activity_type_id"> -->
-							<select name="activity_type_id" class="form-control"
-								id="activity_type_id" required>
+							<label>活動類型:</label> <select name="activity_type_id"
+								class="form-control" id="activity_type_id" required>
 								<option value="" disabled selected>請選擇活動類型</option>
 								<option th:each="type : ${activityTypes}" th:value="${type.id}"
 									th:text="${type.name}"
@@ -212,8 +173,6 @@ function addImage() {
 							<textarea name="activity_address" id="activity_address"
 								required="required" th:text="${vendorActivity.address}"></textarea>
 						</div>
-
-
 					</div>
 					<div class="form-row">
 						<div class="form-group">
@@ -229,13 +188,12 @@ function addImage() {
 					</div>
 					<div class="form-row">
 						<div class="form-group">
-							<label>是否需要報名:</label>
-							<!-- 							<input type="text" name="is_registration_required"> -->
-							<select name="is_registration_required" class="form-control"
-								id="is_registration_required" required="required">
+							<label>是否需要報名:</label> <select name="is_registration_required"
+								class="form-control" id="is_registration_required"
+								required="required" onchange="toggleMaxParticipants()">
 								<option th:each="option : ${registrationOptions}"
 									th:value="${option.value}" th:text="${option.label}"
-									th:selected="${option.value == vendorActivity.isRegistrationRequired}"></option>
+									th:selected="${option.value == vendorActivity.isRegistrationRequired.toString()}"></option>
 							</select>
 						</div>
 						<div class="form-group">
@@ -246,149 +204,150 @@ function addImage() {
 						</div>
 					</div>
 					<div class="form-group full-width">
-						<label>活動圖片:</label> <input type="file" id="house_photo"
-							name="files" multiple required="required">
-						<div>
+						<label>活動圖片:</label>
+						<div class="image-upload">
+							<!-- 預覽資料庫圖片 -->
 							<th:block th:each="imageId : ${vendorActivityImageIdList}">
-								<img
-									th:src="@{'http://localhost:8080/photos/download?photoId=' + ${imageId}}"
-									alt="活動圖片" class="img-fluid rounded imgact" />
+								<div class="image-preview" th:data-image-id="${imageId}">
+									<img
+										th:src="@{'http://localhost:8080/photos/download?photoId=' + ${imageId}}"
+										alt="活動圖片" class="img-fluid rounded imgact" />
+									<button type="button" class="delete-btn"
+										onclick="deleteExistingImage(this)">刪除</button>
+								</div>
 							</th:block>
 						</div>
-
+						<br> <label>新增活動圖片:</label> <input type="file"
+							id="house_photo" name="files" multiple> <br>
+						<div class="image-upload" id="preview-container"></div>
 					</div>
-					<div>
-						<!-- 											<button type="button" class="btn btn-outline-dark" -->
-						<!-- 												onclick="toggleDeleteMode()">選擇刪除圖片</button> -->
-						<!-- 											<button type="button" class="btn btn-outline-dark" -->
-						<!-- 												onclick="deleteSelectedImages()">刪除選擇的圖片</button> -->
+
+					<div style="text-align: right;">
 						<button type="submit" class="btn btn-outline-primary" id="sendBtn">修改活動</button>
 					</div>
-
 				</form>
 			</div>
-
-			<!--**********************************
-            Footer start
-        ***********************************-->
-
-			<!--**********************************
-            Footer end
-        ***********************************-->
 		</div>
 	</div>
 
 	<script type="text/javascript">
-	document.addEventListener("DOMContentLoaded", function () {
-        let startTimeInput = document.getElementById("start_time");
-        let endTimeInput = document.getElementById("end_time");
+	
+	function toggleMaxParticipants() {
+        let select = document.getElementById("is_registration_required");
+        let maxParticipantsInput = document.getElementById("max_participants");
 
-        // 設定開始時間不能選過去的日期
-        function setMinStartTime() {
-            let now = new Date();
-            let localDateTime = now.toISOString().slice(0, 16); // 轉換為 `YYYY-MM-DDTHH:MM`
-            startTimeInput.min = localDateTime;
+        console.log("選擇的值:", select.value); // 確保選到的是 1 或 0
+
+        if (select.value === "false") { // 如果選擇「不需報名」
+            maxParticipantsInput.value = 0;
+            maxParticipantsInput.value = 0;
+            maxParticipantsInput.setAttribute("readonly", "readonly"); // 改用 readonly
+        } else { // 如果選擇「需要報名」
+            maxParticipantsInput.removeAttribute("readonly");
+            if (maxParticipantsInput.value == 0) {
+                maxParticipantsInput.value = 1; // 預設至少填 1
+            }
         }
+    }
 
-        // 當選擇開始時間時，設定結束時間不能早於開始時間
-        startTimeInput.addEventListener("change", function () {
-            endTimeInput.min = startTimeInput.value;
+    // 確保頁面載入時狀態正確
+    document.addEventListener("DOMContentLoaded", function() {
+        console.log("頁面載入完成，執行 toggleMaxParticipants()");
+        toggleMaxParticipants();
+    });
+	
+        document.addEventListener("DOMContentLoaded", function () {
+            const fileInput = document.getElementById("house_photo");
+            const previewContainer = document.getElementById("preview-container");
+
+            fileInput.addEventListener("change", function (event) {
+                previewContainer.innerHTML = ""; // 清空舊預覽
+                const files = event.target.files;
+
+                Array.from(files).forEach((file, index) => {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const imageWrapper = document.createElement("div");
+                        imageWrapper.classList.add("image-preview");
+
+                        const img = document.createElement("img");
+                        img.src = e.target.result;
+                        img.classList.add("preview-image");
+
+                        const deleteBtn = document.createElement("button");
+                        deleteBtn.innerText = "刪除";
+                        deleteBtn.classList.add("delete-btn");
+                        deleteBtn.onclick = function () {
+                            imageWrapper.remove();
+                            removeFileFromInput(index);
+                        };
+
+                        imageWrapper.appendChild(img);
+                        imageWrapper.appendChild(deleteBtn);
+                        previewContainer.appendChild(imageWrapper);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            });
+
+            function removeFileFromInput(indexToRemove) {
+                const dt = new DataTransfer();
+                const files = fileInput.files;
+
+                Array.from(files).forEach((file, index) => {
+                    if (index !== indexToRemove) {
+                        dt.items.add(file);
+                    }
+                });
+
+                fileInput.files = dt.files; // 更新 input 的值
+            }
         });
 
-        // 頁面載入時設定開始時間的最小值
-        setMinStartTime();
-    });
-// 	function submitForm() {
-// 		const sendBtn=document.querySelector(sendBtn);
-// 	    const form = document.querySelector('form');
-// 	    const formData = new FormData(form);
-// 	    const activity_name = document.querySelector('#activity_name').value
-// 	    const activity_type_id = document.querySelector('#activity_type_id').value
-// 	    const activity_address = document.querySelector('#activity_address').value
-// 	    const activity_description = document.querySelector('#activity_description').value
-// 	    const start_time = document.querySelector('#start_time').value
-// 	    const end_time = document.querySelector('#end_time').value
-// 	    const is_registration_required = document.querySelector('#is_registration_required').value
+        let deletedImageIds = [];  // 存要刪除的圖片 ID
 
-// 	    // 获取所有上传的图片文件
-// 	    const images = document.querySelectorAll('.image-upload img');
-// 	    images.forEach(img => {
-// 	        if (img.classList.contains('selected')) {  // 如果图片被选中
-// 	            const file = img.src;  // 你可以选择存储图片文件名，或者处理文件的上传
-// 	            formData.append('images', file);  // 将图片数据添加到FormData
-// 	        }
-// 	    });
+        function deleteExistingImage(button) {
+            const imageContainer = button.parentElement;
+            const imageId = imageContainer.getAttribute('data-image-id');
+            if (imageId) {
+                deletedImageIds.push(imageId);
+                imageContainer.remove();
+            }
+        }
 
-// 	    // 使用 axios 发送 POST 请求
-// 	    axios.post('/vendor_admin/vendor_admin_activity/add', formData,{headers: {
-//         'Content-Type': 'application/json'
-//     }})
-// 	        .then(response => {
-// 	            alert('活动新增成功');
-// 	        })
-// 	        .catch(error => {
-// 	            console.error('发送错误:', error);
-// 	        });
-// 	}
-	
-	const activityForm = document.getElementById('activity_form');
-	activityForm.addEventListener('submit', function (e) {
-		e.preventDefault();
+        // 表單提交處理
+        document.getElementById('activity_form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
 
-		
-		const formdata = new FormData(activityForm);
-// 		const images = document.querySelectorAll('.image-upload img');
-// 	    images.forEach(img => {
-// 	        const file = img.dataset.file;
-// 	        if (file) {
-// 	            formdata.append("files", file); // 添加文件
-// 	        }
-// 	    });
-		
-		axios({
-			method: 'post',
-			url: 'http://localhost:8080/api/vendor_activity/add',
-			data: formdata
-		})
-			.then(response =>{
-				alert('新增成功');
-				window.location.reload();
-			})
-			.catch(error =>
-				alert('新增失敗')
+            // 附加要刪除的圖片 ID
+            deletedImageIds.forEach(id => formData.append('deletedImageIds', id));
 
-			);
-	})
-	
-	
-	// sendBtn.addEventListener('click', (e) => {
-	// 	const inputName = document.querySelector('#name_input').value
-	// 	const inputLevel = document.querySelector('#level_input').value
+            // 檢查並附加新上傳的圖片
+            let files = document.querySelectorAll('.image-preview img[data-file]');
+            files.forEach(img => {
+                const file = img.dataset.file;  // 獲取檔案對象
+                if (file) {
+                    formData.append('files', file);  // 將檔案本身加入到表單數據
+                }
+            });
 
-
-	// 	let dtoObject = {
-	// 		name: inputName,
-	// 		level: inputLevel
-	// 	}
-
-	// 	axios({
-	// 		method: 'post',
-	// 		url: url,
-	// 		data: dtoObject
-	// 	})
-	// 		.then(res => {
-	// 			console.log(res.status)
-	// document.querySelector('#name_input').value = ''
-	// document.querySelector('#level_input').value = ''
-	// output.innerHTML = '新增ok'
-	// 		})
-	// 		.catch(err => {
-	// 			console.log(err)
-	// 			output.innerHTML = '發生錯誤'
-	// 		})
-	// })
-	
-	
-	</script>
+            axios({
+                method: 'post',
+                url: 'http://localhost:8080/api/vendor_activity/update',
+                data: formData,
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            })
+            .then(response => {
+                alert('更新成功');
+                window.location.reload();
+            })
+            .catch(error => {
+                alert('更新失敗');
+            });
+        });
+    </script>
 </body>
 </html>

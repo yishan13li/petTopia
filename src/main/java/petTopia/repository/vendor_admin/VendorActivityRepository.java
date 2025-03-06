@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import petTopia.model.vendor_admin.Vendor;
 import petTopia.model.vendor_admin.VendorActivity;
 
 public interface VendorActivityRepository extends JpaRepository<VendorActivity, Integer> {
@@ -14,4 +15,6 @@ public interface VendorActivityRepository extends JpaRepository<VendorActivity, 
 			+ "LEFT JOIN FETCH va.images " + "WHERE va.vendor.id = :vendorId")
 	List<VendorActivity> findByVendorId(Integer vendorId);
 
+	int countByVendor(Vendor vendor);
+	
 }

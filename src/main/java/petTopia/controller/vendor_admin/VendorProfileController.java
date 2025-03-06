@@ -1,6 +1,7 @@
 package petTopia.controller.vendor_admin;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
@@ -11,6 +12,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,46 +26,73 @@ import org.springframework.web.multipart.MultipartFile;
 import petTopia.model.vendor_admin.User;
 import petTopia.model.vendor_admin.UserRole;
 import petTopia.model.vendor_admin.Vendor;
+import petTopia.model.vendor_admin.VendorActivity;
+import petTopia.model.vendor_admin.VendorActivityImages;
 import petTopia.model.vendor_admin.VendorCategory;
+import petTopia.model.vendor_admin.VendorImages;
 import petTopia.repository.vendor_admin.VendorCategoryRepository;
+import petTopia.repository.vendor_admin.VendorImagesRepository;
+import petTopia.repository.vendor_admin.VendorRepository;
 import petTopia.service.vendor_admin.UserService;
-import petTopia.service.vendor_admin.VendorServiceImpl;
+import petTopia.service.vendor_admin.VendorService;
 
 @Controller
 
 public class VendorProfileController {
 	@Autowired
-	private VendorServiceImpl vendorServiceImpl;
+	private VendorService vendorService;
 
 	@Autowired
-	private UserService userService;
+	private VendorRepository vendorRepository;
+
+//	@Autowired
+//	private UserService userService;
 
 	@Autowired
 	private VendorCategoryRepository categoryRepository;
 
+	@Autowired
+	private VendorImagesRepository vendorImagesRepository;
+
 	// 根據用戶的 email 和 password 獲取 Vendor Profile
 	@GetMapping("/vendor/profile")
 	public String getVendorProfile(@RequestParam String email, @RequestParam String password, Model model) {
-		Optional<User> user = userService.getUserByEmailAndPassword(email, password);
+//		Optional<User> user = userService.getUserByEmailAndPassword(email, password);
 
-		System.out.println(user.get().getUserId());
-		if (user.isPresent() && user.get().getUserRole() == UserRole.vendor) {
-			Optional<Vendor> vendorDetail = vendorServiceImpl.getVendorById(user.get().getUserId());
-			List<VendorCategory> allcategory = categoryRepository.findAll();
-			if (vendorDetail.isPresent()) {
-				System.out.println(vendorDetail.get().getId());
-				System.out.println(vendorDetail.get().getName());
-				Vendor vendor = vendorDetail.get();
-				String vendorLogoImgBase64 = (vendor.getLogoImg() != null)
-						? "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(vendor.getLogoImg())
-						: null;
-				model.addAttribute("allcategory", allcategory);
-				model.addAttribute("user", user.get());
-				model.addAttribute("vendor", vendorDetail.get());
-				model.addAttribute("vendorLogoImgBase64", vendorLogoImgBase64);
-				return "vendor_admin/vendor_admin_profile";
-			}
+		Optional<Vendor> vendorDetail = vendorService.getVendorProfile(email, password);
+
+		if (vendorDetail.isPresent()) {
+			Vendor vendor = vendorDetail.get();
+			String vendorLogoImgBase64 = vendorService.getVendorLogoBase64(vendor);
+			List<VendorCategory> allcategory = vendorService.getAllVendorCategories();
+
+			// 获取该店家的活动总数
+			int activityCount = vendorService.getActivityCountByVendor(vendor.getId());
+
+			model.addAttribute("allcategory", allcategory);
+			model.addAttribute("vendor", vendor);
+			model.addAttribute("vendorLogoImgBase64", vendorLogoImgBase64);
+			return "vendor_admin/vendor_admin_profile";
 		}
+
+//		System.out.println(user.get().getUserId());
+//		if (user.isPresent() && user.get().getUserRole() == UserRole.vendor) {
+//			Optional<Vendor> vendorDetail = vendorServiceImpl.getVendorById(user.get().getUserId());
+//			List<VendorCategory> allcategory = categoryRepository.findAll();
+//			if (vendorDetail.isPresent()) {
+//				System.out.println(vendorDetail.get().getId());
+//				System.out.println(vendorDetail.get().getName());
+//				Vendor vendor = vendorDetail.get();
+//				String vendorLogoImgBase64 = (vendor.getLogoImg() != null)
+//						? "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(vendor.getLogoImg())
+//						: null;
+//				model.addAttribute("allcategory", allcategory);
+//				model.addAttribute("user", user.get());
+//				model.addAttribute("vendor", vendorDetail.get());
+//				model.addAttribute("vendorLogoImgBase64", vendorLogoImgBase64);
+//				return "vendor_admin/vendor_admin_profile";
+//			}
+//		}
 		return "error"; // 返回錯誤頁面
 	}
 
@@ -80,11 +109,11 @@ public class VendorProfileController {
 			@RequestParam(required = false) String vendorPhone, @RequestParam(required = false) String vendorAddress,
 			@RequestParam(required = false) String vendorDescription,
 			@RequestParam(required = false) String contactPerson,
-			@RequestParam(required = false) String vendorTaxidNumber, @RequestParam(required = false) String category,
+			@RequestParam(required = false) String vendorTaxidNumber, @RequestParam(required = false) Integer category,
 			@RequestParam(required = false) MultipartFile vendorLogoImg, Model model) {
 		Map<String, Object> response = new HashMap<>();
 		// 查找原本的商家資料
-		Vendor vendor = vendorServiceImpl.getVendorById(vendorId)
+		Vendor vendor = vendorService.getVendorById(vendorId)
 				.orElseThrow(() -> new RuntimeException("Vendor not found"));
 
 		// 只更新傳遞過來的欄位
@@ -123,13 +152,13 @@ public class VendorProfileController {
 
 		// 只有在傳遞 category 時才更新它
 		if (category != null) {
-			VendorCategory vendorCategory = categoryRepository.findByCategoryName(category)
+			VendorCategory vendorCategory = categoryRepository.findById(category)
 					.orElseThrow(() -> new RuntimeException("Category not found"));
 			vendor.setVendorCategory(vendorCategory);
 		}
 
 		// 保存更新過的資料
-		Vendor updatedVendor = vendorServiceImpl.updateVendor(vendor);
+		Vendor updatedVendor = vendorService.updateVendor(vendor);
 
 		response.put("success", true);
 		response.put("vendor", updatedVendor);
@@ -140,7 +169,7 @@ public class VendorProfileController {
 	// 取得店家圖片 (回傳圖片資料流)
 	@GetMapping("/profileImage/{vendorId}")
 	public ResponseEntity<byte[]> getProfileImage(@PathVariable Integer vendorId) {
-		Vendor vendor = vendorServiceImpl.getVendorById(vendorId)
+		Vendor vendor = vendorService.getVendorById(vendorId)
 				.orElseThrow(() -> new RuntimeException("Vendor not found"));
 
 		byte[] imageBytes = vendor.getLogoImg();
@@ -165,4 +194,41 @@ public class VendorProfileController {
 //			return "vendor_admin/app-profile"; // 刪除失敗則回到原頁面
 //		}
 //	}
+
+	@GetMapping("/profile_photos/download")
+	public ResponseEntity<?> downloadPhotoById(@RequestParam Integer photoId) {
+		Optional<VendorImages> imageOpt = vendorImagesRepository.findById(photoId);
+
+		if (imageOpt.isPresent()) {
+			VendorImages image = imageOpt.get();
+			byte[] imageFile = image.getImage(); // 假設每個 VendorActivityPhoto 實體有一個 photoFile 字段，存儲圖片二進制數據
+
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.IMAGE_JPEG); // 假設圖片是 JPEG 格式
+
+			return new ResponseEntity<>(imageFile, headers, HttpStatus.OK); // 返回圖片的二進制數據
+		}
+
+		return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 如果找不到圖片，返回 404
+	}
+
+	@GetMapping("/profile_photos/ids")
+	public ResponseEntity<?> findPhotoIdsByVendorId(@RequestParam Integer vendorId) {
+		Optional<Vendor> op = vendorRepository.findById(vendorId);
+
+		List<Integer> imageIdList = new ArrayList<>();
+
+		if (op.isPresent()) {
+			Vendor vendor = op.get();
+			List<VendorImages> images = vendor.getImages();
+
+			for (VendorImages image : images) {
+				imageIdList.add(image.getId()); // 假設每個 VendorActivityPhoto 實體有一個 id 字段
+			}
+
+			return new ResponseEntity<>(imageIdList, HttpStatus.OK); // 返回所有照片的 ID 列表
+		}
+
+		return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 如果沒有找到活動，返回 404
+	}
 }

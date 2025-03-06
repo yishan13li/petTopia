@@ -34,6 +34,7 @@ public class VendorActivityService {
 
 	public void deleteVendorActivity(Integer id) {
 		vendorActivityRepository.deleteById(id);
+
 	}
 
 	public void addActivity(VendorActivity activity) {

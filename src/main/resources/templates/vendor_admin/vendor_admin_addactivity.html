@@ -90,6 +90,38 @@ input, textarea, select {
 .full-width {
 	width: 100% !important;
 }
+
+#preview-container {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin-top: 10px;
+}
+
+.image-preview {
+	position: relative;
+	display: inline-block;
+}
+
+.preview-image {
+	width: 100px;
+	height: 100px;
+	object-fit: cover;
+	border-radius: 5px;
+	border: 1px solid #ccc;
+}
+
+.delete-btn {
+	position: absolute;
+	top: 5px;
+	right: 5px;
+	background: red;
+	color: white;
+	border: none;
+	padding: 5px;
+	cursor: pointer;
+	font-size: 12px;
+}
 </style>
 <script>
 function addImage() {
@@ -102,18 +134,30 @@ function addImage() {
     input.onchange = function(event) {
         const files = event.target.files;
         if (files.length > 0) {
+            const dt = new DataTransfer(); // 用來存檔案
+            const existingFiles = document.getElementById("files").files;
+
+            // 先把已經選擇的檔案加入
+            for (let i = 0; i < existingFiles.length; i++) {
+                dt.items.add(existingFiles[i]);
+            }
+
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
+                dt.items.add(file); // 確保檔案加入 input
+
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const img = document.createElement('img');
                     img.src = e.target.result;
-                    img.dataset.file = file;  // 保存文件数据
+                    img.dataset.file = file.name; // 保存文件名 (避免存整個 File 物件)
                     img.onclick = () => toggleSelection(img);
                     document.querySelector('.image-upload').insertBefore(img, document.querySelector('.add-image'));
                 };
                 reader.readAsDataURL(file);
             }
+
+            document.getElementById("files").files = dt.files; // 更新 input 的值
         }
     };
     input.click();
@@ -130,7 +174,23 @@ function addImage() {
         }
 
         function deleteSelectedImages() {
-            document.querySelectorAll('.image-upload img.selected').forEach(img => img.remove());
+            const selectedImages = document.querySelectorAll('.image-upload img.selected');
+            if (selectedImages.length === 0) return;
+
+            const dt = new DataTransfer();
+            const input = document.getElementById("files");
+            const files = input.files;
+
+            // 只保留未被刪除的檔案
+            for (let i = 0; i < files.length; i++) {
+                if (![...selectedImages].some(img => img.dataset.file === files[i].name)) {
+                    dt.items.add(files[i]);
+                }
+            }
+
+            input.files = dt.files; // 更新 input 的值
+
+            selectedImages.forEach(img => img.remove()); // 刪除預覽圖片
             document.body.classList.remove('delete-mode');
         }
     </script>
@@ -209,7 +269,8 @@ function addImage() {
 							<label>是否需要報名:</label>
 							<!-- 							<input type="text" name="is_registration_required"> -->
 							<select name="is_registration_required" class="form-control"
-								id="is_registration_required" required="required">
+								id="is_registration_required" onchange="toggleMaxParticipants()"
+								required="required">
 								<option th:each="option : ${registrationOptions}"
 									th:value="${option.value}" th:text="${option.label}"></option>
 							</select>
@@ -217,20 +278,17 @@ function addImage() {
 						<div class="form-group">
 							<label for="max_participants">活動最大報名人數:</label> <input
 								type="number" id="max_participants" name="max_participants"
-								class="form-control" required min="1">
+								class="form-control" required min="0">
 						</div>
 					</div>
 					<div class="form-group full-width">
 						<label>活動圖片:</label> <input type="file" id="house_photo"
 							name="files" multiple required="required">
-
-
+						<div id="preview-container"></div>
+						<!-- 預覽圖片區域 -->
 					</div>
-					<div>
-						<!-- 											<button type="button" class="btn btn-outline-dark" -->
-						<!-- 												onclick="toggleDeleteMode()">選擇刪除圖片</button> -->
-						<!-- 											<button type="button" class="btn btn-outline-dark" -->
-						<!-- 												onclick="deleteSelectedImages()">刪除選擇的圖片</button> -->
+
+					<div style="text-align: right;">
 						<button type="submit" class="btn btn-outline-primary" id="sendBtn">新增活動</button>
 					</div>
 
@@ -248,6 +306,81 @@ function addImage() {
 	</div>
 
 	<script type="text/javascript">
+	
+	function toggleMaxParticipants() {
+        let select = document.getElementById("is_registration_required");
+        let maxParticipantsInput = document.getElementById("max_participants");
+
+        console.log("選擇的值:", select.value); // 確保選到的是 1 或 0
+
+        if (select.value === "false") { // 如果選擇「不需報名」
+            maxParticipantsInput.value = 0;
+            maxParticipantsInput.value = 0;
+            maxParticipantsInput.setAttribute("readonly", "readonly"); // 改用 readonly
+        } else { // 如果選擇「需要報名」
+            maxParticipantsInput.removeAttribute("readonly");
+            if (maxParticipantsInput.value == 0) {
+                maxParticipantsInput.value = 1; // 預設至少填 1
+            }
+        }
+    }
+
+    // 確保頁面載入時狀態正確
+    document.addEventListener("DOMContentLoaded", function() {
+        console.log("頁面載入完成，執行 toggleMaxParticipants()");
+        toggleMaxParticipants();
+    });
+	
+	
+	document.addEventListener("DOMContentLoaded", function () {
+	    const fileInput = document.getElementById("house_photo");
+	    const previewContainer = document.getElementById("preview-container");
+
+	    fileInput.addEventListener("change", function (event) {
+	        previewContainer.innerHTML = ""; // 清空舊預覽
+	        const files = event.target.files;
+
+	        Array.from(files).forEach((file, index) => {
+	            const reader = new FileReader();
+	            reader.onload = function (e) {
+	                const imageWrapper = document.createElement("div");
+	                imageWrapper.classList.add("image-preview");
+
+	                const img = document.createElement("img");
+	                img.src = e.target.result;
+	                img.classList.add("preview-image");
+
+	                const deleteBtn = document.createElement("button");
+	                deleteBtn.innerText = "刪除";
+	                deleteBtn.classList.add("delete-btn");
+	                deleteBtn.onclick = function () {
+	                    imageWrapper.remove();
+	                    removeFileFromInput(index);
+	                };
+
+	                imageWrapper.appendChild(img);
+	                imageWrapper.appendChild(deleteBtn);
+	                previewContainer.appendChild(imageWrapper);
+	            };
+	            reader.readAsDataURL(file);
+	        });
+	    });
+
+	    function removeFileFromInput(indexToRemove) {
+	        const dt = new DataTransfer();
+	        const files = fileInput.files;
+
+	        Array.from(files).forEach((file, index) => {
+	            if (index !== indexToRemove) {
+	                dt.items.add(file);
+	            }
+	        });
+
+	        fileInput.files = dt.files; // 更新 input 的值
+	    }
+	});
+	
+	
 	document.addEventListener("DOMContentLoaded", function () {
         let startTimeInput = document.getElementById("start_time");
         let endTimeInput = document.getElementById("end_time");

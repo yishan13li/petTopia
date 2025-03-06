@@ -35,39 +35,38 @@ public class Vendor {
 	private Integer id;
 
 	@OneToOne
-	@JoinColumn(name = "id", referencedColumnName = "id")
+	@JoinColumn(name = "id")
 	private User user;
 
-	@Column(name = "name", nullable = false)
+	@Column(name = "name")
 	private String name;
 
-	@Column(name = "description", nullable = false)
+	@Column(name = "description")
 	private String description;
 
-	@Lob
-	@Column(name = "logo_img", nullable = false)
+	@Column(name = "logo_img")
 	private byte[] logoImg;
 
-	@Column(name = "address", nullable = false)
+	@Column(name = "address")
 	private String address;
 
-	@Column(name = "phone", nullable = false)
+	@Column(name = "phone")
 	private String phone;
 
-	@Column(name = "contact_email", nullable = false)
+	@Column(name = "contact_email")
 	private String contactEmail;
 
-	@Column(name = "contact_person", nullable = false)
+	@Column(name = "contact_person")
 	private String contactPerson;
 
-	@Column(name = "taxid_number", nullable = false)
+	@Column(name = "taxid_number")
 	private String taxidNumber;
 
 	@Column(name = "status", nullable = false)
 	private boolean status = false;
 
 	@ManyToOne
-	@JoinColumn(name = "vendor_category_id", referencedColumnName = "id")
+	@JoinColumn(name = "vendor_category_id")
 	private VendorCategory vendorCategory;
 
 	@Column(name = "registration_date", updatable = false)
@@ -78,13 +77,13 @@ public class Vendor {
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date updatedDate = new Date();
 
-	@Column(name = "event_count", nullable = false)
+	@Column(name = "event_count")
 	private int eventCount = 0;
 
-	@Column(name = "total_rating", nullable = false)
+	@Column(name = "total_rating")
 	private float totalRating = 0;
 
-	@Column(name = "review_count", nullable = false)
+	@Column(name = "review_count")
 	private int reviewCount = 0;
 
 	@Column(name = "avg_rating", nullable = false)
@@ -94,14 +93,17 @@ public class Vendor {
 	private String vendorLevel = "普通";
 
 	@OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<VendorCertification> certifications;
-    
-    @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<VendorActivity> activities;
-    
+	private List<VendorCertification> certifications;
+
+	@OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<VendorActivity> activities;
+
 //    @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
 //    private List<VendorReview> reviews;
 //    
 //    @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
 //    private List<Notification> notifications;
+
+	@OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<VendorImages> images;
 }

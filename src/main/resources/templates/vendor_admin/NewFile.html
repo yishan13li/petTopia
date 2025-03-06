@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>店家活動列表</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { width: 80%; margin: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        th { background-color: #f4f4f4; }
+        .pending { color: orange; }
+        .approved { color: green; }
+        .btn { padding: 5px 10px; cursor: pointer; border: none; }
+        .edit { background-color: #4CAF50; color: white; }
+        .delete { background-color: #f44336; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>店家活動列表</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>活動名稱</th>
+                    <th>描述</th>
+                    <th>開始時間</th>
+                    <th>結束時間</th>
+                    <th>狀態</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="activityList">
+                <!-- 活動資料將由 JavaScript 動態填入 -->
+            </tbody>
+        </table>
+    </div>
+    <script>
+        // 模擬活動資料
+        let activities = [
+            { id: 1, name: "寵物嘉年華", description: "帶上你的毛孩一起來玩！", start: "2025-02-10", end: "2025-02-12", status: "審核中" },
+            { id: 2, name: "寵物義診", description: "免費寵物健康檢查", start: "2025-02-15", end: "2025-02-15", status: "已通過" }
+        ];
+
+        function loadActivities() {
+            const tbody = document.getElementById("activityList");
+            tbody.innerHTML = "";
+            activities.forEach(activity => {
+                let row = `<tr>
+                    <td>${activity.name}</td>
+                    <td>${activity.description}</td>
+                    <td>${activity.start}</td>
+                    <td>${activity.end}</td>
+                    <td class="${activity.status === '審核中' ? 'pending' : 'approved'}">${activity.status}</td>
+                    <td>
+                        <button class="btn edit" onclick="editActivity(${activity.id})">編輯</button>
+                        <button class="btn delete" onclick="deleteActivity(${activity.id})">刪除</button>
+                    </td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function editActivity(id) {
+            alert("編輯功能尚未實作 (ID: " + id + ")");
+        }
+
+        function deleteActivity(id) {
+            if (confirm("確定要刪除這個活動嗎？")) {
+                activities = activities.filter(a => a.id !== id);
+                loadActivities();
+            }
+        }
+
+        // 初始載入
+        loadActivities();
+    </script>
+</body>
+</html>

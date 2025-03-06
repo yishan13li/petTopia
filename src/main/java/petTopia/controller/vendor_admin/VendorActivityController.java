@@ -1,7 +1,6 @@
 package petTopia.controller.vendor_admin;
 
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -20,7 +19,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
@@ -38,7 +36,7 @@ import petTopia.service.vendor_admin.ActivityTypeService;
 import petTopia.service.vendor_admin.VendorActivityService;
 
 @Controller
-public class VendorActivitivityController {
+public class VendorActivityController {
 
 	@Autowired
 	private VendorRepository vendorRepository;
@@ -57,6 +55,12 @@ public class VendorActivitivityController {
 
 	@Autowired
 	private ActivityPeopleNumberRepository activityPeopleNumberRepository;
+
+	public void updateActivityCount(Vendor vendor) {
+		int activityCount = vendorActivityRepository.countByVendor(vendor);
+		vendor.setEventCount(activityCount);
+		vendorRepository.save(vendor); // 更新活动数量到数据库
+	}
 //	@GetMapping
 //	public List<VendorActivity> getAllVendorActivities() {
 //		return vendorActivityService.getAllVendorActivities();
@@ -83,12 +87,12 @@ public class VendorActivitivityController {
 			List<ActivityType> activityTypes = activityTypeService.getAllActivityTypes();
 			List<Map<String, Object>> registrationOptions = new ArrayList<>();
 			Map<String, Object> option1 = new HashMap<>();
-			option1.put("value", 1);
+			option1.put("value", "true");
 			option1.put("label", "需要報名");
 			registrationOptions.add(option1);
 
 			Map<String, Object> option2 = new HashMap<>();
-			option2.put("value", 0);
+			option2.put("value", "false");
 			option2.put("label", "不需報名");
 			registrationOptions.add(option2);
 
@@ -115,12 +119,12 @@ public class VendorActivitivityController {
 		// 轉換 is_registration_required 選單的值 (0 -> "不需報名", 1 -> "需要報名")
 		List<Map<String, Object>> registrationOptions = new ArrayList<>();
 		Map<String, Object> option1 = new HashMap<>();
-		option1.put("value", 1);
+		option1.put("value", "true");
 		option1.put("label", "需要報名");
 		registrationOptions.add(option1);
 
 		Map<String, Object> option2 = new HashMap<>();
-		option2.put("value", 0);
+		option2.put("value", "false");
 		option2.put("label", "不需報名");
 		registrationOptions.add(option2);
 
@@ -129,7 +133,126 @@ public class VendorActivitivityController {
 	}
 
 	@ResponseBody
-	@GetMapping("/api/vendor/activity/{vendorId}")
+	@PostMapping("/api/vendor_activity/add") // 不只可以送json 也可以送@RequestParam
+	public ResponseEntity<?> addActivity(@RequestParam("vendor_id") Integer vendorId,
+			@RequestParam String activity_name, @RequestParam ActivityType activity_type_id,
+			@RequestParam String activity_description, @RequestParam String activity_address,
+			@RequestParam("start_time") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") Date startTime,
+			@RequestParam("end_time") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") Date endTime,
+			@RequestParam String is_registration_required, @RequestParam Integer max_participants,
+			@RequestParam("files") MultipartFile[] files) {
+
+		try {
+			VendorActivity vendorActivity = new VendorActivity();
+			Vendor vendor = vendorRepository.findById(vendorId).orElseThrow(() -> new Exception("Vendor not found"));
+			vendorActivity.setVendor(vendor);
+			vendorActivity.setName(activity_name);
+			vendorActivity.setActivityType(activity_type_id);
+			vendorActivity.setDescription(activity_description);
+			vendorActivity.setAddress(activity_address);
+			vendorActivity.setStartTime(startTime);
+			vendorActivity.setEndTime(endTime);
+
+			Boolean isRegistrationRequired = Boolean.parseBoolean(is_registration_required);
+			vendorActivity.setRegistrationRequired(isRegistrationRequired); // 設置布林值
+			List<VendorActivityImages> vendorActivityImagesList = new ArrayList<>();
+
+			for (MultipartFile oneFile : files) {
+				VendorActivityImages vendorActivityImages = new VendorActivityImages();
+				vendorActivityImages.setImage(oneFile.getBytes());
+				vendorActivityImages.setVendorActivity(vendorActivity); // 多set 一
+
+				vendorActivityImagesList.add(vendorActivityImages);
+			}
+
+			vendorActivity.setImages(vendorActivityImagesList); // 一set多
+
+			vendorActivity = vendorActivityRepository.save(vendorActivity);
+
+			// 5. 建立並儲存人數表 (ActivityPeopleNumber)
+			ActivityPeopleNumber activityPeopleNumber = new ActivityPeopleNumber();
+			activityPeopleNumber.setVendorActivity(vendorActivity);
+			activityPeopleNumber.setMaxParticipants(max_participants);
+			activityPeopleNumber.setCurrentParticipants(0); // 初始參與人數設為 0
+			activityPeopleNumberRepository.save(activityPeopleNumber);
+
+			updateActivityCount(vendor);
+
+			return new ResponseEntity<>(HttpStatus.CREATED); // 201
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST); // 400
+		}
+
+	}
+
+	@ResponseBody
+	@PostMapping("/api/vendor_activity/update")
+	public ResponseEntity<?> updateActivity(@RequestParam("activity_id") Integer activityId,
+			@RequestParam("vendor_id") Integer vendorId, @RequestParam String activity_name,
+			@RequestParam ActivityType activity_type_id, @RequestParam String activity_description,
+			@RequestParam String activity_address,
+			@RequestParam("start_time") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") Date startTime,
+			@RequestParam("end_time") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") Date endTime,
+			@RequestParam String is_registration_required, @RequestParam Integer max_participants,
+			@RequestParam(value = "files", required = false) MultipartFile[] files,
+			@RequestParam(value = "deletedImageIds", required = false) List<Integer> deletedImageIds) {
+
+		try {
+			// 1. 查找活動
+			VendorActivity vendorActivity = vendorActivityRepository.findById(activityId)
+					.orElseThrow(() -> new Exception("活動不存在"));
+
+			// 2. 更新基本資訊
+			vendorActivity.setName(activity_name);
+			vendorActivity.setDescription(activity_description);
+			vendorActivity.setAddress(activity_address);
+			vendorActivity.setStartTime(startTime);
+			vendorActivity.setEndTime(endTime);
+			vendorActivity.setActivityType(activity_type_id);
+
+			Boolean isRegistrationRequired = Boolean.parseBoolean(is_registration_required);
+			vendorActivity.setRegistrationRequired(isRegistrationRequired); // 設置布林值
+			// 3. 刪除指定的圖片
+			if (deletedImageIds != null && !deletedImageIds.isEmpty()) {
+				vendorActivityImagesRepository.deleteAllById(deletedImageIds);
+			}
+
+			// 4. 更新新圖片（如果有新圖片則更新）
+			if (files != null && files.length > 0) {
+				List<VendorActivityImages> vendorActivityImagesList = new ArrayList<>();
+				for (MultipartFile file : files) {
+					if (!file.isEmpty()) {
+						System.out.println("上傳的圖片：" + file.getOriginalFilename());
+						VendorActivityImages vendorActivityImage = new VendorActivityImages();
+						vendorActivityImage.setImage(file.getBytes());
+						vendorActivityImage.setVendorActivity(vendorActivity);
+						vendorActivityImagesList.add(vendorActivityImage);
+						System.out.println(vendorActivityImagesList);
+					}
+				}
+				vendorActivity.getImages().addAll(vendorActivityImagesList);
+			}
+
+			// 5. 更新最大參與人數
+			ActivityPeopleNumber activityPeopleNumber = activityPeopleNumberRepository
+					.findByVendorActivity_Id(activityId).orElseThrow(() -> new Exception("人數表不存在"));
+			activityPeopleNumber.setMaxParticipants(max_participants);
+
+			activityPeopleNumberRepository.save(activityPeopleNumber);
+
+			// 6. 儲存變更
+			vendorActivityRepository.save(vendorActivity);
+
+			return new ResponseEntity<>(HttpStatus.OK);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+	}
+
+	@ResponseBody
+	@GetMapping("/api/vendor_admin/activity/{vendorId}")
 	public ResponseEntity<List<VendorActivity>> getVendorActivitiesByVendorId(@PathVariable Integer vendorId) {
 		List<VendorActivity> activities = vendorActivityService.getVendorActivityByVendorId(vendorId);
 
@@ -148,7 +271,10 @@ public class VendorActivitivityController {
 	@ResponseBody
 	@DeleteMapping("/{id}")
 	public ResponseEntity<Map<String, String>> deleteVendorActivity(@PathVariable Integer id) {
+		Optional<VendorActivity> vendorActivity = vendorActivityRepository.findById(id);
 		vendorActivityService.deleteVendorActivity(id);
+		Vendor vendor = vendorActivity.get().getVendor();
+		updateActivityCount(vendor);
 		Map<String, String> response = new HashMap<>();
 		response.put("message", "刪除成功");
 		return ResponseEntity.ok(response);
@@ -239,52 +365,27 @@ public class VendorActivitivityController {
 //		return ResponseEntity.ok("活動新增成功");
 //	}
 
-	@ResponseBody
-	@PostMapping("/api/vendor_activity/add") // 不只可以送json 也可以送@RequestParam
-	public ResponseEntity<?> addActivity(@RequestParam("vendor_id") Integer vendorId,
-			@RequestParam String activity_name, @RequestParam ActivityType activity_type_id,
-			@RequestParam String activity_description, @RequestParam String activity_address,
-			@RequestParam("start_time") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") Date startTime,
-			@RequestParam("end_time") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") Date endTime,
-			@RequestParam String is_registration_required, @RequestParam Integer max_participants,
-			@RequestParam("files") MultipartFile[] files) {
+	// 計算並更新店家的等級
+//	private void updateVendorLevel(Vendor vendor) {
+//	    // 計算總活動數和評分來決定等級
+//	    String newLevel = calculateVendorLevel(vendor);
+//	    vendor.setVendorLevel(newLevel);  // 更新等級
+//	    vendorRepository.save(vendor);  // 儲存更新後的 Vendor
+//	}
 
-		try {
-			VendorActivity vendorActivity = new VendorActivity();
-			Vendor vendor = vendorRepository.findById(vendorId).orElseThrow(() -> new Exception("Vendor not found"));
-			vendorActivity.setVendor(vendor);
-			vendorActivity.setName(activity_name);
-			vendorActivity.setActivityType(activity_type_id);
-			vendorActivity.setDescription(activity_description);
-			vendorActivity.setAddress(activity_address);
-			vendorActivity.setStartTime(startTime);
-			vendorActivity.setEndTime(endTime);
-
-			List<VendorActivityImages> vendorActivityImagesList = new ArrayList<>();
-
-			for (MultipartFile oneFile : files) {
-				VendorActivityImages vendorActivityImages = new VendorActivityImages();
-				vendorActivityImages.setImage(oneFile.getBytes());
-				vendorActivityImages.setVendorActivity(vendorActivity); // 多set 一
-
-				vendorActivityImagesList.add(vendorActivityImages);
-			}
-
-			vendorActivity.setImages(vendorActivityImagesList); // 一set多
-
-			vendorActivity = vendorActivityRepository.save(vendorActivity);
-
-			// 5. 建立並儲存人數表 (ActivityPeopleNumber)
-			ActivityPeopleNumber activityPeopleNumber = new ActivityPeopleNumber();
-			activityPeopleNumber.setVendorActivity(vendorActivity);
-			activityPeopleNumber.setMaxParticipants(max_participants);
-			activityPeopleNumber.setCurrentParticipants(0); // 初始參與人數設為 0
-			activityPeopleNumberRepository.save(activityPeopleNumber);
-			return new ResponseEntity<>(HttpStatus.CREATED); // 201
-		} catch (Exception e) {
-			e.printStackTrace();
-			return new ResponseEntity<>(HttpStatus.BAD_REQUEST); // 400
-		}
-
-	}
+	// 計算等級的邏輯
+//	private String calculateVendorLevel(Vendor vendor) {
+//	    int totalPosts = vendor.getTotalActivityCount();  // 店家總發文數
+//	    double averageRating = vendor.getAverageRating(); // 假設 Vendor 有計算過的平均評分
+//
+//	    if (totalPosts >= 50 && averageRating >= 4.5) {
+//	        return "Gold";  // 等級為 Gold
+//	    } else if (totalPosts >= 30 && averageRating >= 4.0) {
+//	        return "Silver";  // 等級為 Silver
+//	    } else if (totalPosts >= 10 && averageRating >= 3.5) {
+//	        return "Bronze";  // 等級為 Bronze
+//	    } else {
+//	        return "Standard";  // 等級為 Standard
+//	    }
+//	}
 }
