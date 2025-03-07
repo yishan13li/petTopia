@@ -1,12 +1,15 @@
 package petTopia.model.vendor;
 
 import java.util.Date;
+import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,7 +29,7 @@ public class VendorReview {
 
 	@Column(name = "vendor_id")
 	private Integer vendorId;
-	
+
 	@Column(name = "member_id")
 	private Integer memberId;
 
@@ -44,4 +47,7 @@ public class VendorReview {
 
 	@Column(name = "rating_service")
 	private Integer ratingService;
+
+	@OneToMany(mappedBy = "vendorReview", cascade = CascadeType.ALL)
+	private List<ReviewPhoto> reviewPhotos;
 }

@@ -1,37 +1,39 @@
 package petTopia.model.vendor;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@Entity
+@Table(name = "activity_people_number")
 @Getter
 @Setter
 @NoArgsConstructor
-@Entity
-@Table(name = "vendor_activity_images")
-public class VendorActivityImages {
-
+@AllArgsConstructor
+public class ActivityPeopleNumber {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id")
 	private Integer id;
 
-	@ManyToOne
-	@JoinColumn(name = "vendor_activity_id")
+	@JsonIgnore
+	@OneToOne
+	@JoinColumn(name = "vendor_activity_id", nullable = false)
 	private VendorActivity vendorActivity;
 
-	@Column(name = "image")
-	private byte[] image;
+	@Column(name = "max_participants", nullable = false)
+	private int maxParticipants;
 
-	@Transient
-	private String imageBase64;
+	@Column(name = "current_participants", nullable = false)
+	private int currentParticipants = 0;
 }

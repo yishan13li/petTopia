@@ -39,7 +39,7 @@ public class VendorActivityReviewService {
 		
 		Optional<VendorActivity> optional = vendorActivityRepository.findById(activityId);
 		VendorActivity activityOptional = optional.get();
-		Integer vendorId = activityOptional.getVendorId();
+		Integer vendorId = activityOptional.getVendor().getId();
 		
 		Optional<Vendor> vendorOptional = vendorRepository.findById(vendorId);
 		Vendor vendor = vendorOptional.get();

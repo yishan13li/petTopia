@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -31,8 +30,8 @@ public class VendorCategory {
 
 	@Column(name = "name")
 	private String name;
-	
+
 	@JsonIgnore
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "vendorCategory", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "vendorCategory", cascade = CascadeType.ALL)
 	private List<Vendor> vendors;
 }

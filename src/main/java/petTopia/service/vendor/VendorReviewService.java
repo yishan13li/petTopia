@@ -1,5 +1,7 @@
 package petTopia.service.vendor;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -7,11 +9,15 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.transaction.Transactional;
 import petTopia.dto.vendor.VendorReviewDto;
 import petTopia.model.user.Member;
+import petTopia.model.vendor.ReviewPhoto;
 import petTopia.model.vendor.VendorReview;
 import petTopia.repository.user.MemberRepository;
+import petTopia.repository.vendor.ReviewPhotoRepository;
 import petTopia.repository.vendor.VendorReviewRepository;
 
 @Service
@@ -22,6 +28,9 @@ public class VendorReviewService {
 
 	@Autowired
 	private MemberRepository memberRepository;
+	
+	@Autowired
+	private ReviewPhotoRepository reviewPhotoRepository;
 
 	/* 尋找單一店家其所有的評分及留言 */
 	public List<VendorReview> findVendorReviewByVendorId(Integer vendorId) {
@@ -29,6 +38,28 @@ public class VendorReviewService {
 		return vendorReviewList;
 	}
 
+	/* 上傳多張圖片(未成功) */
+	@Transactional
+	public void addReviewPhotos(Integer reviewId, List<MultipartFile> reviewPhotos) throws IOException {
+		
+		List<ReviewPhoto> photoList=new ArrayList<>();
+		
+		for(MultipartFile photo:reviewPhotos) {
+			ReviewPhoto reviewPhoto = new ReviewPhoto();
+			
+			Optional<VendorReview> optional = vendorReviewRepository.findById(reviewId);
+			VendorReview vendorReview = optional.get();
+			
+			reviewPhoto.setVendorReview(vendorReview);
+			reviewPhoto.setPhoto(photo.getBytes()); // 取得byte[]
+			reviewPhotoRepository.save(reviewPhoto);
+			
+			photoList.add(reviewPhoto);
+		}
+		
+	}
+	
+	
 	/* 新增或修改文字評論 */
 	public void addOrModifyVendorTextReview(Integer memberId, Integer vendorId, String content) {
 		VendorReview vendorReview = vendorReviewRepository.findByMemberIdAndVendorId(memberId, vendorId);

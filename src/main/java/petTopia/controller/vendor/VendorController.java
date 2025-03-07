@@ -1,5 +1,6 @@
 package petTopia.controller.vendor;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +10,9 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 
 import petTopia.dto.vendor.VendorReviewDto;
 import petTopia.model.vendor.Vendor;
@@ -106,4 +109,13 @@ public class VendorController {
 		List<Vendor> vendorList = vendorService.findVendorByNameOrDescription(keyword);
 		return vendorList;
 	}
+	
+	@PostMapping("/vendor/add_review_photos")
+	public String addReviewPhotos(Integer reviewId, List<MultipartFile> reviewPhotos) throws IOException {
+		vendorReviewService.addReviewPhotos(reviewId, reviewPhotos);
+		
+		return "/vendor/vendor_detail.html";
+	}
+
+
 }

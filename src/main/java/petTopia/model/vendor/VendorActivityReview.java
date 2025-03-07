@@ -4,7 +4,6 @@ import java.util.Date;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -27,8 +26,9 @@ public class VendorActivityReview {
 	@Column(name = "id")
 	private Integer id;
 
-//	@Column(name = "vendor_id")
-//	private Integer vendorId;
+	@ManyToOne
+	@JoinColumn(name = "vendor_id")
+	private Vendor vendor;
 
 	@Column(name = "member_id")
 	private Integer memberId;
@@ -41,9 +41,4 @@ public class VendorActivityReview {
 
 	@Column(name = "vendor_activity_id")
 	private Integer vendorActivityId;
-
-	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "vendor_id")
-	private Vendor vendor;
-
 }
