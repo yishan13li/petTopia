@@ -116,7 +116,7 @@ public class ShopProductDetailController {
 
 	// 商品詳情頁面 => 獲取確認商品規格的Product
 	@ResponseBody
-	@GetMapping("/api/getConfirmProductByDetailIdSizeIdColorId")
+	@PostMapping("/api/getConfirmProductByDetailIdSizeIdColorId")
 	public ResponseEntity<?> getConfirmProduct(
 			@RequestParam Integer productDetailId, 
 			@RequestParam Optional<Integer> productSizeId,

@@ -732,14 +732,11 @@
       if (selectedSizeRadio !== null) {
         console.log("productDetailId: " + selectedSizeRadio.dataset.productDetailId);
         console.log("sizeId: " + selectedSizeRadio.value);
-
       }
       if (selectedColorRadio !== null) {
         console.log("productDetailId: " + selectedColorRadio.dataset.productDetailId);
         console.log("colorId: " + selectedColorRadio.value);
-
       }
-
       console.log("productQuantity: " + productQuantityInput.value);
       // return;
 
@@ -749,9 +746,6 @@
       else if (selectedColorRadio !== null)
         productDetailId = selectedColorRadio.dataset.productDetailId;
 
-      let productSizeId = selectedSizeRadio !== null ? selectedSizeRadio.value : null;
-      let productColorId = selectedColorRadio !== null ? selectedColorRadio.value : null;
-
       //FIXME: 預設 memberid = 1，之後改為參數傳入
       if (isAllOptionChecked) {
         axios({
@@ -760,8 +754,8 @@
           params: {
             memberId: 1,
             productDetailId: productDetailId,
-            productSizeId: productSizeId,
-            productColorId: productColorId,
+            productSizeId: selectedSizeRadio !== null ? selectedSizeRadio.value : null,
+            productColorId: selectedColorRadio !== null ? selectedColorRadio.value : null,
             quantity: productQuantityInput.value
           }
         })
@@ -801,19 +795,16 @@
       else if (selectedColorRadio !== null)
         productDetailId = selectedColorRadio.dataset.productDetailId;
 
-      let productSizeId = selectedSizeRadio !== null ? selectedSizeRadio.value : null;
-      let productColorId = selectedColorRadio !== null ? selectedColorRadio.value : null;
-
-      // 搜尋字串 ( 因為productSizeId=null為字串，讓參數為null時不傳送)
-      let searchParams = new URLSearchParams();
-      searchParams.append("productDetailId", productDetailId);
-      if (productSizeId !== null) searchParams.append("productSizeId", productSizeId);
-      if (productColorId !== null) searchParams.append("productColorId", productColorId);
-
-
       axios({
-        method: 'get',
-        url: 'http://localhost:8080/shop/productDetail/api/getConfirmProductByDetailIdSizeIdColorId?' + searchParams,
+        method: 'post',
+        url: 'http://localhost:8080/shop/productDetail/api/getConfirmProductByDetailIdSizeIdColorId',
+        params: {
+          memberId: 1,
+          productDetailId: productDetailId,
+          productSizeId: selectedSizeRadio !== null ? selectedSizeRadio.value : null,
+          productColorId: selectedColorRadio !== null ? selectedColorRadio.value : null,
+          quantity: productQuantityInput.value
+        }
       })
 
         .then(response => {
