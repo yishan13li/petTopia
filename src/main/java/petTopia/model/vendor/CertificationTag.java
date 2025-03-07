@@ -1,4 +1,4 @@
-package petTopia.model.vendor_admin;
+package petTopia.model.vendor;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,17 +13,18 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Entity
-@Table(name = "activity_type")
+@Table(name = "certification_tag")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 
-public class ActivityType {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
-    
-    @Column(name = "name", nullable = false, unique = true)
-    private String name;
+public class CertificationTag {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer id;
+
+	@Column(name = "tag_name", nullable = false, unique = true)
+	private String tagName;
+
 }

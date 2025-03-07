@@ -2,7 +2,6 @@ package petTopia.controller.vendor_admin;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -23,17 +22,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
-import petTopia.model.vendor_admin.User;
-import petTopia.model.vendor_admin.UserRole;
-import petTopia.model.vendor_admin.Vendor;
-import petTopia.model.vendor_admin.VendorActivity;
-import petTopia.model.vendor_admin.VendorActivityImages;
-import petTopia.model.vendor_admin.VendorCategory;
-import petTopia.model.vendor_admin.VendorImages;
+import petTopia.model.vendor.Vendor;
+import petTopia.model.vendor.VendorCategory;
+import petTopia.model.vendor.VendorImages;
 import petTopia.repository.vendor_admin.VendorCategoryRepository;
 import petTopia.repository.vendor_admin.VendorImagesRepository;
 import petTopia.repository.vendor_admin.VendorRepository;
-import petTopia.service.vendor_admin.UserService;
 import petTopia.service.vendor_admin.VendorService;
 
 @Controller

@@ -6,7 +6,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import petTopia.model.vendor_admin.User;
+import petTopia.model.vendor.User;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Integer> {

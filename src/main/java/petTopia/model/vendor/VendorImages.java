@@ -1,4 +1,6 @@
-package petTopia.model.vendor_admin;
+package petTopia.model.vendor;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -6,35 +8,36 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 @Entity
-@Table(name = "vendor_certification_tag")
+@Table(name = "vendor_images")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-
-public class VendorCertificationTag {
+public class VendorImages {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
 
+	@JsonIgnore
 	@ManyToOne
-	@JoinColumn(name = "certification_id", nullable = false)
-	private VendorCertification certification;
+	@JoinColumn(name = "vendor_id", nullable = false)
+	private Vendor vendor;
 
-	@ManyToOne
-	@JoinColumn(name = "tag_id", nullable = false)
-	private CertificationTag tag;
+	@Lob
+	@Column(name = "image", nullable = false)
+	private byte[] image;
 
-	@Column(name = "meets_standard", nullable = false)
-	private boolean meetsStandard = false;
-
+	/* 使用Transient防止被序列化，用於Service層賦值 */
+	@Transient
+	private String imageBase64;
 }

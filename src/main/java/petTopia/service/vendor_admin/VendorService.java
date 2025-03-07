@@ -7,11 +7,11 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import petTopia.model.vendor_admin.User;
-import petTopia.model.vendor_admin.UserRole;
-import petTopia.model.vendor_admin.Vendor;
-import petTopia.model.vendor_admin.VendorActivity;
-import petTopia.model.vendor_admin.VendorCategory;
+import petTopia.model.vendor.User;
+import petTopia.model.vendor.UserRole;
+import petTopia.model.vendor.Vendor;
+import petTopia.model.vendor.VendorActivity;
+import petTopia.model.vendor.VendorCategory;
 import petTopia.repository.vendor_admin.VendorActivityRepository;
 import petTopia.repository.vendor_admin.VendorCategoryRepository;
 import petTopia.repository.vendor_admin.VendorRepository;
@@ -75,6 +75,5 @@ public class VendorService {
 		List<VendorActivity> activities = vendorActivityRepository.findByVendorId(vendorId);
 		return activities.size();
 	}
-	
-	
+
 }

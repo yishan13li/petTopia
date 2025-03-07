@@ -1,4 +1,4 @@
-package petTopia.model.vendor_admin;
+package petTopia.model.vendor;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,22 +10,20 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 @Entity
-@Table(name = "vendor_category")
+@Table(name = "activity_type")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class VendorCategory {
 
+public class ActivityType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-
-    @Column(name = "name")
-    private String categoryName;
-
     
+    @Column(name = "name", nullable = false, unique = true)
+    private String name;
 }
-

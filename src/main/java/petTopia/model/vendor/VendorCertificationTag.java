@@ -1,6 +1,4 @@
-package petTopia.model.vendor_admin;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
+package petTopia.model.vendor;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -8,7 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,25 +15,26 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Entity
-@Table(name = "activity_people_number")
+@Table(name = "vendor_certification_tag")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 
-public class ActivityPeopleNumber {
+public class VendorCertificationTag {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
 
-	@JsonIgnore
-	@OneToOne
-	@JoinColumn(name = "vendor_activity_id", nullable = false)
-	private VendorActivity vendorActivity;
+	@ManyToOne
+	@JoinColumn(name = "certification_id", nullable = false)
+	private VendorCertification certification;
 
-	@Column(name = "max_participants", nullable = false)
-	private int maxParticipants;
+	@ManyToOne
+	@JoinColumn(name = "tag_id", nullable = false)
+	private CertificationTag tag;
 
-	@Column(name = "current_participants", nullable = false)
-	private int currentParticipants = 0;
+	@Column(name = "meets_standard", nullable = false)
+	private boolean meetsStandard = false;
+
 }

@@ -6,8 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import petTopia.model.vendor_admin.VendorActivity;
-import petTopia.model.vendor_admin.VendorActivityImages;
+import petTopia.model.vendor.VendorActivity;
 import petTopia.repository.vendor_admin.VendorActivityImagesRepository;
 import petTopia.repository.vendor_admin.VendorActivityRepository;
 
