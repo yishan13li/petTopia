@@ -1,5 +1,7 @@
 package petTopia.model.shop;
 
+import java.util.Date;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.Column;
@@ -40,6 +42,6 @@ public class Cart {
     private Integer quantity;
 
     @Column(name = "created_date", nullable = false)
-    private java.util.Date createdDate;
+    private Date createdDate;
     
 }
