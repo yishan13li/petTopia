@@ -34,11 +34,11 @@ public class Product {
     private ProductDetail productDetail;
     
     @ManyToOne
-    @JoinColumn(name = "product_color_id", nullable = false)
+    @JoinColumn(name = "product_color_id")
     private ProductColor productColor;
     
     @ManyToOne
-    @JoinColumn(name = "product_size_id", nullable = false)
+    @JoinColumn(name = "product_size_id")
     private ProductSize productSize;
     
     @Column(name = "stock_quantity", nullable = false)

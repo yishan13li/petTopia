@@ -40,15 +40,13 @@ public class ShippingService {
         Optional<ShippingAddress> existingAddressOpt = shippingAddressRepo.findByMemberAndCityAndStreet(member, city, street);
 
         if (existingAddressOpt.isPresent()) {
-            // 2. 若地址已存在，將所有舊地址 isCurrent 設為 false，然後將此地址設為 true
-            shippingAddressRepo.updateAllIsCurrentFalse(member.getId());
-            
+        // 2. 若地址已存在，則將此地址設為 isCurrent = true，其他地址不變
             ShippingAddress existingAddress = existingAddressOpt.get();
             existingAddress.setIsCurrent(true);
             return shippingAddressRepo.save(existingAddress);
         } 
         
-        // 3. 若地址不存在，則新增新地址
+        // 3. 若地址不存在，則先把所有舊地址 isCurrent 設為 false，然後新增新地址
         shippingAddressRepo.updateAllIsCurrentFalse(member.getId());  // 先將舊地址 isCurrent 設為 false
    
     	ShippingAddress shippingAddress =new ShippingAddress();
