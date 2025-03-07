@@ -467,6 +467,7 @@
             style="width: 60px;" disabled>
           <button class="btn btn-outline-secondary" id="increase-btn" disabled>+</button>
           <label class="form-label ms-3" id="show-stock-quantity">還剩 [[${totalStockQuantity}]] 件</label>
+          <label class="form-label ms-3" id="messages"></label>
         </div>
 
         <button class="btn btn-primary w-100" id="add-to-cart-btn">加入購物車</button>
@@ -620,6 +621,11 @@
     const increaseBtn = document.querySelector("#increase-btn");
     const productQuantityInput = document.querySelector("#product-quantity-input");
     const addToCartBtn = document.querySelector("#add-to-cart-btn");
+    const messages = document.querySelector("#messages");
+
+    // 已選擇的規格選項
+    let selectedSizeRadio = null;
+    let selectedColorRadio = null;
 
     // 檢查所有選項是否已選擇
     let isAllOptionChecked = false;
@@ -630,7 +636,10 @@
       radio.addEventListener('click', function (e) {
         // e.preventDefault();
 
+        // 初始選項狀態
         isAllOptionChecked = false;
+        selectedSizeRadio = null;
+        selectedColorRadio = null;
 
         // 設定 +- 按鈕 和 輸入數量的disabled
         setQuantityBtnAndInputDisabled(true);
@@ -640,24 +649,28 @@
           this.checked = false;
           this.dataset.selected = "false";
 
-          onCancelOneOption(this);
-
-          // 檢查規格選項是否都未選擇
+          // 檢查剩下的規格選項是否都未選擇
           // radios要先轉換為陣列 使用Array.from(radios)或[...radios]
-          const isChecked = Array.from(radios).some(radio => {
+          let isAllChecked = false;
+          isAllChecked = Array.from(radios).some(radio => {
             if (radio.checked) {
               return true;  // 終止 `some()`，並回傳 `true`
             }
-            return false;
           });
 
-          if (!isChecked) {
+          if (!isAllChecked) {
             onCancelAllOption(this);
+          }
+          else {
+            onCancelOneOption(this);
           }
 
         }
         else {
-          // 點擊選項 => 其他同名選項 變為 未選擇
+          // 點擊選項 => 變為 已選擇
+          this.checked = true;
+          this.dataset.selected = "true";
+          // 其他同名選項 =>  變為 未選擇
           radios.forEach(radio => {
             if (radio !== this && radio.name === this.name) {
               radio.checked = false;
@@ -665,35 +678,26 @@
             }
           });
 
-          // 點擊的選項變為 已選擇
-          this.checked = true;
-          this.dataset.selected = "true";
-
-          // 檢查規格選項是否已選擇
-          // radios要先轉換為陣列 使用Array.from(radios)或[...radios]
-          let selectedSizeRadio;
-          let selectedColorRadio;
-          const isSizeChecked = Array.from(sizeRadios).some(sizeRadio => {
+          // 檢查 尺寸和顏色規格選項
+          sizeRadios.forEach(sizeRadio => {
             if (sizeRadio.checked) {
               selectedSizeRadio = sizeRadio;
-              return true;  // 終止 `some()`，並回傳 `true`
             }
-            return false;
           });
-          const isColorChecked = Array.from(colorRadios).some(colorRadio => {
+          colorRadios.forEach(colorRadio => {
             if (colorRadio.checked) {
               selectedColorRadio = colorRadio;
-              return true;  // 終止 `some()`，並回傳 `true`
             }
-            return false;
           });
 
-          if (isSizeChecked && isColorChecked) {
-            // 規格都有選擇
+          // 規格都有選擇 和 如果規格只有一種也要視為已經選擇全部規格
+          if ((selectedSizeRadio !== null && selectedColorRadio !== null) ||
+            (selectedSizeRadio !== null && colorRadios.length === 0) ||
+            (selectedColorRadio !== null && sizeRadios.length === 0)) {
             onConfirmProduct(selectedSizeRadio, selectedColorRadio);
           }
+          // 只有選擇一種規格
           else {
-            // 只有選擇一個規格
             onSelectOneOption(this);
           }
 
@@ -725,28 +729,50 @@
 
     addToCartBtn.addEventListener('click', function () {
 
-      console.log("isAllOptionChecked: " + isAllOptionChecked);
-      return;
+      if (selectedSizeRadio !== null) {
+        console.log("productDetailId: " + selectedSizeRadio.dataset.productDetailId);
+        console.log("sizeId: " + selectedSizeRadio.value);
 
+      }
+      if (selectedColorRadio !== null) {
+        console.log("productDetailId: " + selectedColorRadio.dataset.productDetailId);
+        console.log("colorId: " + selectedColorRadio.value);
+
+      }
+
+      console.log("productQuantity: " + productQuantityInput.value);
+      // return;
+
+      let productDetailId;
+      if (selectedSizeRadio !== null)
+        productDetailId = selectedSizeRadio.dataset.productDetailId;
+      else if (selectedColorRadio !== null)
+        productDetailId = selectedColorRadio.dataset.productDetailId;
+
+      let productSizeId = selectedSizeRadio !== null ? selectedSizeRadio.value : null;
+      let productColorId = selectedColorRadio !== null ? selectedColorRadio.value : null;
+
+      //FIXME: 預設 memberid = 1，之後改為參數傳入
       if (isAllOptionChecked) {
         axios({
           method: 'post',
           url: 'http://localhost:8080/shop/productDetail/api/addProductToCart',
-          data: {
-            productDetailId: selectedSizeRadio.dataset.productDetailId,
-            productSizeId: selectedSizeRadio.value,
-            productColorId: selectedColorRadio.value,
+          params: {
+            memberId: 1,
+            productDetailId: productDetailId,
+            productSizeId: productSizeId,
+            productColorId: productColorId,
             quantity: productQuantityInput.value
           }
         })
           .then(response => {
             console.log(response.data);
-            alert("成功加入購物車");
+            messages.textContent = "成功加入購物車";
           })
           .catch(error => console.log(error));
       }
       else {
-        alert("請選擇商品規格");
+        messages.textContent = "請選擇商品規格";
       }
 
     });
@@ -757,19 +783,37 @@
     // #region function
 
     // 當所有規格都被選擇時，確認選定商品
-    // selectedRadio = 選擇的規格
     function onConfirmProduct(selectedSizeRadio, selectedColorRadio) {
 
       // 除了選擇的規格以外的選項都禁止點擊
-      radios.forEach(radio => {
-        if (!radio.checked) {
-          radio.disabled = true;
-        }
-      });
+      // 但是如果只有一種規格不能把其他選項禁止點擊
+      if (selectedSizeRadio !== null && selectedColorRadio !== null) {
+        radios.forEach(radio => {
+          if (!radio.checked) {
+            radio.disabled = true;
+          }
+        });
+      }
+
+      let productDetailId;
+      if (selectedSizeRadio !== null)
+        productDetailId = selectedSizeRadio.dataset.productDetailId;
+      else if (selectedColorRadio !== null)
+        productDetailId = selectedColorRadio.dataset.productDetailId;
+
+      let productSizeId = selectedSizeRadio !== null ? selectedSizeRadio.value : null;
+      let productColorId = selectedColorRadio !== null ? selectedColorRadio.value : null;
+
+      // 搜尋字串 ( 因為productSizeId=null為字串，讓參數為null時不傳送)
+      let searchParams = new URLSearchParams();
+      searchParams.append("productDetailId", productDetailId);
+      if (productSizeId !== null) searchParams.append("productSizeId", productSizeId);
+      if (productColorId !== null) searchParams.append("productColorId", productColorId);
+
 
       axios({
         method: 'get',
-        url: 'http://localhost:8080/shop/productDetail/api/getConfirmProductByDetailIdSizeIdColorId?productDetailId=' + selectedSizeRadio.dataset.productDetailId + '&productSizeId=' + selectedSizeRadio.value + '&productColorId=' + selectedColorRadio.value,
+        url: 'http://localhost:8080/shop/productDetail/api/getConfirmProductByDetailIdSizeIdColorId?' + searchParams,
       })
 
         .then(response => {
@@ -792,8 +836,7 @@
     }
 
     // 當有單一規格被選擇時，過濾是否有符合該規格的顏色或尺寸，並切換為可點擊或不可點擊
-    // selectedRadio = 選擇的規格
-    // anotherRadios = 選擇除外的其他規格
+    // selectedRadio = 選擇的規格選項
     function onSelectOneOption(selectedRadio) {
       let anotherRadios;
 
@@ -852,14 +895,14 @@
     }
 
     // 當有規格選項被取消時，重置選項狀態，如果還有規格被選取則執行onSelectOneOption()
-    // selectedRadio = 選擇的規格
-    // anotherRadios = 選擇除外的其他規格
-    function onCancelOneOption(selectedRadio) {
+    // clickedRadio = 點擊的規格選項
+    // anotherRadios = 選擇除外的其他規格選項
+    function onCancelOneOption(clickedRadio) {
       let anotherRadios;
 
-      if (selectedRadio.name === 'size')
+      if (clickedRadio.name === 'size' && colorRadios !== null)
         anotherRadios = colorRadios;
-      else if (selectedRadio.name === 'color')
+      else if (clickedRadio.name === 'color' && sizeRadios !== null)
         anotherRadios = sizeRadios;
 
       // 當取消已選擇的選項，將除選擇外的規格選項更改為可以點擊的狀態
@@ -878,13 +921,12 @@
     }
 
     // 當所有規格選項被取消時，重置頁面顯示內容
-    // selectedRadio = 選擇的規格
-    function onCancelAllOption(selectedRadio) {
-      console.log("onCancelAllOption");
+    // clickedRadio = 點擊的規格選項
+    function onCancelAllOption(clickedRadio) {
       // 重新設置未選擇規格前的商品詳情頁面
       axios({
         method: 'get',
-        url: 'http://localhost:8080/shop/productDetail/api/getProductByProductDetailId?productDetailId=' + selectedRadio.dataset.productDetailId,
+        url: 'http://localhost:8080/shop/productDetail/api/getProductByProductDetailId?productDetailId=' + clickedRadio.dataset.productDetailId,
       })
 
         .then(response => {

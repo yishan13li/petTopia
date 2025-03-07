@@ -119,12 +119,13 @@ public class ShopProductDetailController {
 	@GetMapping("/api/getConfirmProductByDetailIdSizeIdColorId")
 	public ResponseEntity<?> getConfirmProduct(
 			@RequestParam Integer productDetailId, 
-			@RequestParam Integer productSizeId,
-			@RequestParam Integer productColorId, 
+			@RequestParam Optional<Integer> productSizeId,
+			@RequestParam Optional<Integer> productColorId, 
 			Model model) {
 
 		// 獲取確認商品規格的Product
-		Product product = productService.getConfirmProduct(productDetailId, productSizeId, productColorId);
+		Product product = productService.getConfirmProduct(
+				productDetailId, productSizeId.orElse(null), productColorId.orElse(null));
 
 		if (product != null) {
 
@@ -246,13 +247,15 @@ public class ShopProductDetailController {
 			@RequestParam Optional<Integer> productColorId, 
 			@RequestParam Integer quantity) {
 
-		//TODO: 檢查購物車該商品數量是否大於庫存，前端顯示庫存的地方要用庫存扣除購物車內已經選擇的數量
+		//TODO: 前端顯示庫存的地方要用庫存扣除該會員購物車內已經選擇的數量
 		
+		// 獲取會員
 		Member member = null;
 		Optional<Member> memberOpt = memberService.findById(memberId);
 		if (memberOpt.isPresent())
 			member = memberOpt.get();
-			
+		
+		// 獲取選擇的商品
 		Product product = productService.getConfirmProduct(
 				productDetailId, productSizeId.orElse(null), productColorId.orElse(null));
 		

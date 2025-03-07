@@ -48,7 +48,7 @@ public class Product {
 //	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss EEEE", timezone = "GMT+8") // JSON 時間格式化
 //	@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") // 在 thymeleaf 要用 {{}} 強制轉換
 //	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "created_time", nullable = false)
+	@Column(name = "created_time", nullable = false, insertable = false, updatable = false)
 	private Date createdTime;
 
 	@Column(name = "status", nullable = false)
