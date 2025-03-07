@@ -1,4 +1,4 @@
-package petTopia.model.vendor_admin;
+package petTopia.model.vendor;
 
 public enum UserRole {
 	member, vendor, admin

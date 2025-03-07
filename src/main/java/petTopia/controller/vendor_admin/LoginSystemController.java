@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import jakarta.servlet.http.HttpSession;
-import petTopia.model.vendor_admin.User;
-import petTopia.model.vendor_admin.UserRole;
-import petTopia.model.vendor_admin.Vendor;
+import petTopia.model.vendor.User;
+import petTopia.model.vendor.UserRole;
+import petTopia.model.vendor.Vendor;
 import petTopia.service.vendor_admin.UserService;
 import petTopia.service.vendor_admin.VendorService;
 

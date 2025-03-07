@@ -4,8 +4,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import petTopia.model.vendor_admin.ActivityPeopleNumber;
-import petTopia.model.vendor_admin.VendorActivity;
+import petTopia.model.vendor.ActivityPeopleNumber;
 
 public interface ActivityPeopleNumberRepository extends JpaRepository<ActivityPeopleNumber, Integer> {
 

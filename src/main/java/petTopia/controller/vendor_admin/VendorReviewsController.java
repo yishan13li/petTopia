@@ -21,8 +21,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import petTopia.model.vendor_admin.ReviewPhoto;
-import petTopia.model.vendor_admin.VendorReviews;
+import petTopia.model.vendor.ReviewPhoto;
+import petTopia.model.vendor.VendorReviews;
 import petTopia.repository.vendor_admin.ReviewPhotoRepository;
 import petTopia.repository.vendor_admin.VendorReviewsRepository;
 import petTopia.service.vendor_admin.VendorReviewsService;

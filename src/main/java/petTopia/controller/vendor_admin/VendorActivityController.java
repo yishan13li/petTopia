@@ -23,11 +23,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
-import petTopia.model.vendor_admin.ActivityPeopleNumber;
-import petTopia.model.vendor_admin.ActivityType;
-import petTopia.model.vendor_admin.Vendor;
-import petTopia.model.vendor_admin.VendorActivity;
-import petTopia.model.vendor_admin.VendorActivityImages;
+import petTopia.model.vendor.ActivityPeopleNumber;
+import petTopia.model.vendor.ActivityType;
+import petTopia.model.vendor.Vendor;
+import petTopia.model.vendor.VendorActivity;
+import petTopia.model.vendor.VendorActivityImages;
 import petTopia.repository.vendor_admin.ActivityPeopleNumberRepository;
 import petTopia.repository.vendor_admin.VendorActivityImagesRepository;
 import petTopia.repository.vendor_admin.VendorActivityRepository;

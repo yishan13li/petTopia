@@ -29,6 +29,10 @@
 	color: gold;
 	font-size: 1.2em;
 }
+
+h4 {
+	text-align: center;
+}
 </style>
 </head>
 
@@ -37,7 +41,7 @@
 		<div th:replace="~{layout/vendor_admin_header}"></div>
 		<div class="content-body">
 			<div class="container mt-4">
-				<h2 class="mb-3">店家評價概覽</h2>
+				<!-- 				<h2 class="mb-3">店家評價概覽</h2> -->
 				<h4>
 					總平均評分: <span id="overallRating" class="text-primary fw-bold">-</span>
 				</h4>
@@ -124,32 +128,22 @@
             const tableBody = document.getElementById('reviewsTable');
             tableBody.innerHTML = '';
             
-            if (ratingsData.reviews.length === 0) {
-                // ✅ 如果沒有評論，顯示「暫無評論」
-                const noDataRow = document.createElement('tr');
-                noDataRow.innerHTML = `
-                    <td colspan="5" style="text-align: center;">暫無評論</td>
+            ratingsData.reviews.forEach((review, index) => {
+                const avgRating = ((review.ratingEnvironment + review.ratingPrice + review.ratingService) / 3).toFixed(1);
+                const formattedDate = formatReviewDate(review.reviewTime); // 格式化日期
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${review.memberId}</td>
+                    <td>${formattedDate}</td>
+                    <td>${review.reviewContent}</td>
+                    <td>⭐ (${avgRating})</td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" onclick="deleteReview(event, ${review.id})">刪除</button>
+                    </td>
                 `;
-                tableBody.appendChild(noDataRow);
-            } else {
-                // ✅ 正常顯示評論
-                ratingsData.reviews.forEach((review, index) => {
-                    const avgRating = ((review.ratingEnvironment + review.ratingPrice + review.ratingService) / 3).toFixed(1);
-                    const formattedDate = formatReviewDate(review.reviewTime); // 格式化日期
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${review.memberId}</td>
-                        <td>${formattedDate}</td>
-                        <td>${review.reviewContent}</td>
-                        <td>⭐ (${avgRating})</td>
-                        <td>
-                            <button class="btn btn-danger btn-sm" onclick="deleteReview(event, ${review.id})">刪除</button>
-                        </td>
-                    `;
-                    row.onclick = (event) => toggleReviewDetails(event, row, review, index);
-                    tableBody.appendChild(row);
-                });
-            }
+                row.onclick = (event) => toggleReviewDetails(event, row, review, index);
+                tableBody.appendChild(row);
+            });
         }
         
         function formatReviewDate(dateString) {
@@ -190,22 +184,46 @@
                 return;
             }
 
-            document.querySelectorAll('.review-detail-row').forEach(row => row.remove());
+            document.querySelectorAll('.review-detail-row').forEach(row => row.remove()); //确保每次只展开一个详情，而不会有多个详情行同时存在
 
             const detailRow = document.createElement('tr');
             detailRow.classList.add(`review-detail-row`, `detail-row-${index}`);
-            detailRow.innerHTML = `
-                <td colspan="5">
-                    <div class="review-detail">
-                        <strong>環境評分：</strong> ${generateStars(Math.round(review.ratingEnvironment))}(${review.ratingEnvironment})&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 
-                        <strong>價格評分：</strong> ${generateStars(Math.round(review.ratingPrice))}(${review.ratingPrice})&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
-                        <strong>服務評分：</strong> ${generateStars(Math.round(review.ratingService))} (${review.ratingService})
-                    </div>
-                </td>
-            `;
 
-            row.insertAdjacentElement('afterend', detailRow);
+            // 使用 axios 发送请求获取照片 ID
+            axios.get(`/review_photos/ids?vendorReviewId=${review.id}`)
+                .then(response => {
+                    const photoIds = response.data;  // 假设后端返回的照片 ID 是一个数组
+                    let photoHtml = '';
+					console.log(photoIds);
+                    // 根据获得的 photoIds 获取图片
+                    photoIds.forEach(photoId => {
+                        photoHtml += `<img src="http://localhost:8080/review_photos/download?photoId=${photoId}" alt="Review Photo" style="max-width: 100px; max-height: 100px; margin: 5px;" loading="lazy">`;
+                    });
+
+                    // 在此之后，动态生成 detailRow 内容
+                    detailRow.innerHTML = `
+                        <td colspan="5">
+                            <div class="review-detail">
+                                <strong>環境評分：</strong> ${generateStars(Math.round(review.ratingEnvironment))}(${review.ratingEnvironment})&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <strong>價格評分：</strong> ${generateStars(Math.round(review.ratingPrice))}(${review.ratingPrice})&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <strong>服務評分：</strong> ${generateStars(Math.round(review.ratingService))} (${review.ratingService})
+                            </div>
+                            <div>
+                        
+                                <div class="review-detail">
+                                    ${photoHtml}  <!-- 确保这里正确拼接了每张图片的HTML -->
+                                </div>
+                            </div>
+                        </td>
+                    `;
+
+                    row.insertAdjacentElement('afterend', detailRow);
+                })
+                .catch(error => {
+                    console.error('获取评论照片失败:', error);
+                });
         }
+
 
         function deleteReview(event, reviewId) {
             event.stopPropagation(); // 防止點擊事件觸發父元素
@@ -233,13 +251,13 @@
 
             ratingsData.reviews.forEach((review, index) => {
                 let avgRating = ((review.ratingEnvironment + review.ratingPrice + review.ratingService) / 3).toFixed(1);
-                let reviewText = `${review.memberId} ${review.reviewTime} ${review.reviewContent} ${avgRating}`.toLowerCase(); // 加入「平均評分」
-
+                const formattedDate = formatReviewDate(review.reviewTime); // 格式化日期
+                let reviewText = `${review.memberId} ${formattedDate} ${review.reviewContent} ${avgRating}`.toLowerCase(); // 加入「平均評分」
                 if (reviewText.includes(keyword)) { // 如果搜尋關鍵字出現在任何欄位，就顯示該評價
                     const row = document.createElement('tr');
                     row.innerHTML = `
                     	<td>${review.memberId}</td>
-                        <td>${review.reviewTime}</td>
+                        <td>${formattedDate}</td>
                         <td>${review.reviewContent}</td>
                         <td>⭐ (${avgRating})</td>
                         <td>

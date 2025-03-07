@@ -1,4 +1,4 @@
-package petTopia.model.vendor_admin;
+package petTopia.model.vendor;
 
 import java.util.Date;
 import java.util.List;
@@ -51,12 +51,12 @@ public class VendorActivity {
 	private String description;
 
 	@Column(name = "start_time", nullable = false)
-	@Temporal(TemporalType.TIMESTAMP)
-	private Date startTime;
+
+	private java.util.Date startTime;
 
 	@Column(name = "end_time", nullable = false)
-	@Temporal(TemporalType.TIMESTAMP)
-	private Date endTime;
+
+	private java.util.Date endTime;
 
 	@Column(name = "is_registration_required", nullable = false)
 	private boolean isRegistrationRequired = false;
@@ -66,8 +66,8 @@ public class VendorActivity {
 	private ActivityType activityType;
 
 	@Column(name = "registration_date", updatable = false)
-	@Temporal(TemporalType.TIMESTAMP)
-	private Date registrationDate = new Date();
+
+	private java.util.Date registrationDate = new Date();
 
 	@Column(name = "number_visitor", nullable = false)
 	private int numberVisitor = 0;
@@ -79,7 +79,7 @@ public class VendorActivity {
 	@OneToMany(mappedBy = "vendorActivity", cascade = CascadeType.ALL)
 	@BatchSize(size = 20)
 	private List<VendorActivityImages> images;
-	
+
 	@JsonIgnore
 	public List<VendorActivityImages> getVendorActivityImages() {
 		// TODO Auto-generated method stub

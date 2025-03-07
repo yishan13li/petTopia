@@ -141,7 +141,7 @@ select.form-control {
 
 
 												<option th:each="type : ${allcategory}"
-													th:value="${type.id}" th:text="${type.categoryName}"
+													th:value="${type.id}" th:text="${type.name}"
 													th:selected="${type.id == vendor.vendorCategory.id}"></option>
 											</select><br />
 										</div>
@@ -280,6 +280,29 @@ select.form-control {
 		        email: '${user.email}',
 		        password: '${user.password}'
 		    };
+		
+		function formatReviewDate(dateString) {
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1; // 月份從0開始
+            const day = date.getDate();
+            let hours = date.getHours();
+            const minutes = date.getMinutes();
+            const period = hours >= 12 ? '下午' : '上午';
+
+            // 轉換為12小時制
+            hours = hours % 12;
+            hours = hours ? hours : 12; // 小時為0時顯示12
+
+            // 格式化為 'YYYY年M月D日 上午/下午 HH:mm'
+            return `${year}年${month}月${day}日 ${period} ${hours}:${minutes < 10 ? '0' + minutes : minutes}`;
+        }
+		document.addEventListener("DOMContentLoaded", function() {
+	        const registrationDateInput = document.getElementById('registrationDate');
+	        const formattedDate = formatReviewDate(registrationDateInput.value); // 使用formatReviewDate函数格式化日期
+	        registrationDateInput.value = formattedDate; // 将格式化后的日期填充回输入框
+	    });
+		
 // 		axios.get('http://localhost:8080/vendor/profile', {
 // 		    params: {
 // 		        email: '1234@gmail.com',

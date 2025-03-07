@@ -1,4 +1,4 @@
-package petTopia.model.vendor_admin;
+package petTopia.model.vendor;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 

@@ -1,4 +1,4 @@
-package petTopia.model.vendor_admin;
+package petTopia.model.vendor;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

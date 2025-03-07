@@ -1,4 +1,4 @@
-package petTopia.model.vendor_admin;
+package petTopia.model.vendor;
 
 import java.util.Date;
 
@@ -41,11 +41,10 @@ public class VendorCertification {
 	private String reason;
 
 	@Column(name = "request_date", updatable = false)
-	@Temporal(TemporalType.TIMESTAMP)
-	private Date requestDate = new Date();
+	private java.util.Date requestDate = new Date();
 
 	@Column(name = "approved_date")
 	@Temporal(TemporalType.TIMESTAMP)
-	private Date approvedDate;
+	private java.util.Date approvedDate;
 
 }

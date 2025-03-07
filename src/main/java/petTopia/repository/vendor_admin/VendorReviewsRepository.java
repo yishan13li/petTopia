@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import petTopia.model.vendor_admin.VendorReviews;
+import petTopia.model.vendor.VendorReviews;
 
 @Repository
 public interface VendorReviewsRepository extends JpaRepository<VendorReviews, Integer> {
