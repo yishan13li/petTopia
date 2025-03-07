@@ -45,9 +45,13 @@ public class OrderDetailService {
             Product product = cartItem.getProduct();
             Integer quantity = cartItem.getQuantity();
             BigDecimal unitPrice = product.getUnitPrice();
-            BigDecimal discountPrice = (product.getDiscountPrice() != null) ? product.getDiscountPrice() : unitPrice;
-            BigDecimal totalPrice = discountPrice.multiply(BigDecimal.valueOf(quantity));
-
+            BigDecimal discountPrice = product.getDiscountPrice();
+            
+            // 如果 discountPrice 是 null，則使用 unitPrice 計算 totalPrice
+            BigDecimal totalPrice = (discountPrice == null) 
+                ? unitPrice.multiply(BigDecimal.valueOf(quantity)) 
+                : discountPrice.multiply(BigDecimal.valueOf(quantity));
+            
             // **建立訂單詳情**
             OrderDetail orderDetail = new OrderDetail();
             orderDetail.setOrder(order);

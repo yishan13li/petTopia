@@ -343,6 +343,7 @@ public class OrderService {
         }
 
         query.where(predicates.toArray(new Predicate[0]));
+        query.orderBy(criteriaBuilder.desc(root.get("id")));  // 按訂單編號（id）降序排序
         List<Order> orders = entityManager.createQuery(query).getResultList();
         
         return orders.stream().map(this::convertToOrderHistoryDto).collect(Collectors.toList());
