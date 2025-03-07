@@ -39,6 +39,6 @@ public class Cart {
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
-    @Column(name = "created_date", nullable = false)
+    @Column(name = "created_date", insertable=false, updatable=false)
     private java.util.Date createdDate;
 }

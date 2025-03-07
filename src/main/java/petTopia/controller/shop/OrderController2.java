@@ -17,6 +17,7 @@ import jakarta.servlet.http.HttpSession;
 import petTopia.dto.shop.OrderDetailDto;
 import petTopia.dto.shop.OrderHistoryDto;
 import petTopia.model.user.Member;
+import petTopia.service.shop.OrderDetailService;
 import petTopia.service.shop.OrderService;
 
 @RestController
@@ -25,6 +26,9 @@ public class OrderController2 {
 
 	@Autowired
 	private OrderService orderService;
+	
+	@Autowired
+	private OrderDetailService orderDetailService;
 	
     @GetMapping("/orderHistory2")
     public String orderHistoryPage(HttpSession session) {
@@ -40,7 +44,7 @@ public class OrderController2 {
             Integer memberId = member.getId();
             
             // 使用 Service 層方法查詢訂單詳情
-            OrderDetailDto orderDetailDto = orderService.getOrderDetailById(orderId);
+            OrderDetailDto orderDetailDto = orderDetailService.getOrderDetailById(orderId);
             
             Integer memberLogin = orderDetailDto.getMemberId();
             

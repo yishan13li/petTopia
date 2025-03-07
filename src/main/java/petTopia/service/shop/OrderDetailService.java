@@ -3,15 +3,25 @@ package petTopia.service.shop;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import petTopia.dto.shop.OrderDetailDto;
+import petTopia.dto.shop.OrderItemDto;
+import petTopia.dto.shop.PaymentInfoDto;
+import petTopia.dto.shop.ShippingInfoDto;
 import petTopia.model.shop.Cart;
 import petTopia.model.shop.Order;
 import petTopia.model.shop.OrderDetail;
+import petTopia.model.shop.Payment;
 import petTopia.model.shop.Product;
+import petTopia.model.shop.Shipping;
 import petTopia.repository.shop.OrderDetailRepository;
+import petTopia.repository.shop.OrderRepository;
+import petTopia.repository.shop.PaymentRepository;
+import petTopia.repository.shop.ShippingRepository;
 
 @Service
 public class OrderDetailService {
@@ -19,6 +29,15 @@ public class OrderDetailService {
     @Autowired
     private OrderDetailRepository orderDetailRepo;
 
+	@Autowired
+	private OrderRepository orderRepo;
+	
+	@Autowired
+	private ShippingRepository shippingRepo;
+	
+	@Autowired
+	private PaymentRepository paymentRepo;
+	
     public List<OrderDetail> createOrderDetails(Order order, List<Cart> cartItems) {
         List<OrderDetail> orderDetails = new ArrayList<>();
 
@@ -45,5 +64,71 @@ public class OrderDetailService {
         orderDetailRepo.saveAll(orderDetails);
 
         return orderDetails;
+    }
+    
+    //將訂單的商品細節轉成orderItem
+    public OrderItemDto getOrderItemDto(OrderDetail orderDetail) {
+    	OrderItemDto orderItemDto = new OrderItemDto();
+    	orderItemDto.setProductPhoto(orderDetail.getProduct().getPhoto());
+    	orderItemDto.setProductName(orderDetail.getProduct().getProductDetail().getName());
+    	orderItemDto.setProductSize(orderDetail.getProduct().getProductSize().getName());
+    	orderItemDto.setProductColor(orderDetail.getProduct().getProductColor().getName());
+    	orderItemDto.setQuantity(orderDetail.getQuantity());
+    	orderItemDto.setUnitPrice(orderDetail.getUnitPrice());
+    	orderItemDto.setDiscountPrice(orderDetail.getDiscountPrice());
+    	orderItemDto.setTotalPrice(orderDetail.getTotalPrice());
+    	
+    	return orderItemDto;
+    }
+    
+    // 查詢訂單的詳情
+    public OrderDetailDto getOrderDetailById(Integer orderId) {
+        // 查詢訂單
+        Order order = orderRepo.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
+
+        // 查詢該訂單的明細
+        List<OrderDetail> orderDetails = orderDetailRepo.findByOrderId(orderId);
+
+        // 把 OrderDetail 轉換成 OrderItemDto
+        List<OrderItemDto> orderItemDtos = orderDetails.stream()
+            .map(this::getOrderItemDto)
+            .collect(Collectors.toList());
+
+        // 填充 OrderDetailDto
+        OrderDetailDto orderDetailDto = new OrderDetailDto();
+        orderDetailDto.setMemberId(order.getMember().getId());
+        orderDetailDto.setOrderId(order.getId());
+        orderDetailDto.setSubtotal(order.getSubtotal());
+        orderDetailDto.setDiscountAmount(order.getDiscountAmount());
+        orderDetailDto.setShippingFee(order.getShippingFee());
+        orderDetailDto.setTotalAmount(order.getTotalAmount());
+        orderDetailDto.setOrderStatus(order.getOrderStatus().getName());
+        orderDetailDto.setCreatedTime(new java.sql.Date(order.getCreatedTime().getTime()));
+        orderDetailDto.setUpdatedDate(order.getUpdatedDate() != null ? new java.sql.Date(order.getUpdatedDate().getTime()) : null);
+        orderDetailDto.setOrderItems(orderItemDtos);
+
+        // 查詢並填充配送和支付資訊
+        Shipping shipping = shippingRepo.findByOrderId(orderId);
+        Payment payment = paymentRepo.findByOrderId(orderId);
+
+        // 填充 ShippingInfoDto
+        ShippingInfoDto shippingInfoDto = new ShippingInfoDto();
+        shippingInfoDto.setReceiverName(shipping.getReceiverName());
+        shippingInfoDto.setReceiverPhone(shipping.getReceiverPhone());
+        shippingInfoDto.setStreet(shipping.getShippingAddress().getStreet());
+        shippingInfoDto.setCity(shipping.getShippingAddress().getCity());
+        shippingInfoDto.setShippingCategory(shipping.getShippingCategory().getName());
+
+        // 填充 PaymentInfoDto
+        PaymentInfoDto paymentInfoDto = new PaymentInfoDto();
+        paymentInfoDto.setPaymentCategory(payment.getPaymentCategory().getName());
+        paymentInfoDto.setPaymentAmount(payment.getPaymentAmount());
+        paymentInfoDto.setPaymentStatus(payment.getPaymentStatus().getName());
+
+        // 設定配送和支付資訊
+        orderDetailDto.setShippingInfo(shippingInfoDto);
+        orderDetailDto.setPaymentInfo(paymentInfoDto);
+
+        return orderDetailDto;
     }
 }

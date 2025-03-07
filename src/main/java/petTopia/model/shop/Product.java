@@ -50,7 +50,7 @@ public class Product {
     @Column(name = "discount_price", precision = 10, scale = 2)
     private BigDecimal discountPrice;
     
-    @Column(name = "created_time", nullable = false)
+    @Column(name = "created_time", insertable=false, updatable=false)
     private Date createdTime;
     
     @Column(name = "status", nullable = false)

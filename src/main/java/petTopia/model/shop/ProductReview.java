@@ -41,7 +41,7 @@ public class ProductReview {
     @Column(name = "review_description", length = 255)
     private String reviewDescription;
     
-    @Column(name = "review_time", nullable = false)
+    @Column(name = "review_time", insertable=false, updatable=false)
     private Date reviewTime;
     
 }

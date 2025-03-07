@@ -238,71 +238,7 @@ public class OrderService {
         return order;
     }
     
-    //將訂單的商品細節轉成orderItem
-    public OrderItemDto getOrderItemDto(OrderDetail orderDetail) {
-    	OrderItemDto orderItemDto = new OrderItemDto();
-    	orderItemDto.setProductPhoto(orderDetail.getProduct().getPhoto());
-    	orderItemDto.setProductName(orderDetail.getProduct().getProductDetail().getName());
-    	orderItemDto.setProductSize(orderDetail.getProduct().getProductSize().getName());
-    	orderItemDto.setProductColor(orderDetail.getProduct().getProductColor().getName());
-    	orderItemDto.setQuantity(orderDetail.getQuantity());
-    	orderItemDto.setUnitPrice(orderDetail.getUnitPrice());
-    	orderItemDto.setDiscountPrice(orderDetail.getDiscountPrice());
-    	orderItemDto.setTotalPrice(orderDetail.getTotalPrice());
-    	
-    	return orderItemDto;
-    }
-    
-    // 查詢訂單的詳情
-    public OrderDetailDto getOrderDetailById(Integer orderId) {
-        // 查詢訂單
-        Order order = orderRepo.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
 
-        // 查詢該訂單的明細
-        List<OrderDetail> orderDetails = orderDetailRepo.findByOrderId(orderId);
-
-        // 把 OrderDetail 轉換成 OrderItemDto
-        List<OrderItemDto> orderItemDtos = orderDetails.stream()
-            .map(this::getOrderItemDto)
-            .collect(Collectors.toList());
-
-        // 填充 OrderDetailDto
-        OrderDetailDto orderDetailDto = new OrderDetailDto();
-        orderDetailDto.setMemberId(order.getMember().getId());
-        orderDetailDto.setOrderId(order.getId());
-        orderDetailDto.setSubtotal(order.getSubtotal());
-        orderDetailDto.setDiscountAmount(order.getDiscountAmount());
-        orderDetailDto.setShippingFee(order.getShippingFee());
-        orderDetailDto.setTotalAmount(order.getTotalAmount());
-        orderDetailDto.setOrderStatus(order.getOrderStatus().getName());
-        orderDetailDto.setCreatedTime(new java.sql.Date(order.getCreatedTime().getTime()));
-        orderDetailDto.setUpdatedDate(order.getUpdatedDate() != null ? new java.sql.Date(order.getUpdatedDate().getTime()) : null);
-        orderDetailDto.setOrderItems(orderItemDtos);
-
-        // 查詢並填充配送和支付資訊
-        Shipping shipping = shippingRepo.findByOrderId(orderId);
-        Payment payment = paymentRepo.findByOrderId(orderId);
-
-        // 填充 ShippingInfoDto
-        ShippingInfoDto shippingInfoDto = new ShippingInfoDto();
-        shippingInfoDto.setReceiverName(shipping.getReceiverName());
-        shippingInfoDto.setReceiverPhone(shipping.getReceiverPhone());
-        shippingInfoDto.setStreet(shipping.getShippingAddress().getStreet());
-        shippingInfoDto.setCity(shipping.getShippingAddress().getCity());
-        shippingInfoDto.setShippingCategory(shipping.getShippingCategory().getName());
-
-        // 填充 PaymentInfoDto
-        PaymentInfoDto paymentInfoDto = new PaymentInfoDto();
-        paymentInfoDto.setPaymentCategory(payment.getPaymentCategory().getName());
-        paymentInfoDto.setPaymentAmount(payment.getPaymentAmount());
-        paymentInfoDto.setPaymentStatus(payment.getPaymentStatus().getName());
-
-        // 設定配送和支付資訊
-        orderDetailDto.setShippingInfo(shippingInfoDto);
-        orderDetailDto.setPaymentInfo(paymentInfoDto);
-
-        return orderDetailDto;
-    }
 
     // 查詢該會員的所有訂單
     public List<OrderHistoryDto> getOrderHistoryByMemberId(Integer memberId) {
@@ -324,7 +260,7 @@ public class OrderService {
 
             // **這裡改用 getOrderItemDto 方法**
             List<OrderItemDto> orderItemDtos = orderDetails.stream()
-                    .map(this::getOrderItemDto) // 呼叫已經寫好的方法
+                    .map(orderDetailService::getOrderItemDto) // 呼叫已經寫好的方法
                     .collect(Collectors.toList());
 
             orderHistory.setOrderItems(orderItemDtos);
@@ -350,7 +286,7 @@ public class OrderService {
 
         // 使用 getOrderItemDto 方法來轉換商品明細
         List<OrderItemDto> orderItemDtos = orderDetails.stream()
-            .map(this::getOrderItemDto)
+            .map(orderDetailService::getOrderItemDto)
             .collect(Collectors.toList());
 
         orderHistory.setOrderItems(orderItemDtos);
@@ -358,6 +294,7 @@ public class OrderService {
         return orderHistory;
     }
 
+    //訂單查詢的篩選
     public List<OrderHistoryDto> getOrderHistoryFilter(Integer memberId, String orderStatus, Date startDate, Date endDate, String keyword) {
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Order> query = criteriaBuilder.createQuery(Order.class);
