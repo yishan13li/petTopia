@@ -1,6 +1,7 @@
 package petTopia.controller.shop;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -10,13 +11,11 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpSession;
-import petTopia.dto.shop.OrderDetailDto;
 import petTopia.dto.shop.OrderHistoryDto;
 import petTopia.model.user.Member;
 import petTopia.repository.shop.PaymentCategoryRepository;
@@ -25,8 +24,8 @@ import petTopia.service.shop.OrderDetailService;
 import petTopia.service.shop.OrderService;
 
 @RestController
-@RequestMapping("/shop")
-public class OrderController2 {
+@RequestMapping("/manage/shop")
+public class ManageOrderController {
 
 	@Autowired
 	private OrderService orderService;
@@ -34,46 +33,22 @@ public class OrderController2 {
 	@Autowired
 	private OrderDetailService orderDetailService;
 	
-    @GetMapping("/orderHistory2")
-    public String orderHistoryPage(HttpSession session) {
-        return "shop/shop_orderHistory";
-    }
-    
-    @GetMapping("/orders/{orderId}")
-    public ResponseEntity<OrderDetailDto> getOrderDetail(HttpSession session,@PathVariable("orderId") Integer orderId) {
-        try {
-            // 從 session 取得 userId 和 member 資訊
-            Member member = (Member) session.getAttribute("member");
-        
-            Integer memberId = member.getId();
-            
-            // 使用 Service 層方法查詢訂單詳情
-            OrderDetailDto orderDetailDto = orderDetailService.getOrderDetailById(orderId);
-            
-            Integer memberLogin = orderDetailDto.getMemberId();
-            
-            if(memberLogin!=memberId) {
-            	return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-            }
-            
-            // 返回成功的響應與訂單詳細資料
-            return new ResponseEntity<>(orderDetailDto, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            // 若訂單不存在，返回 404 Not Found
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
-    
- // 查詢會員訂單歷史紀錄
-    @GetMapping("/orderHistory")
-    public ResponseEntity<Page<OrderHistoryDto>> getOrderHistory(
+	@Autowired
+	private PaymentCategoryRepository paymentCategoryRepo;
+	
+	@Autowired
+	private ShippingCategoryRepository shippingCategoryRepo;
+	
+    // 後台訂單管理>>查詢會員訂單歷史紀錄
+    @GetMapping("/orders")
+    public ResponseEntity<Map<String, Object>> getManageOrderHistory(
             HttpSession session,
             @RequestParam(required = false) String orderStatus,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String paymentCategory, 
-            @RequestParam(required = false) String shippingCategory, 
+            @RequestParam(required = false) String paymentCategory,  // 新增付款方式篩選
+            @RequestParam(required = false) String shippingCategory, // 新增配送方式篩選
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size) {
 
@@ -95,12 +70,22 @@ public class OrderController2 {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
 
-            // 回傳分頁結果
-            return new ResponseEntity<>(orderHistoryPage, HttpStatus.OK);
+            // 查詢付款方式和運送方式資料，直接從 Repository 中取得
+            List<String> paymentMethods = paymentCategoryRepo.findAllPaymentCategory(); // 透過 Repository 查詢付款方式
+            List<String> shippingMethods = shippingCategoryRepo.findAllShippingCategory(); // 透過 Repository 查詢運送方式
+
+            // 建立回傳結果
+            Map<String, Object> response = new HashMap<>();
+            response.put("orderHistory", orderHistoryPage);
+            response.put("paymentMethods", paymentMethods);
+            response.put("shippingMethods", shippingMethods);
+
+            // 回傳資料
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
         } catch (Exception e) {
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
 }

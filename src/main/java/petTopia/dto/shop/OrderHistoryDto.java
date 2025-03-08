@@ -17,6 +17,8 @@ public class OrderHistoryDto {
     private String orderStatus;      // 訂單狀態
     private Date createdTime;        // 訂單日期
     private String paymentStatus;    // 付款狀態
+    private String paymentCategory;  // 付款方式
+    private String shippingCategory;  // 配送方式
     private BigDecimal totalAmount;      // 訂單總金額
     private List<OrderItemDto> orderItems; // 商品列表
 
