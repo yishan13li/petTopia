@@ -40,7 +40,7 @@ public class SecurityConfig {
                 
                 if (authentication.getPrincipal() instanceof OAuth2User) {
                     OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
-                    // 将用户信息存储到 session
+                    // 將用戶信息存儲到 session
                     session.setAttribute("userId", oauth2User.getAttribute("userId"));
                     session.setAttribute("userRole", oauth2User.getAttribute("userRole"));
                     session.setAttribute("memberName", oauth2User.getAttribute("memberName"));
@@ -58,30 +58,38 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())  // 暫時禁用 CSRF
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/", "/member/login/**", "/member/register/**", "/user_static/**", 
+                .requestMatchers("/", "/login/**", "/register/**", "/user_static/**", 
                                "/css/**", "/js/**", "/images/**", "/icon/**", "/vendor/**",
-                               "/static/**", "/templates/**").permitAll()
+                               "/static/**", "/templates/**", "/member/**", "/api/**").permitAll()
                 .anyRequest().permitAll()  // 暫時允許所有請求，方便測試
             )
+            // 會員登入配置
             .formLogin(form -> form
-                .loginPage("/member/login")
-                .loginProcessingUrl("/member/login")
+                .loginPage("/login")
+                .loginProcessingUrl("/api/member/login")  // 修改為實際的登入處理URL
                 .defaultSuccessUrl("/", true)
-                .failureUrl("/member/login?error=true")
+                .failureUrl("/login?error=true")
                 .permitAll()
             )
+            // OAuth2登入配置
             .oauth2Login(oauth2 -> oauth2
-                .loginPage("/member/login")
+                .loginPage("/login")
                 .userInfoEndpoint(userInfo -> userInfo
                     .userService(oAuth2UserService)
                 )
                 .successHandler(authenticationSuccessHandler())
-                .failureUrl("/member/login?error=true")
+                .failureUrl("/login?error=true")
             )
+            // 登出配置
             .logout(logout -> logout
-                .logoutSuccessUrl("/member/login?logout=true")
+                .logoutUrl("/api/logout")  // 修改登出URL
+                .logoutSuccessUrl("/login?logout=true")
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID")
                 .permitAll()
-            );
+            )
+            // 允許跨域請求
+            .cors(cors -> cors.disable());
         
         return http.build();
     }

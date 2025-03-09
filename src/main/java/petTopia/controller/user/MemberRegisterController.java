@@ -6,7 +6,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -20,10 +19,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.time.LocalDateTime;
+import java.net.URLEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Controller
-@RequestMapping("/member")
 public class MemberRegisterController {
+
+    private static final Logger logger = LoggerFactory.getLogger(MemberRegisterController.class);
 
     @Autowired
     private RegistrationService registrationService;
@@ -39,7 +42,7 @@ public class MemberRegisterController {
     @GetMapping("/register")
     public String showRegisterForm(Model model) {
         model.addAttribute("errors", new HashMap<String, String>());
-        return "member/register";
+        return "register";
     }
 
     @PostMapping("/register")
@@ -47,11 +50,18 @@ public class MemberRegisterController {
             @RequestParam(required = false) String email,
             @RequestParam(required = false) String password,
             Model model) {
-        
+
         Map<String, String> errors = new HashMap<>();
         model.addAttribute("errors", errors);
 
         try {
+            // 检查是否已存在相同email的会员账号
+            UsersBean existingUser = memberService.findByEmail(email);
+            if (existingUser != null && existingUser.getUserRole() == UsersBean.UserRole.MEMBER) {
+                errors.put("registerFailed", "此 email 已註冊為會員");
+                return "register";
+            }
+
             // 1. 創建用戶基本信息
             UsersBean newUser = new UsersBean();
             newUser.setEmail(email);
@@ -64,17 +74,17 @@ public class MemberRegisterController {
 
             // 3. 使用 MemberLoginService 處理註冊
             Map<String, Object> result = memberService.registerMember(newUser, newMember);
-            
+
             if ((Boolean) result.get("success")) {
-                return "redirect:/member/login?registered=true";
+                return "redirect:/login?registered=true&message=" + URLEncoder.encode("註冊成功，請登入", "UTF-8");
             } else {
                 errors.put("registerFailed", (String) result.get("message"));
-                return "member/register";
+                return "register";
             }
-            
+
         } catch (Exception e) {
             errors.put("registerFailed", "註冊失敗：" + e.getMessage());
-            return "member/register";
+            return "register";
         }
     }
 
@@ -82,7 +92,7 @@ public class MemberRegisterController {
     @ResponseBody
     public Map<String, Object> apiRegister(@RequestBody Map<String, String> request) {
         Map<String, Object> response = new HashMap<>();
-        
+
         try {
             // 基本驗證
             if (!request.get("password").equals(request.get("confirmPassword"))) {
@@ -95,16 +105,16 @@ public class MemberRegisterController {
             newUser.setEmail(request.get("email"));
             newUser.setPassword(request.get("password"));
             newUser.setUserRole(UsersBean.UserRole.MEMBER);
-            
+
             registrationService.register(newUser);
-            
+
             response.put("success", true);
             response.put("message", "註冊成功");
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", e.getMessage());
         }
-        
+
         return response;
     }
 
@@ -125,27 +135,27 @@ public class MemberRegisterController {
     @ResponseBody
     public Map<String, Object> sendVerificationCode(@RequestParam String email) {
         Map<String, Object> response = new HashMap<>();
-        
+
         try {
             // 生成6位數驗證碼
             String code = String.format("%06d", new Random().nextInt(1000000));
-            
+
             // 存儲驗證碼和時間戳
             Map<String, Object> codeData = new HashMap<>();
             codeData.put("code", code);
             codeData.put("timestamp", System.currentTimeMillis());
             verificationCodes.put(email, codeData);
-            
+
             // 發送驗證碼到郵箱
             emailService.sendVerificationCode(email, code);
-            
+
             response.put("success", true);
             response.put("message", "驗證碼已發送");
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", "驗證碼發送失敗");
         }
-        
+
         return response;
     }
 
@@ -180,9 +190,27 @@ public class MemberRegisterController {
             response.put("message", "驗證碼錯誤");
             return response;
         }
+
+        try {
+            // 驗證成功，更新用戶的郵箱驗證狀態
+            UsersBean user = memberService.findByEmail(email);
+            if (user != null && user.getUserRole() == UsersBean.UserRole.MEMBER) {
+                user.setEmailVerified(true);
+                memberService.updateUser(user);
+                verificationCodes.remove(email); // 清除已使用的驗證碼
+                
+                response.put("success", true);
+                response.put("message", "驗證成功");
+            } else {
+                response.put("success", false);
+                response.put("message", "找不到對應的會員帳號");
+            }
+        } catch (Exception e) {
+            logger.error("更新郵箱驗證狀態失敗", e);
+            response.put("success", false);
+            response.put("message", "驗證失敗：" + e.getMessage());
+        }
         
-        response.put("success", true);
-        response.put("message", "驗證成功");
         return response;
     }
-} 
+}

@@ -153,7 +153,7 @@
           <div class="row py-4 pb-0 pb-sm-4 align-items-center">
               <div class="col-sm-4 col-lg-3 text-center text-sm-start">
                   <div class="main-logo d-flex align-items-center justify-content-center justify-content-sm-start">
-                      <a href="index.html" class="d-flex align-items-center text-decoration-none">
+                      <a href="/" class="d-flex align-items-center text-decoration-none">
                           <img th:src="@{/user_static/images/logo.png}" alt="logo" class="img-fluid">
                           <h1 class="mb-0" style="font-size: 32px; 
                                                 margin-left: 15px; 
@@ -176,7 +176,12 @@
   <!-- Main Content -->
   <div class="register-container">
       <h2 class="mb-4">商家註冊</h2>
-      <form th:action="@{/vendor/register}" method="POST" id="registerForm">
+      <div th:if="${errors != null}">
+          <div th:each="error : ${errors.values()}" class="alert alert-danger">
+              <span th:text="${error}"></span>
+          </div>
+      </div>
+      <form th:action="@{/vendor/vendor_register}" method="POST" id="registerForm">
           <div class="form-group">
               <label for="email">電子郵件</label>
               <input type="email" id="email" name="email" class="form-control" required>
@@ -196,7 +201,7 @@
           </div>
 
           <div class="form-group">
-              <label for="password">密碼</label>ㄊ
+              <label for="password">密碼</label>
               <input type="password" id="password" name="password" class="form-control" required>
               <div class="error" th:if="${errors != null && errors.containsKey('password')}" 
                    th:text="${errors.get('password')}"></div>
@@ -211,15 +216,7 @@
 
           <button type="submit" class="btn btn-primary">註冊</button>
       </form>
-      <div class="divider"><span>或</span></div>
-      <a href="/oauth2/authorization/facebook" class="social-btn">
-          <img src="/user_static/icon/Facebook_icon.png" alt="Facebook"> 使用 Facebook 註冊
-      </a>
-      <a href="/oauth2/authorization/google" class="social-btn1">
-          <img src="/user_static/icon/Google_icon.png" alt="Google"> 使用 Google 註冊
-      </a>
-      <p class="text-center mt-3">已有帳號？ <a th:href="@{/vendor/login}">登入</a></p>
-      
+      <p class="text-center mt-3">已有帳號？ <a th:href="@{/vendor/vendor_login}">登入</a></p>
   </div>
   
   <!-- Footer Section -->
@@ -358,9 +355,12 @@ document.getElementById("registerForm").addEventListener("submit", function(even
     fetch('/vendor/verify-code', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
+            'Content-Type': 'application/json'
         },
-        body: `email=${encodeURIComponent(email)}&code=${encodeURIComponent(verificationCode)}`
+        body: JSON.stringify({
+            email: email,
+            code: verificationCode
+        })
     })
     .then(response => response.json())
     .then(data => {
@@ -418,23 +418,36 @@ document.getElementById('sendVerificationBtn').addEventListener('click', functio
         return;
     }
 
-    fetch('/vendor/send-verification', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    body: 'email=' + encodeURIComponent(email)
-})
+    // 禁用按鈕並開始倒計時
+    this.disabled = true;
+    startCountdown(this);
+
+    fetch('/vendor/api/send-verification', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            email: email
+        })
+    })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
             alert('驗證碼已發送到您的郵箱');
         } else {
             alert(data.message || '發送失敗，請稍後再試');
+            // 如果發送失敗，重置按鈕狀態
+            this.disabled = false;
+            this.textContent = "發送驗證碼";
         }
     })
     .catch(error => {
+        console.error('Error:', error);
         alert('發送失敗，請稍後再試');
+        // 如果發送失敗，重置按鈕狀態
+        this.disabled = false;
+        this.textContent = "發送驗證碼";
     });
 });
 

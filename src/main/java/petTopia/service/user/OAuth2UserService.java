@@ -18,15 +18,24 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import java.util.Map;
 import java.util.HashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import petTopia.model.user.VendorBean;
+import petTopia.repository.user.VendorRepository;
 
 @Service
 public class OAuth2UserService extends DefaultOAuth2UserService {
+
+    private static final Logger logger = LoggerFactory.getLogger(OAuth2UserService.class);
 
     @Autowired
     private MemberRepository memberRepository;
 
     @Autowired
     private UsersRepository usersRepository;
+    
+    @Autowired
+    private VendorRepository vendorRepository;
     
     @PersistenceContext
     private EntityManager entityManager;
@@ -36,65 +45,82 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2User oauth2User = super.loadUser(userRequest);
         
-        // 获取 Google 账号信息
         String email = oauth2User.getAttribute("email");
         String name = oauth2User.getAttribute("name");
         
         try {
-            // 先检查是否存在对应的 UsersBean
             UsersBean user = usersRepository.findByEmail(email);
-            MemberBean member = null;
             
-            if (user == null) {
-                // 创建新的 UsersBean
+            if (user != null) {
+                // 檢查是否是商家帳號
+                if (user.getUserRole() == UsersBean.UserRole.VENDOR) {
+                    throw new OAuth2AuthenticationException(
+                        new OAuth2Error("account_exists",
+                        "商家帳號請使用一般登入方式，不支援Google登入", null)
+                    );
+                }
+                
+                // 檢查是否是本地註冊的會員帳號
+                if (user.getProvider() == UsersBean.Provider.LOCAL) {
+                    throw new OAuth2AuthenticationException(
+                        new OAuth2Error("account_exists",
+                        "此Email已使用本地註冊為會員帳號，請使用密碼登入", null)
+                    );
+                }
+                
+                // 更新會員資訊
+                MemberBean member = memberRepository.findByEmail(email);
+                if (member != null) {
+                    member.setName(name != null ? name : member.getName());
+                    member.setUpdatedDate(LocalDateTime.now());
+                    memberRepository.save(member);
+                }
+            } else {
+                // 建立新的會員帳號
                 user = new UsersBean();
                 user.setEmail(email);
-                user.setPassword(""); // Google 登录不需要密码
+                user.setPassword(""); // Google 登入不需要密碼
                 user.setUserRole(UsersBean.UserRole.MEMBER);
                 user.setEmailVerified(true);
-                user.setProvider("GOOGLE");
-                user = usersRepository.save(user); // 保存并获取生成的 ID
-                entityManager.flush(); // 确保 ID 已生成
+                user.setProvider(UsersBean.Provider.GOOGLE);
+                user = usersRepository.save(user);
+                entityManager.flush();
                 
-                // 创建新的 MemberBean
-                member = new MemberBean();
-                member.setId(user.getId()); // 设置相同的 ID
+                // 建立新的會員資料
+                MemberBean member = new MemberBean();
+                member.setId(user.getId());
                 member.setUser(user);
                 member.setName(name != null ? name : "");
-                member.setPhone(""); // 需要用户后续补充
+                member.setPhone("");
                 member.setStatus(true);
-                member.setGender(false); // 设置默认值
+                member.setGender(false);
                 member.setUpdatedDate(LocalDateTime.now());
                 
-                // 保存 MemberBean
                 entityManager.persist(member);
                 entityManager.flush();
-            } else {
-                // 如果用户已存在，获取对应的 MemberBean
-                member = memberRepository.findByEmail(email);
             }
             
-            // 创建包含额外信息的属性Map
+            // 建立包含額外資訊的屬性Map
             Map<String, Object> attributes = new HashMap<>(oauth2User.getAttributes());
             attributes.put("userId", user.getId());
             attributes.put("userRole", user.getUserRole());
-            attributes.put("memberName", member != null ? member.getName() : name);
+            attributes.put("memberName", name);
             attributes.put("provider", user.getProvider());
             
-            // 返回包含额外信息的OAuth2User
             return new DefaultOAuth2User(
                 oauth2User.getAuthorities(),
                 attributes,
-                "email" // nameAttributeKey
+                "email"
             );
             
+        } catch (OAuth2AuthenticationException e) {
+            throw e;
         } catch (Exception e) {
-            OAuth2Error oauth2Error = new OAuth2Error(
-                "user_creation_error",
-                "Error creating user: " + e.getMessage(),
-                null
+            logger.error("Google登入處理失敗", e);
+            throw new OAuth2AuthenticationException(
+                new OAuth2Error("processing_error",
+                "處理Google登入時發生錯誤: " + e.getMessage(), null)
             );
-            throw new OAuth2AuthenticationException(oauth2Error, e);
         }
     }
 } 

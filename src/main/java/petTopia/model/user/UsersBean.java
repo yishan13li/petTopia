@@ -48,12 +48,18 @@ public class UsersBean {
     private Integer adminLevel = 0;
 
     @Column(name = "provider", length = 20)
-    private String provider = "LOCAL"; // LOCAL 或 GOOGLE
+    @Enumerated(EnumType.STRING)
+    private Provider provider = Provider.LOCAL;
 
     public enum UserRole {
         MEMBER,
         VENDOR,
         ADMIN
+    }
+
+    public enum Provider {
+        LOCAL,
+        GOOGLE
     }
 
     public UsersBean() {
@@ -115,5 +121,21 @@ public class UsersBean {
     public static final class Permissions {
         public static final String USER_MANAGE = "USER_MANAGE";
         public static final String COUPON_MANAGE = "COUPON_MANAGE";
+    }
+
+    public void setProvider(String provider) {
+        try {
+            this.provider = Provider.valueOf(provider.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            this.provider = Provider.LOCAL;
+        }
+    }
+
+    public void setProvider(Provider provider) {
+        this.provider = provider;
+    }
+
+    public Provider getProvider() {
+        return this.provider;
     }
 }

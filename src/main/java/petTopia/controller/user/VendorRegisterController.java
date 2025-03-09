@@ -19,10 +19,14 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Controller
 @RequestMapping("/vendor")
 public class VendorRegisterController {
+
+    private static final Logger logger = LoggerFactory.getLogger(VendorRegisterController.class);
 
     @Autowired
     private VendorLoginService vendorService;
@@ -32,13 +36,13 @@ public class VendorRegisterController {
 
     private Map<String, Map<String, Object>> verificationCodes = new HashMap<>();
 
-    @GetMapping("/register")
+    @GetMapping("/vendor_register")
     public String showRegisterForm(Model model) {
         model.addAttribute("errors", new HashMap<String, String>());
-        return "vendor/register";
+        return "vendor/vendor_register";
     }
 
-    @PostMapping("/register")
+    @PostMapping("/vendor_register")
     public String processRegister(
             @RequestParam(required = false) String email,
             @RequestParam(required = false) String password,
@@ -48,32 +52,40 @@ public class VendorRegisterController {
         model.addAttribute("errors", errors);
 
         try {
-            // 1. 創建用戶基本信息
+            // 检查是否已存在相同email的商家账号
+            UsersBean existingVendor = vendorService.findByEmail(email);
+            if (existingVendor != null) {
+                errors.put("registerFailed", "此 email 已註冊為商家");
+                return "vendor/vendor_register";
+            }
+
+            // 1. 创建用户基本信息
             UsersBean newUser = new UsersBean();
             newUser.setEmail(email);
             newUser.setPassword(password);
             newUser.setUserRole(UsersBean.UserRole.VENDOR);
+            newUser.setEmailVerified(true); // 因為已經通過驗證碼驗證
 
-            // 2. 創建商家信息
+            // 2. 创建商家信息
             VendorBean newVendor = new VendorBean();
             newVendor.setRegistrationDate(LocalDateTime.now());
             newVendor.setUpdatedDate(LocalDateTime.now());
-            newVendor.setStatus(false);
-            newVendor.setVendorCategoryId(1);  // 設置預設分類為1
+            newVendor.setStatus(true);  // 設置為啟用狀態
+            newVendor.setVendorCategoryId(1);
 
-            // 3. 使用 VendorLoginService 處理註冊
+            // 3. 使用 VendorLoginService 处理注册
             Map<String, Object> result = vendorService.registerVendor(newUser, newVendor);
             
             if ((Boolean) result.get("success")) {
-                return "redirect:/vendor/login?registered=true";
+                return "redirect:/vendor/vendor_login?registered=true";
             } else {
                 errors.put("registerFailed", (String) result.get("message"));
-                return "vendor/register";
+                return "vendor/vendor_register";
             }
             
         } catch (Exception e) {
             errors.put("registerFailed", "註冊失敗：" + e.getMessage());
-            return "vendor/register";
+            return "vendor/vendor_register";
         }
     }
 
@@ -123,29 +135,17 @@ public class VendorRegisterController {
     @PostMapping("/api/send-verification")
     @ResponseBody
     public Map<String, Object> apiSendVerificationCode(@RequestBody Map<String, String> request) {
-        return sendVerificationCode(request.get("email"));
-    }
-
-    @PostMapping("/api/verify-code")
-    @ResponseBody
-    public Map<String, Object> apiVerifyCode(@RequestBody Map<String, String> request) {
-        return verifyCode(request.get("email"), request.get("code"));
-    }
-
-    // 發送驗證碼
-    @PostMapping("/send-verification")
-    @ResponseBody
-    public Map<String, Object> sendVerificationCode(@RequestParam String email) {
         Map<String, Object> response = new HashMap<>();
         
         try {
+            String email = request.get("email");
             // 生成6位數驗證碼
             String code = String.format("%06d", new Random().nextInt(1000000));
             
             // 存儲驗證碼和時間戳
             Map<String, Object> codeData = new HashMap<>();
             codeData.put("code", code);
-            codeData.put("timestamp", System.currentTimeMillis());
+            codeData.put("timestamp", LocalDateTime.now());
             verificationCodes.put(email, codeData);
             
             // 發送驗證碼到郵箱
@@ -154,47 +154,58 @@ public class VendorRegisterController {
             response.put("success", true);
             response.put("message", "驗證碼已發送");
         } catch (Exception e) {
+            logger.error("發送驗證碼失敗", e);
             response.put("success", false);
-            response.put("message", "驗證碼發送失敗");
+            response.put("message", "驗證碼發送失敗：" + e.getMessage());
         }
         
         return response;
     }
 
-    // 驗證驗證碼
     @PostMapping("/verify-code")
     @ResponseBody
-    public Map<String, Object> verifyCode(
-            @RequestParam String email,
-            @RequestParam String code) {
+    public Map<String, Object> verifyCode(@RequestBody Map<String, String> request) {
         Map<String, Object> response = new HashMap<>();
-        
-        Map<String, Object> codeData = verificationCodes.get(email);
-        if (codeData == null) {
+        String email = request.get("email");
+        String code = request.get("code");
+
+        // 檢查驗證碼是否存在
+        Map<String, Object> storedData = verificationCodes.get(email);
+        if (storedData == null || !code.equals(storedData.get("code"))) {
             response.put("success", false);
-            response.put("message", "驗證碼已過期");
+            response.put("message", "驗證碼錯誤");
             return response;
         }
-        
-        String storedCode = (String) codeData.get("code");
-        long timestamp = (long) codeData.get("timestamp");
-        
+
         // 檢查驗證碼是否過期（5分鐘）
-        if (System.currentTimeMillis() - timestamp > 5 * 60 * 1000) {
+        LocalDateTime codeTime = (LocalDateTime) storedData.get("timestamp");
+        if (codeTime.plusMinutes(5).isBefore(LocalDateTime.now())) {
             verificationCodes.remove(email);
             response.put("success", false);
             response.put("message", "驗證碼已過期");
             return response;
         }
-        
-        if (!code.equals(storedCode)) {
+
+        try {
+            // 檢查是否已經是商家帳號
+            UsersBean existingVendor = vendorService.findByEmail(email);
+            if (existingVendor != null) {
+                response.put("success", false);
+                response.put("message", "此 email 已註冊為商家帳號");
+                return response;
+            }
+
+            // 驗證成功，清除驗證碼
+            verificationCodes.remove(email);
+            response.put("success", true);
+            response.put("message", "驗證成功");
+            
+        } catch (Exception e) {
+            logger.error("驗證碼驗證失敗", e);
             response.put("success", false);
-            response.put("message", "驗證碼錯誤");
-            return response;
+            response.put("message", "驗證失敗：" + e.getMessage());
         }
         
-        response.put("success", true);
-        response.put("message", "驗證成功");
         return response;
     }
 } 
