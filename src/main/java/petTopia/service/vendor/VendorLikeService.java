@@ -13,7 +13,7 @@ public class VendorLikeService {
 	private VendorLikeRepository vendorLikeRepository;
 
 	/* 新增或取消店家收藏 */
-	public void addOrCancelVendorLike(Integer memberId, Integer vendorId) {
+	public boolean addOrCancelVendorLike(Integer memberId, Integer vendorId) {
 		VendorLike vendorLike = vendorLikeRepository.findByMemberIdAndVendorId(memberId, vendorId);
 
 		if (vendorLike == null) {
@@ -21,9 +21,11 @@ public class VendorLikeService {
 			newVendorLike.setMemberId(memberId);
 			newVendorLike.setVendorId(vendorId);
 			vendorLikeRepository.save(newVendorLike);
+			return true;
 		} else {
 			Integer vendorLikeId = vendorLike.getId();
 			vendorLikeRepository.deleteById(vendorLikeId);
+			return false;
 		}
 
 	}

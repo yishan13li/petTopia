@@ -11,6 +11,8 @@
   <meta name="author" content="">
   <meta name="keywords" content="">
   <meta name="description" content="">
+  <meta name="vendor-id" content="[[${vendor.id}]]">
+
 
   <style>
     /* 遮罩層樣式 */
@@ -366,7 +368,8 @@
           <div class="d-flex">
 
             <div class="d-flex flex-wrap mt-3">
-              <a class="btn btn-primary btn-1g text-uppercase fs-5 rounded-4 me-4" onclick="openCollection()">
+              <a class="btn btn-primary btn-1g text-uppercase fs-5 rounded-4 me-4"
+                onclick="openCollection(), likeVendor()">
                 收藏
               </a>
               <a class="btn btn-primary btn-lg text-uppercase fs-5 rounded-4 me-4" onclick="openScore()">
@@ -511,7 +514,7 @@
 
   <div id="popupCollect" class="overlay">
     <div class="popup">
-      <h3><b>收藏成功</b></h3>
+      <h3><b id="likeContent"></b></h3>
       <br>
       <button class="btn btn-outline-dark btn-1g text-uppercase fs-5 rounded-4" onclick="closeCollection()">關閉</button>
     </div>
@@ -612,7 +615,7 @@
 
   <!-- 收藏視窗JS -->
 
-  <script>
+  <script th:inline="javascript">
     function openCollection() {
       document.getElementById('popupCollect').style.display = 'flex';
       document.body.style.overflow = "hidden";
@@ -622,6 +625,34 @@
       document.getElementById('popupCollect').style.display = 'none';
       document.body.style.overflow = "scroll";
     }
+
+    function likeVendor() {
+      let vendorId = /*[[${vendor.id}]]*/null;
+      let data = {
+        memberId: 19,  // 這裡改成實際的會員 ID
+        vendorId: vendorId
+      };
+
+      let content = document.getElementById('likeContent');
+
+      fetch("/vendor/give_vendor_like", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      })
+        .then(response => response.json())
+        .then(result => {
+          if (result.action == true) {
+            content.textContent = "成功收藏";
+          } else if (result.action == false) {
+            content.textContent = "取消收藏";
+          }
+        })
+        .catch(error => {
+          console.error("發生錯誤:", error);
+        });
+    }
+
   </script>
 
   <!-- 收藏視窗JS -->
@@ -677,7 +708,7 @@
 
   <!-- 留言視窗JS -->
 
-  <script>
+  <script th:inline="javascript">
     function openPopup() {
       document.getElementById('popupComment').style.display = 'flex';
       // document.getElementById('inputField').value = "";
@@ -690,10 +721,40 @@
       document.body.style.overflow = "scroll";
     }
 
+    // function submitForm() {
+    //   let inputValue = document.getElementById('inputField').value;
+    //   alert("你輸入的是: " + inputValue);
+    //   alert("現在是測試用之後改掉");
+    //   closePopup(); // 提交後關閉表單
+    // }
+
     function submitForm() {
-      let inputValue = document.getElementById('inputField').value;
-      alert("你輸入的是: " + inputValue);
-      alert("現在是測試用之後改掉");
+      let vendorId = /*[[${vendor.id}]]*/null;
+      let content = document.getElementById('inputField').value;
+
+      let data = {
+        memberId: 19,  // 這裡之後要改
+        vendorId: vendorId,
+        content: content
+      };
+
+      fetch("/vendor/give_text_review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      })
+        .then(response => response.json())
+        .then(result => {
+          if (result.sucess) {
+            alert("留言新增成功");
+          } else {
+            alert("留言新增失敗");
+          }
+        })
+        .catch(error => {
+          console.error("發生錯誤:", error);
+        });
+
       closePopup(); // 提交後關閉表單
     }
   </script>
@@ -764,7 +825,6 @@
   <script src="js/script.js"></script>
   <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
 
-  <!-- swiper.js -->
   <script src="js/swiper.js"></script>
 
 </body>
