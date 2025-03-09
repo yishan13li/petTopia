@@ -5,10 +5,10 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import petTopia.model.vendor.VendorReviews;
+import petTopia.model.vendor.VendorReview;
 
 @Repository
-public interface VendorReviewsRepository extends JpaRepository<VendorReviews, Integer> {
+public interface VendorReviewsRepository extends JpaRepository<VendorReview, Integer> {
 
-	List<VendorReviews> findByVendorId(Integer vendorId);
+	List<VendorReview> findByVendorId(Integer vendorId);
 }

@@ -32,7 +32,7 @@ public class ReviewPhoto {
 	@JsonBackReference
 	@ManyToOne
 	@JoinColumn(name = "vendor_review_id", nullable = false)
-	private VendorReviews vendorReview;
+	private VendorReview vendorReview;
 
 	@JsonIgnore
 	@Lob

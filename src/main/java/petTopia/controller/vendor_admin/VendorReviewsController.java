@@ -19,10 +19,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.websocket.server.PathParam;
 import petTopia.model.vendor.ReviewPhoto;
-import petTopia.model.vendor.VendorReviews;
+import petTopia.model.vendor.VendorReview;
 import petTopia.repository.vendor_admin.ReviewPhotoRepository;
 import petTopia.repository.vendor_admin.VendorReviewsRepository;
 import petTopia.service.vendor_admin.VendorReviewsService;
@@ -47,7 +50,7 @@ public class VendorReviewsController {
 	@ResponseBody
 	@GetMapping("/api/vendor_admin/reviews/{vendorId}")
 	public ResponseEntity<?> getAllReviews() {
-		List<VendorReviews> reviews = vendorReviewsRepository.findAll();
+		List<VendorReview> reviews = vendorReviewsRepository.findAll();
 		if (reviews.isEmpty()) {
 			return ResponseEntity.ok(Collections.emptyList()); // ✅ 返回空数组 []
 		}
@@ -55,9 +58,14 @@ public class VendorReviewsController {
 	}
 
 	// 取得店家的所有評論
-	@GetMapping("/api/vendor_admin/review/{vendorId}")
-	public List<VendorReviews> getReviewsByVendorId(@PathVariable Integer vendorId) {
-		return vendorReviewsService.getReviewsByVendorId(vendorId);
+	@ResponseBody
+	@GetMapping("/api/vendor_admin/review")
+	public ResponseEntity<?> getReviewsByVendorId(@RequestParam Integer vendorId) {
+		List<VendorReview> vendorReviews = vendorReviewsService.getReviewsByVendorId(vendorId);
+		if (vendorReviews.isEmpty()) {
+			return ResponseEntity.ok(Collections.emptyList()); // ✅ 返回空数组 []
+		}
+		return ResponseEntity.ok(vendorReviews);
 	}
 
 	// 取得評論的所有照片
@@ -68,12 +76,12 @@ public class VendorReviewsController {
 
 	@GetMapping("/review_photos/ids")
 	public ResponseEntity<?> findPhotoIdByVendorReviewId(@RequestParam Integer vendorReviewId) {
-		Optional<VendorReviews> op = vendorReviewsRepository.findById(vendorReviewId);
+		Optional<VendorReview> op = vendorReviewsRepository.findById(vendorReviewId);
 
 		List<Integer> photoIdList = new ArrayList<>();
 
 		if (op.isPresent()) {
-			VendorReviews vendorReviews = op.get();
+			VendorReview vendorReviews = op.get();
 			List<ReviewPhoto> photos = vendorReviews.getReviewPhotos();
 
 			for (ReviewPhoto photo : photos) {
@@ -107,10 +115,11 @@ public class VendorReviewsController {
 //	@Transactional
 	@ResponseBody
 	@PostMapping("/api/vendor_admin/review/add")
-	public ResponseEntity<?> addReview(@RequestBody VendorReviews review) {
+	public ResponseEntity<?> addReview(@RequestBody VendorReview review,
+			@RequestPart(value = "photo", required = false) MultipartFile photo) {
 		try {
 			// 假设saveReview是保存评论的方法
-			VendorReviews vendorReviews = new VendorReviews();
+			VendorReview vendorReviews = new VendorReview();
 //			vendorReviews.setId(review.getId());
 			vendorReviews.setVendorId(review.getVendorId());
 			vendorReviews.setMemberId(review.getMemberId());
@@ -120,7 +129,16 @@ public class VendorReviewsController {
 			vendorReviews.setRatingPrice(review.getRatingPrice());
 			vendorReviews.setRatingService(review.getRatingService());
 
-			VendorReviews savedReview = vendorReviewsRepository.save(vendorReviews);
+			VendorReview savedReview = vendorReviewsRepository.save(vendorReviews);
+
+			// 如果有上传图片，保存图片
+			if (photo != null && !photo.isEmpty()) {
+				ReviewPhoto reviewPhoto = new ReviewPhoto();
+				reviewPhoto.setVendorReview(savedReview);
+				reviewPhoto.setPhoto(photo.getBytes()); // 转换为 byte[]
+				reviewPhotoRepository.save(reviewPhoto); // 保存图片
+			}
+
 			return new ResponseEntity<>(savedReview, HttpStatus.CREATED); // 返回保存的评论数据
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -138,7 +156,7 @@ public class VendorReviewsController {
 	@ResponseBody
 	@DeleteMapping("/api/vendor_admin/review/delete/{reviewId}")
 	public ResponseEntity<?> deleteReview(@PathVariable Integer reviewId) {
-		Optional<VendorReviews> review = vendorReviewsRepository.findById(reviewId);
+		Optional<VendorReview> review = vendorReviewsRepository.findById(reviewId);
 		Map<String, String> response = new HashMap<>();
 		if (review.isPresent()) {
 			boolean deleted = vendorReviewsService.deleteReview(reviewId);

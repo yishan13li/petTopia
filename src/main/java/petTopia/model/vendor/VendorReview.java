@@ -25,7 +25,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class VendorReviews {
+public class VendorReview {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

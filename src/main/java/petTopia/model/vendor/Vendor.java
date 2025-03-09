@@ -44,6 +44,7 @@ public class Vendor {
 	@Column(name = "description")
 	private String description;
 
+	@JsonIgnore
 	@Column(name = "logo_img")
 	private byte[] logoImg;
 
@@ -92,9 +93,11 @@ public class Vendor {
 	@Column(name = "vendor_level", nullable = false)
 	private String vendorLevel = "普通";
 
+	@JsonIgnore
 	@OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<VendorCertification> certifications;
 
+	@JsonIgnore
 	@OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<VendorActivity> activities;
 
@@ -107,16 +110,17 @@ public class Vendor {
 	@JsonIgnore
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "vendor", cascade = CascadeType.ALL)
 	private List<VendorActivityReview> reviews;
-	
+
 	@JsonIgnore
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "vendor", cascade = CascadeType.ALL)
 	private List<VendorImages> vendorImages;
-	
+
+	@JsonIgnore
 	@OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<VendorImages> images;
-	
+
 	/* 使用Transient防止被序列化，用於Service層賦值 */
 	@Transient
 	private String logoImgBase64;
-	
+
 }

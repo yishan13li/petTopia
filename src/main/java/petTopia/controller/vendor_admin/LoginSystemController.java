@@ -25,7 +25,7 @@ public class LoginSystemController {
 	private UserService userServiceImpl;
 
 	@Autowired
-	private VendorService vendorServiceImpl;
+	private VendorService vendorService;
 
 	@GetMapping("/loginsystemmain.controller")
 	public String processMainAction() {
@@ -64,7 +64,8 @@ public class LoginSystemController {
 
 	@PostMapping("/checklogin.controller")
 	public String processAction(@RequestParam("userEmail") String useremail, @RequestParam("userPwd") String pwd,
-			Model m) {
+			Model m,
+            HttpSession httpSession) {
 		Map<String, String> errors = new HashMap<>();
 		m.addAttribute("errors", errors);
 
@@ -85,9 +86,11 @@ public class LoginSystemController {
 
 			// 如果是 Vendor，載入店家資訊
 			if (user.getUserRole() == UserRole.vendor) {
-				Optional<Vendor> vendorOpt = vendorServiceImpl.getVendorById(user.getUserId());
+				Optional<Vendor> vendorOpt = vendorService.getVendorById(user.getUserId());
 				if (vendorOpt.isPresent()) {
 					Vendor vendor = vendorOpt.get();
+					httpSession.setAttribute("userId", user.getUserId());
+	                httpSession.setAttribute("vendor", vendorOpt.get());  // 存入 Member 資訊
 
 					// 把圖片轉換成 Base64
 					String vendorLogoImgBase64 = (vendor.getLogoImg() != null)
