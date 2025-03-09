@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import petTopia.model.user.UsersBean;
-import petTopia.model.user.VendorBean;
+import petTopia.model.user.Users;
+import petTopia.model.user.Vendor;
 import petTopia.service.user.EmailService;
 import petTopia.service.user.VendorLoginService;
 
@@ -53,21 +53,21 @@ public class VendorRegisterController {
 
         try {
             // 检查是否已存在相同email的商家账号
-            UsersBean existingVendor = vendorService.findByEmail(email);
+            Users existingVendor = vendorService.findByEmail(email);
             if (existingVendor != null) {
                 errors.put("registerFailed", "此 email 已註冊為商家");
                 return "vendor/vendor_register";
             }
 
             // 1. 创建用户基本信息
-            UsersBean newUser = new UsersBean();
+            Users newUser = new Users();
             newUser.setEmail(email);
             newUser.setPassword(password);
-            newUser.setUserRole(UsersBean.UserRole.VENDOR);
+            newUser.setUserRole(Users.UserRole.VENDOR);
             newUser.setEmailVerified(true); // 因為已經通過驗證碼驗證
 
             // 2. 创建商家信息
-            VendorBean newVendor = new VendorBean();
+            Vendor newVendor = new Vendor();
             newVendor.setRegistrationDate(LocalDateTime.now());
             newVendor.setUpdatedDate(LocalDateTime.now());
             newVendor.setStatus(true);  // 設置為啟用狀態
@@ -102,13 +102,13 @@ public class VendorRegisterController {
                 return response;
             }
 
-            UsersBean newUser = new UsersBean();
+            Users newUser = new Users();
             newUser.setEmail(request.get("email"));
             newUser.setPassword(request.get("password"));
-            newUser.setUserRole(UsersBean.UserRole.VENDOR);
+            newUser.setUserRole(Users.UserRole.VENDOR);
             
             // 2. 創建商家信息
-            VendorBean newVendor = new VendorBean();
+            Vendor newVendor = new Vendor();
             newVendor.setRegistrationDate(LocalDateTime.now());
             newVendor.setUpdatedDate(LocalDateTime.now());
             newVendor.setStatus(false);
@@ -188,7 +188,7 @@ public class VendorRegisterController {
 
         try {
             // 檢查是否已經是商家帳號
-            UsersBean existingVendor = vendorService.findByEmail(email);
+            Users existingVendor = vendorService.findByEmail(email);
             if (existingVendor != null) {
                 response.put("success", false);
                 response.put("message", "此 email 已註冊為商家帳號");

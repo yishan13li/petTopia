@@ -9,11 +9,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import petTopia.model.user.UsersBean;
+import petTopia.model.user.Users;
 import petTopia.service.user.EmailService;
 import petTopia.service.user.RegistrationService;
 import petTopia.service.user.MemberLoginService;
-import petTopia.model.user.MemberBean;
+import petTopia.model.user.Member;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -56,20 +56,20 @@ public class MemberRegisterController {
 
         try {
             // 检查是否已存在相同email的会员账号
-            UsersBean existingUser = memberService.findByEmail(email);
-            if (existingUser != null && existingUser.getUserRole() == UsersBean.UserRole.MEMBER) {
+            Users existingUser = memberService.findByEmail(email);
+            if (existingUser != null && existingUser.getUserRole() == Users.UserRole.MEMBER) {
                 errors.put("registerFailed", "此 email 已註冊為會員");
                 return "register";
             }
 
             // 1. 創建用戶基本信息
-            UsersBean newUser = new UsersBean();
+            Users newUser = new Users();
             newUser.setEmail(email);
             newUser.setPassword(password);
-            newUser.setUserRole(UsersBean.UserRole.MEMBER);
+            newUser.setUserRole(Users.UserRole.MEMBER);
 
             // 2. 創建會員信息
-            MemberBean newMember = new MemberBean();
+            Member newMember = new Member();
             newMember.setUpdatedDate(LocalDateTime.now());
 
             // 3. 使用 MemberLoginService 處理註冊
@@ -101,10 +101,10 @@ public class MemberRegisterController {
                 return response;
             }
 
-            UsersBean newUser = new UsersBean();
+            Users newUser = new Users();
             newUser.setEmail(request.get("email"));
             newUser.setPassword(request.get("password"));
-            newUser.setUserRole(UsersBean.UserRole.MEMBER);
+            newUser.setUserRole(Users.UserRole.MEMBER);
 
             registrationService.register(newUser);
 
@@ -193,8 +193,8 @@ public class MemberRegisterController {
 
         try {
             // 驗證成功，更新用戶的郵箱驗證狀態
-            UsersBean user = memberService.findByEmail(email);
-            if (user != null && user.getUserRole() == UsersBean.UserRole.MEMBER) {
+            Users user = memberService.findByEmail(email);
+            if (user != null && user.getUserRole() == Users.UserRole.MEMBER) {
                 user.setEmailVerified(true);
                 memberService.updateUser(user);
                 verificationCodes.remove(email); // 清除已使用的驗證碼

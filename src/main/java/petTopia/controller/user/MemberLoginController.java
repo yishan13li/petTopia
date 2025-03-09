@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import jakarta.servlet.http.HttpSession;
-import petTopia.model.user.UsersBean;
+import petTopia.model.user.Users;
 import petTopia.service.user.MemberLoginService;
 
 import org.slf4j.Logger;

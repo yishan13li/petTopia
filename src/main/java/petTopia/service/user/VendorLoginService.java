@@ -24,9 +24,9 @@ import java.util.Properties;
 import java.time.LocalDateTime;
 import java.util.Random;
 
-import petTopia.model.user.UsersBean;
+import petTopia.model.user.Users;
 import petTopia.repository.user.UsersRepository;
-import petTopia.model.user.VendorBean;
+import petTopia.model.user.Vendor;
 import petTopia.repository.user.VendorRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +50,7 @@ public class VendorLoginService extends BaseUserService {
     private EntityManager entityManager;
 
     @Transactional
-    public void updateUser(UsersBean user) {
+    public void updateUser(Users user) {
         try {
             entityManager.merge(user);
             entityManager.flush();
@@ -61,12 +61,12 @@ public class VendorLoginService extends BaseUserService {
     }
 
     @Override
-    public UsersBean findByEmail(String email) {
-        return usersRepository.findByEmailAndUserRole(email, UsersBean.UserRole.VENDOR);
+    public Users findByEmail(String email) {
+        return usersRepository.findByEmailAndUserRole(email, Users.UserRole.VENDOR);
     }
 
     @Transactional
-    public Map<String, Object> registerVendor(UsersBean user, VendorBean vendor) {
+    public Map<String, Object> registerVendor(Users user, Vendor vendor) {
         Map<String, Object> result = new HashMap<>();
         logger.info("開始商家註冊流程，email: {}", user.getEmail());
 
@@ -98,7 +98,7 @@ public class VendorLoginService extends BaseUserService {
             }
 
             // 檢查信箱是否已被使用
-            UsersBean existingVendor = usersRepository.findByEmailAndUserRole(user.getEmail(), UsersBean.UserRole.VENDOR);
+            Users existingVendor = usersRepository.findByEmailAndUserRole(user.getEmail(), Users.UserRole.VENDOR);
             
             if (existingVendor != null) {
                 logger.warn("註冊失敗：商家帳號已存在，email: {}", user.getEmail());
@@ -109,11 +109,11 @@ public class VendorLoginService extends BaseUserService {
             }
                 
             // 如果是會員帳號或新帳號，允許註冊商家帳號
-            UsersBean newVendorUser = new UsersBean();
+            Users newVendorUser = new Users();
             newVendorUser.setEmail(user.getEmail());
             newVendorUser.setPassword(passwordEncoder.encode(user.getPassword()));
-            newVendorUser.setProvider(UsersBean.Provider.LOCAL);
-            newVendorUser.setUserRole(UsersBean.UserRole.VENDOR);
+            newVendorUser.setProvider(Users.Provider.LOCAL);
+            newVendorUser.setUserRole(Users.UserRole.VENDOR);
             newVendorUser.setEmailVerified(false);
             
             // 生成6位數驗證碼
@@ -135,7 +135,7 @@ public class VendorLoginService extends BaseUserService {
             }
             
             // 設置商家資訊
-            VendorBean newVendor = new VendorBean();
+            Vendor newVendor = new Vendor();
             newVendor.setId(newVendorUser.getId());
             newVendor.setUser(newVendorUser);
             newVendor.setRegistrationDate(LocalDateTime.now());
@@ -266,7 +266,7 @@ public class VendorLoginService extends BaseUserService {
                 return result;
             }
 
-            UsersBean user = usersRepository.findByEmail(email);
+            Users user = usersRepository.findByEmail(email);
             if (user == null) {
                 logger.warn("驗證失敗：找不到用戶，email: {}", email);
                 result.put("success", false);
@@ -308,7 +308,7 @@ public class VendorLoginService extends BaseUserService {
             }
 
             // 更新商家狀態
-            VendorBean vendor = vendorRepository.findByUserId(user.getId()).orElse(null);
+            Vendor vendor = vendorRepository.findByUserId(user.getId()).orElse(null);
             if (vendor != null) {
                 vendor.setStatus(true);
                 try {
@@ -384,14 +384,14 @@ public class VendorLoginService extends BaseUserService {
 
             // 查找用戶
             logger.info("開始查找商家用戶，email: {}", email);
-            UsersBean user = usersRepository.findByEmailAndUserRole(email, UsersBean.UserRole.VENDOR);
+            Users user = usersRepository.findByEmailAndUserRole(email, Users.UserRole.VENDOR);
             logger.info("查詢用戶結果: {}, 用戶角色: {}", 
                 user != null ? "找到用戶" : "未找到用戶",
                 user != null ? user.getUserRole() : "無");
 
             if (user == null) {
                 // 檢查是否是會員帳號
-                UsersBean memberUser = usersRepository.findByEmailAndUserRole(email, UsersBean.UserRole.MEMBER);
+                Users memberUser = usersRepository.findByEmailAndUserRole(email, Users.UserRole.MEMBER);
                 if (memberUser != null) {
                     logger.warn("登入失敗：會員帳號嘗試登入商家系統，email: {}", email);
                     result.put("success", false);
@@ -409,7 +409,7 @@ public class VendorLoginService extends BaseUserService {
 
             // 檢查是否是Google帳號
             logger.info("檢查帳號類型，Provider: {}", user.getProvider());
-            if (user.getProvider() == UsersBean.Provider.GOOGLE) {
+            if (user.getProvider() == Users.Provider.GOOGLE) {
                 logger.warn("登入失敗：Google帳號嘗試使用密碼登入，userId: {}", user.getId());
                 result.put("success", false);
                 result.put("message", "此帳號是使用Google註冊的，請點擊「使用Google登入」按鈕");
@@ -443,7 +443,7 @@ public class VendorLoginService extends BaseUserService {
 
             // 獲取商家信息
             logger.info("開始獲取商家信息，userId: {}", user.getId());
-            VendorBean vendor = vendorRepository.findByUserIdWithJoin(user.getId())
+            Vendor vendor = vendorRepository.findByUserIdWithJoin(user.getId())
                 .orElse(null);
             logger.info("查詢商家信息結果: {}, userId: {}", 
                 vendor != null ? "找到商家信息" : "未找到商家信息", 

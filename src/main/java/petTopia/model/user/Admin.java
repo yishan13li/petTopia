@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "admin")
 @Data
-public class AdminBean {
+public class Admin {
     
     @Id
     @Column(name = "id")
@@ -16,7 +16,7 @@ public class AdminBean {
     @OneToOne
     @MapsId
     @JoinColumn(name = "id")
-    private UsersBean user;
+    private Users users;
     
     @Column(nullable = false)
     private String name;

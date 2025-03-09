@@ -5,8 +5,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Optional;
-import petTopia.model.user.MemberBean;
-import petTopia.model.user.UsersBean;
+import petTopia.model.user.Member;
+import petTopia.model.user.Users;
 import petTopia.repository.user.MemberRepository;
 import petTopia.repository.user.UsersRepository;
 
@@ -20,21 +20,21 @@ public class MemberService {
     private UsersRepository usersRepository;
 
     @Transactional
-    public MemberBean createOrUpdateMember(MemberBean member) {
+    public Member createOrUpdateMember(Member member) {
         try {
             validateMemberInput(member);
     
             // 確保用戶已存在於 `users` 表
-            UsersBean user = usersRepository.findById(member.getId())
+            Users user = usersRepository.findById(member.getId())
                 .orElseThrow(() -> new RuntimeException("用戶不存在"));
-            member.setUser(user);  // 關聯 `UsersBean`
+            member.setUser(user);  // 關聯 `Users`
     
             // 查詢 `member` 是否已存在
-            Optional<MemberBean> existingMemberOpt = memberRepository.findById(member.getId());
+            Optional<Member> existingMemberOpt = memberRepository.findById(member.getId());
     
             if (existingMemberOpt.isPresent()) {
                 // 更新已存在的 `Member`
-                MemberBean existingMember = existingMemberOpt.get();
+                Member existingMember = existingMemberOpt.get();
                 existingMember.setName(member.getName());
                 existingMember.setPhone(member.getPhone());
                 existingMember.setBirthdate(member.getBirthdate());
@@ -60,17 +60,17 @@ public class MemberService {
         }
     }
 
-    public MemberBean getMemberById(Integer userId) {
+    public Member getMemberById(Integer userId) {
         return memberRepository.findById(userId).orElse(null);
     }
 
-    public MemberBean updateMember(MemberBean member) {
+    public Member updateMember(Member member) {
         validateMemberInput(member);
         member.setUpdatedDate(LocalDateTime.now());
         return memberRepository.save(member);
     }
 
-    public MemberBean createMember(MemberBean member) {
+    public Member createMember(Member member) {
         validateMemberInput(member);
         member.setStatus(false);  // 預設未認證
         member.setUpdatedDate(LocalDateTime.now());
@@ -78,7 +78,7 @@ public class MemberService {
     }
 
     public void updateProfilePhoto(Integer memberId, byte[] photoData) {
-        MemberBean member = getMemberById(memberId);
+        Member member = getMemberById(memberId);
         member.setProfilePhoto(photoData);
         member.setUpdatedDate(LocalDateTime.now());
         memberRepository.save(member);
@@ -88,7 +88,7 @@ public class MemberService {
         memberRepository.deleteById(id);
     }
 
-    private void validateMemberInput(MemberBean member) {
+    private void validateMemberInput(Member member) {
         // 確保必要的關聯存在
         if (member.getUser() == null || member.getUser().getId() == null) {
             throw new IllegalArgumentException("用戶關聯不能為空");
@@ -105,7 +105,7 @@ public class MemberService {
     }
 
     public boolean verifyMember(Integer userId) {
-        MemberBean member = getMemberById(userId);
+        Member member = getMemberById(userId);
         if (member != null) {
             member.setStatus(true);  // 設置為已驗證
             memberRepository.save(member);

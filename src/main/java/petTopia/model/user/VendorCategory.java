@@ -6,7 +6,7 @@ import lombok.Data;
 @Entity
 @Table(name = "vendor_category")
 @Data
-public class VendorCategoryBean {
+public class VendorCategory {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

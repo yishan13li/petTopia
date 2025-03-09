@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import jakarta.servlet.http.HttpSession;
-import petTopia.model.user.UsersBean;
+import petTopia.model.user.Users;
 import petTopia.service.user.VendorLoginService;
 
 import org.slf4j.Logger;
@@ -37,8 +37,8 @@ public class VendorLoginController {
     @GetMapping("/vendor_admin_profile")
     public String showVendorAdminProfile(HttpSession session, Model model) {
         // 檢查是否已登入
-        UsersBean loggedInUser = (UsersBean) session.getAttribute("loggedInUser");
-        if (loggedInUser == null || loggedInUser.getUserRole() != UsersBean.UserRole.VENDOR) {
+        Users loggedInUser = (Users) session.getAttribute("loggedInUser");
+        if (loggedInUser == null || loggedInUser.getUserRole() != Users.UserRole.VENDOR) {
             return "redirect:/vendor/vendor_login";
         }
         

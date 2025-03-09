@@ -12,7 +12,7 @@ import lombok.Data;
 @Entity
 @Table(name = "users")
 @Data
-public class UsersBean {
+public class Users {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -62,10 +62,10 @@ public class UsersBean {
         GOOGLE
     }
 
-    public UsersBean() {
+    public Users() {
     }
 
-    public UsersBean(String password, String email, UserRole userRole) {
+    public Users(String password, String email, UserRole userRole) {
         this.password = password;
         this.email = email;
         this.userRole = userRole;
@@ -90,7 +90,7 @@ public class UsersBean {
         return ADMIN_PERMISSIONS.contains(permission);
     }
 
-    public boolean canManageUser(UsersBean targetUser) {
+    public boolean canManageUser(Users targetUser) {
         return isAdmin() && (!targetUser.isAdmin() || isSuperAdmin());
     }
 
@@ -109,7 +109,7 @@ public class UsersBean {
             return true;
         if (o == null || getClass() != o.getClass())
             return false;
-        UsersBean usersBean = (UsersBean) o;
+        Users usersBean = (Users) o;
         return Objects.equals(id, usersBean.id);
     }
 

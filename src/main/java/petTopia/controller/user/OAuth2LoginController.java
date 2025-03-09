@@ -7,9 +7,9 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import petTopia.model.user.UsersBean;
-import petTopia.model.user.VendorBean;
-import petTopia.model.user.MemberBean;
+import petTopia.model.user.Users;
+import petTopia.model.user.Vendor;
+import petTopia.model.user.Member;
 import petTopia.service.user.VendorLoginService;
 import petTopia.service.user.MemberLoginService;
 
@@ -29,19 +29,19 @@ public class OAuth2LoginController {
         String email = oauth2User.getAttribute("email");
         
         // 检查是否已经存在相同email的商家账号
-        UsersBean existingUser = vendorService.findByEmail(email);
-        if (existingUser != null && existingUser.getUserRole() == UsersBean.UserRole.VENDOR) {
+        Users existingUser = vendorService.findByEmail(email);
+        if (existingUser != null && existingUser.getUserRole() == Users.UserRole.VENDOR) {
             // 如果已存在相同email的商家账号，直接登录
             return "redirect:/vendor/login?email=" + email + "&oauth2Success=true";
         }
         
         // 创建新商家账号
-        UsersBean newUser = new UsersBean();
+        Users newUser = new Users();
         newUser.setEmail(email);
-        newUser.setUserRole(UsersBean.UserRole.VENDOR);
+        newUser.setUserRole(Users.UserRole.VENDOR);
         newUser.setPassword(provider + "_" + oauth2User.getName());
         
-        VendorBean newVendor = new VendorBean();
+        Vendor newVendor = new Vendor();
         vendorService.registerVendor(newUser, newVendor);
         
         return "redirect:/vendor/login?oauth2Success=true";
@@ -54,19 +54,19 @@ public class OAuth2LoginController {
         String email = oauth2User.getAttribute("email");
         
         // 检查是否已经存在相同email的会员账号
-        UsersBean existingUser = memberService.findByEmail(email);
-        if (existingUser != null && existingUser.getUserRole() == UsersBean.UserRole.MEMBER) {
+        Users existingUser = memberService.findByEmail(email);
+        if (existingUser != null && existingUser.getUserRole() == Users.UserRole.MEMBER) {
             // 如果已存在相同email的会员账号，直接登录
             return "redirect:/member/login?oauth2Success=true&message=" + URLEncoder.encode("OAuth2 登入成功", "UTF-8");
         }
         
         // 创建新会员账号
-        UsersBean newUser = new UsersBean();
+        Users newUser = new Users();
         newUser.setEmail(email);
-        newUser.setUserRole(UsersBean.UserRole.MEMBER);
+        newUser.setUserRole(Users.UserRole.MEMBER);
         newUser.setPassword(provider + "_" + oauth2User.getName());
         
-        MemberBean newMember = new MemberBean();
+        Member newMember = new Member();
         memberService.registerMember(newUser, newMember);
         
         return "redirect:/member/login?oauth2Success=true";

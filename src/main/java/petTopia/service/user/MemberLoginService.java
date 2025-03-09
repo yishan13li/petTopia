@@ -24,8 +24,8 @@ import java.util.Properties;
 import java.time.LocalDateTime;
 import java.util.Random;
 
-import petTopia.model.user.UsersBean;
-import petTopia.model.user.MemberBean;
+import petTopia.model.user.Users;
+import petTopia.model.user.Member;
 import petTopia.repository.user.UsersRepository;
 import petTopia.repository.user.MemberRepository;
 
@@ -47,7 +47,7 @@ public class MemberLoginService extends BaseUserService {
     private EntityManager entityManager;
 
     @Transactional
-    public void updateUser(UsersBean user) {
+    public void updateUser(Users user) {
         try {
             entityManager.merge(user);
             entityManager.flush();
@@ -58,7 +58,7 @@ public class MemberLoginService extends BaseUserService {
     }
 
     @Transactional
-    public Map<String, Object> registerMember(UsersBean user, MemberBean member) {
+    public Map<String, Object> registerMember(Users user, Member member) {
         Map<String, Object> result = new HashMap<>();
         logger.info("開始會員註冊流程，email: {}", user.getEmail());
 
@@ -90,14 +90,14 @@ public class MemberLoginService extends BaseUserService {
             }
 
             // 檢查信箱是否已被使用
-            UsersBean existingUser = usersRepository.findByEmail(user.getEmail());
+            Users existingUser = usersRepository.findByEmail(user.getEmail());
             
             if (existingUser != null) {
                 // 如果已經是會員帳號，不允許重複註冊（無論是Google還是本地註冊）
-                if (existingUser.getUserRole() == UsersBean.UserRole.MEMBER) {
+                if (existingUser.getUserRole() == Users.UserRole.MEMBER) {
                     logger.warn("註冊失敗：會員帳號已存在，email: {}", user.getEmail());
                     result.put("success", false);
-                    if (existingUser.getProvider() == UsersBean.Provider.GOOGLE) {
+                    if (existingUser.getProvider() == Users.Provider.GOOGLE) {
                         result.put("message", "此Email已透過Google登入註冊，請使用Google登入");
                         result.put("errorCode", "GOOGLE_ACCOUNT_EXISTS");
                     } else {
@@ -108,11 +108,11 @@ public class MemberLoginService extends BaseUserService {
                 }
                 
                 // 如果是商家帳號，允許註冊會員帳號
-                UsersBean newMemberUser = new UsersBean();
+                Users newMemberUser = new Users();
                 newMemberUser.setEmail(user.getEmail());
                 newMemberUser.setPassword(passwordEncoder.encode(user.getPassword()));
-                newMemberUser.setProvider(UsersBean.Provider.LOCAL);
-                newMemberUser.setUserRole(UsersBean.UserRole.MEMBER);
+                newMemberUser.setProvider(Users.Provider.LOCAL);
+                newMemberUser.setUserRole(Users.UserRole.MEMBER);
                 newMemberUser.setEmailVerified(false);
                 
                 // 生成6位數驗證碼
@@ -134,7 +134,7 @@ public class MemberLoginService extends BaseUserService {
                 }
                 
                 // 設置會員資訊
-                MemberBean newMember = new MemberBean();
+                Member newMember = new Member();
                 newMember.setId(newMemberUser.getId());
                 newMember.setUser(newMemberUser);
                 newMember.setStatus(false);
@@ -179,8 +179,8 @@ public class MemberLoginService extends BaseUserService {
             }
 
             // 如果是全新的email註冊
-            user.setProvider(UsersBean.Provider.LOCAL);
-            user.setUserRole(UsersBean.UserRole.MEMBER);
+            user.setProvider(Users.Provider.LOCAL);
+            user.setUserRole(Users.UserRole.MEMBER);
             user.setEmailVerified(false);
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             
@@ -274,7 +274,7 @@ public class MemberLoginService extends BaseUserService {
 
             // 查找用戶
             logger.info("開始查找會員用戶，email: {}", email);
-            UsersBean user = usersRepository.findByEmailAndUserRole(email, UsersBean.UserRole.MEMBER);
+            Users user = usersRepository.findByEmailAndUserRole(email, Users.UserRole.MEMBER);
             
             if (user == null) {
                 logger.warn("登入失敗：找不到會員帳號，email: {}", email);
@@ -310,7 +310,7 @@ public class MemberLoginService extends BaseUserService {
 
             // 獲取會員信息
             logger.info("開始獲取會員信息，userId: {}", user.getId());
-            MemberBean member = memberRepository.findByUserIdWithJoin(user.getId())
+            Member member = memberRepository.findByUserIdWithJoin(user.getId())
                 .orElse(null);
             
             if (member == null) {
@@ -357,11 +357,11 @@ public class MemberLoginService extends BaseUserService {
     }
 
     @Override
-    public UsersBean findByEmail(String email) {
-        return usersRepository.findByEmailAndUserRole(email, UsersBean.UserRole.MEMBER);
+    public Users findByEmail(String email) {
+        return usersRepository.findByEmailAndUserRole(email, Users.UserRole.MEMBER);
     }
 
-    public UsersBean findById(Integer id) {
+    public Users findById(Integer id) {
         return usersRepository.findById(id).orElse(null);
     }
 
@@ -446,7 +446,7 @@ public class MemberLoginService extends BaseUserService {
 
             // 查找用戶
             logger.info("開始查找用戶，email: {}", email);
-            UsersBean user = usersRepository.findByEmail(email);
+            Users user = usersRepository.findByEmail(email);
             if (user == null) {
                 logger.warn("驗證失敗：找不到用戶，email: {}", email);
                 result.put("success", false);
@@ -482,7 +482,7 @@ public class MemberLoginService extends BaseUserService {
             
             // 更新會員狀態
             logger.info("開始查找會員信息，userId: {}", user.getId());
-            MemberBean member = memberRepository.findByUserId(user.getId()).orElse(null);
+            Member member = memberRepository.findByUserId(user.getId()).orElse(null);
             if (member == null) {
                 logger.error("找不到對應的會員資訊，userId: {}", user.getId());
                 result.put("success", false);

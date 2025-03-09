@@ -5,10 +5,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import petTopia.model.user.MemberBean;
+import petTopia.model.user.Member;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import petTopia.model.user.UsersBean;
+import petTopia.model.user.Users;
 import petTopia.service.user.MemberLoginService;
 import petTopia.service.user.MemberService;
 
@@ -33,13 +33,13 @@ public class MemberController {
         }
 
         try {
-            MemberBean member = memberService.getMemberById(userId);
+            Member member = memberService.getMemberById(userId);
             // 獲取用戶的 email
-            UsersBean user = memberLoginService.findById(userId);
+            Users user = memberLoginService.findById(userId);
 
             if (member == null) {
                 // 4. 如果是新用戶，自動創建 member 資料
-                member = new MemberBean();
+                member = new Member();
                 member.setId(userId);
                 member.setStatus(false);
                 member.setUser(user);
@@ -61,7 +61,7 @@ public class MemberController {
     // 更新會員資料
     @PostMapping("/update")
     public String updateProfile(
-            @ModelAttribute MemberBean member,
+            @ModelAttribute Member member,
             @RequestParam(value = "birthdate", required = false) String birthdateStr,
             @RequestParam(value = "photo", required = false) MultipartFile photo,
             HttpSession session,
@@ -76,8 +76,8 @@ public class MemberController {
             // 確保更新的是當前登入用戶的資料
             member.setId(userId);
 
-            // 獲取當前用戶的 UsersBean
-            UsersBean currentUser = memberLoginService.findById(userId);
+            // 獲取當前用戶的 Users
+            Users currentUser = memberLoginService.findById(userId);
             if (currentUser == null) {
                 redirectAttributes.addFlashAttribute("error", "用戶資料不存在");
                 return "redirect:/profile";
@@ -90,7 +90,7 @@ public class MemberController {
             }
 
             // 獲取現有會員資料
-            MemberBean existingMember = memberService.getMemberById(userId);
+            Member existingMember = memberService.getMemberById(userId);
             // 設置狀態
             if (existingMember != null) {
                 member.setStatus(existingMember.getStatus());
