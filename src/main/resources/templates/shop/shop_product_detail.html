@@ -383,7 +383,7 @@
   </header>
 
   <!-- 主要頁面 -->
-  <section id="product_details" class="container my-5" th:data-product-detail-id="${productDetail.id}">
+  <section id="product_detail" class="container my-5" th:data-product-detail-id="${productDetail.id}">
     <div class="row">
       <!-- 商品圖片 -->
       <div class="col-md-6">
@@ -609,7 +609,7 @@
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
   <script>
-    const productDetails = document.querySelector("#product_details");
+    const productDetails = document.querySelector("#product_detail");
 
     const radios = document.querySelectorAll('input[type="radio"]');
     const sizeRadios = document.querySelectorAll('input[type="radio"].size-radio');
