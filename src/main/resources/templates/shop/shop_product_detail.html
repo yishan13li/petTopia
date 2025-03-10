@@ -383,7 +383,7 @@
   </header>
 
   <!-- 主要頁面 -->
-  <section id="product_details" class="container my-5">
+  <section id="product_details" class="container my-5" th:data-product-detail-id="${productDetail.id}">
     <div class="row">
       <!-- 商品圖片 -->
       <div class="col-md-6">
@@ -424,7 +424,7 @@
             <th:block th:each="size, iterStat : ${sizeList}">
               <div class="form-check">
                 <input class="size-radio form-check-input" type="radio" name="size" th:id="'size' + ${iterStat.count}"
-                  th:value="${size.id}" th:data-product-detail-id="${productDetail.id}">
+                  th:value="${size.id}">
                 <label class="form-check-label no-select" th:for="'size' + ${iterStat.count}">
                   [[${size.name}]]
                 </label>
@@ -446,8 +446,7 @@
             <th:block th:each="color, iterStat : ${colorList}">
               <div class="form-check">
                 <input class="color-radio form-check-input" type="radio" name="color"
-                  th:id="'color' + ${iterStat.count}" th:value="${color.id}"
-                  th:data-product-detail-id="${productDetail.id}">
+                  th:id="'color' + ${iterStat.count}" th:value="${color.id}">
                 <label class="form-check-label no-select" th:for="'color' + ${iterStat.count}">
                   [[${color.name}]]
                 </label>
@@ -610,6 +609,8 @@
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
   <script>
+    const productDetails = document.querySelector("#product_details");
+
     const radios = document.querySelectorAll('input[type="radio"]');
     const sizeRadios = document.querySelectorAll('input[type="radio"].size-radio');
     const colorRadios = document.querySelectorAll('input[type="radio"].color-radio');
@@ -622,6 +623,8 @@
     const productQuantityInput = document.querySelector("#product-quantity-input");
     const addToCartBtn = document.querySelector("#add-to-cart-btn");
     const messages = document.querySelector("#messages");
+
+    onNoOption();
 
     // 已選擇的規格選項
     let selectedSizeRadio = null;
@@ -730,30 +733,26 @@
     addToCartBtn.addEventListener('click', function () {
 
       if (selectedSizeRadio !== null) {
-        console.log("productDetailId: " + selectedSizeRadio.dataset.productDetailId);
+        ;
         console.log("sizeId: " + selectedSizeRadio.value);
       }
       if (selectedColorRadio !== null) {
-        console.log("productDetailId: " + selectedColorRadio.dataset.productDetailId);
+        ;
         console.log("colorId: " + selectedColorRadio.value);
       }
       console.log("productQuantity: " + productQuantityInput.value);
       // return;
 
-      let productDetailId;
-      if (selectedSizeRadio !== null)
-        productDetailId = selectedSizeRadio.dataset.productDetailId;
-      else if (selectedColorRadio !== null)
-        productDetailId = selectedColorRadio.dataset.productDetailId;
 
       //FIXME: 預設 memberid = 1，之後改為參數傳入
-      if (isAllOptionChecked) {
+      // 有規格必須全部選擇，沒有規格可以直接加入購物車
+      if (isAllOptionChecked || (sizeRadios.length === 0 && colorRadios.length === 0)) {
         axios({
           method: 'post',
           url: 'http://localhost:8080/shop/productDetail/api/addProductToCart',
           params: {
             memberId: 1,
-            productDetailId: productDetailId,
+            productDetailId: productDetails.dataset.productDetailId,
             productSizeId: selectedSizeRadio !== null ? selectedSizeRadio.value : null,
             productColorId: selectedColorRadio !== null ? selectedColorRadio.value : null,
             quantity: productQuantityInput.value
@@ -789,18 +788,12 @@
         });
       }
 
-      let productDetailId;
-      if (selectedSizeRadio !== null)
-        productDetailId = selectedSizeRadio.dataset.productDetailId;
-      else if (selectedColorRadio !== null)
-        productDetailId = selectedColorRadio.dataset.productDetailId;
-
       axios({
         method: 'post',
         url: 'http://localhost:8080/shop/productDetail/api/getConfirmProductByDetailIdSizeIdColorId',
         params: {
           memberId: 1,
-          productDetailId: productDetailId,
+          productDetailId: productDetails.dataset.productDetailId,
           productSizeId: selectedSizeRadio !== null ? selectedSizeRadio.value : null,
           productColorId: selectedColorRadio !== null ? selectedColorRadio.value : null,
           quantity: productQuantityInput.value
@@ -838,7 +831,7 @@
 
       axios({
         method: 'get',
-        url: 'http://localhost:8080/shop/productDetail/api/getProductByOption?productDetailId=' + selectedRadio.dataset.productDetailId + '&optionId=' + selectedRadio.value + '&optionName=' + selectedRadio.name,
+        url: 'http://localhost:8080/shop/productDetail/api/getProductByOption?productDetailId=' + productDetails.dataset.productDetailId + '&optionId=' + selectedRadio.value + '&optionName=' + selectedRadio.name,
       })
         .then(response => {
           let productList = response.data.productList;
@@ -917,7 +910,7 @@
       // 重新設置未選擇規格前的商品詳情頁面
       axios({
         method: 'get',
-        url: 'http://localhost:8080/shop/productDetail/api/getProductByProductDetailId?productDetailId=' + clickedRadio.dataset.productDetailId,
+        url: 'http://localhost:8080/shop/productDetail/api/getProductByProductDetailId?productDetailId=' + productDetails.dataset.productDetailId,
       })
 
         .then(response => {
@@ -936,6 +929,13 @@
         .catch(error => console.log(error));
     }
 
+    // 初始進入網頁，如果沒有規格選項 => +- 按鈕 和 輸入數量的disabled=false
+    function onNoOption() {
+      if (sizeRadios.length === 0 && colorRadios.length === 0) {
+        setQuantityBtnAndInputDisabled(false);
+      }
+    }
+
     // 設定 +- 按鈕 和 輸入數量的disabled
     function setQuantityBtnAndInputDisabled(setBoolean) {
       increaseBtn.disabled = setBoolean;
@@ -943,7 +943,6 @@
       productQuantityInput.disabled = setBoolean;
 
     }
-
 
     // #endregion
 
