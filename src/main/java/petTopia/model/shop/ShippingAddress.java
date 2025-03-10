@@ -1,7 +1,7 @@
 package petTopia.model.shop;
 
-import java.util.Date;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -20,26 +20,24 @@ import petTopia.model.user.Member;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name="cart")
-public class Cart {
-	
+@Table(name = "shipping_address")
+public class ShippingAddress {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    @JoinColumn(name = "member_id", referencedColumnName = "id")
+    @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    @ManyToOne
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    @Column(name = "city", nullable = false)
+    private String city;
 
-    @Column(name = "quantity", nullable = false)
-    private Integer quantity;
+    @Column(name = "street", nullable = false)
+    private String street;
 
-    @Column(name = "created_date", insertable = false, updatable = false)
-    private Date createdDate;
-    
+    @Column(name = "is_current", nullable = false, columnDefinition = "BIT DEFAULT 0")
+    private Boolean isCurrent;
 }
