@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>店家評價管理</title>
+<link rel="stylesheet" th:href="@{/admin_static/css/style.css}">
+<link rel="stylesheet"
+	th:href="@{https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script
+	src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<style>
+.table-hover tbody tr:hover {
+	background-color: #f1f1f1;
+	cursor: pointer;
+}
+
+.review-detail {
+	display: none;
+	background: #fff;
+	border-left: 4px solid #007bff;
+	padding: 10px;
+	margin-top: 5px;
+	box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.review-img {
+	width: 100px;
+	height: 100px;
+	object-fit: cover;
+	cursor: pointer;
+	transition: transform 0.3s;
+}
+
+.review-img:hover {
+	transform: scale(1.1);
+}
+</style>
+</head>
+<body>
+	<div class="container mt-4">
+		<h2 class="text-center">店家評價概覽</h2>
+		<h4 class="text-center">
+			總平均評分: <span id="overallRating">-</span>
+		</h4>
+
+		<div class="chart-container d-flex justify-content-center my-4">
+			<canvas id="ratingChart"></canvas>
+		</div>
+
+		<div class="table-container">
+			<h4>評價列表</h4>
+			<input type="text" id="searchInput" class="form-control mb-3"
+				placeholder="搜尋評價內容..." oninput="searchReviews()">
+			<table class="table table-hover table-striped">
+				<thead class="table-primary">
+					<tr>
+						<th>評論者</th>
+						<th>評價時間</th>
+						<th>環境評分</th>
+						<th>價格評分</th>
+						<th>服務評分</th>
+						<th>評價內容</th>
+						<th>操作</th>
+					</tr>
+				</thead>
+				<tbody id="reviewsTable"></tbody>
+			</table>
+		</div>
+	</div>
+
+	
+
+	<!-- Modal for Image Preview -->
+	<div class="modal fade" id="imageModal" tabindex="-1"
+		aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-body text-center">
+					<img id="modalImage" class="img-fluid">
+				</div>
+			</div>
+		</div>
+	</div>
+	<script>
+        let ratingsData = {
+            reviews: [
+                { name: "小明", date: "2025-03-01", environment: 4.5, price: 4.0, service: 4.7, content: "店鋪整體很棒，服務也很好。", image: "https://via.placeholder.com/100" },
+                { name: "小美", date: "2025-02-28", environment: 4.0, price: 4.3, service: 4.0, content: "價格實惠，服務態度親切。", image: "https://via.placeholder.com/100" }
+            ]
+        };
+
+        function updateReviews() {
+            const tableBody = document.getElementById('reviewsTable');
+            tableBody.innerHTML = '';
+            ratingsData.reviews.forEach((review, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${review.name}</td>
+                    <td>${review.date}</td>
+                    <td>${review.environment}</td>
+                    <td>${review.price}</td>
+                    <td>${review.service}</td>
+                    <td>${review.content}</td>
+                    <td><button class="btn btn-danger btn-sm" onclick="deleteReview(${index})">刪除</button></td>
+                `;
+                row.onclick = () => toggleDetails(index);
+                tableBody.appendChild(row);
+
+                const detailRow = document.createElement('tr');
+                detailRow.innerHTML = `
+                    <td colspan="7">
+                        <div class="review-detail p-3">
+                            <p><strong>詳細評論:</strong> ${review.content}</p>
+                            <img src="${review.image}" class="review-img" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showImage('${review.image}')">
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(detailRow);
+            });
+        }
+
+        function toggleDetails(index) {
+            document.querySelectorAll('.review-detail').forEach((el, i) => {
+                el.style.display = (i === index && el.style.display !== 'block') ? 'block' : 'none';
+            });
+        }
+
+        function showImage(imageSrc) {
+            document.getElementById('modalImage').src = imageSrc;
+        }
+
+        function deleteReview(index) {
+            ratingsData.reviews.splice(index, 1);
+            updateReviews();
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            updateReviews();
+        });
+    </script>
+</body>
+</html>

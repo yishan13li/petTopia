@@ -8,12 +8,15 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -23,11 +26,18 @@ import lombok.Setter;
 @NoArgsConstructor
 @Entity
 @Table(name = "vendor")
+@AllArgsConstructor
+
+
 public class Vendor {
 
 	@Id
 	@Column(name = "id")
 	private Integer id;
+
+	@OneToOne
+	@JoinColumn(name = "id")
+	private User user;
 
 	@Column(name = "name")
 	private String name;
@@ -35,6 +45,7 @@ public class Vendor {
 	@Column(name = "description")
 	private String description;
 
+	@JsonIgnore
 	@Column(name = "logo_img")
 	private byte[] logoImg;
 
@@ -53,46 +64,62 @@ public class Vendor {
 	@Column(name = "taxid_number")
 	private String taxidNumber;
 
-	@Column(name = "status")
-	private boolean status;
+	@Column(name = "status", nullable = false)
+	private boolean status = false;
 
 	@ManyToOne
 	@JoinColumn(name = "vendor_category_id")
 	private VendorCategory vendorCategory;
 
-	@Column(name = "registration_date")
-	private Date registrationDate;
+	@Column(name = "registration_date", updatable = false)
+	private java.util.Date registrationDate = new Date();
 
 	@Column(name = "updated_date")
-	private Date updatedDate;
+	private java.util.Date updatedDate = new Date();
 
 	@Column(name = "event_count")
-	private Integer eventCount;
+	private int eventCount = 0;
 
 	@Column(name = "total_rating")
-	private Double totalRating;
+	private float totalRating = 0;
 
 	@Column(name = "review_count")
-	private Integer reviewCount;
+	private int reviewCount = 0;
 
-	@Column(name = "avg_rating")
-	private Double avgRating;
+	@Column(name = "avg_rating", nullable = false)
+	private float avgRating = 0;
 
-	@Column(name = "vendor_level")
-	private String vendorLevel;
+	@Column(name = "vendor_level", nullable = false)
+	private String vendorLevel = "普通";
 
 	@JsonIgnore
-	@OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<VendorCertification> certifications;
+
+	@JsonIgnore
+	@OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<VendorActivity> activities;
+
+//    @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
+//    private List<VendorReview> reviews;
+//    
+//    @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
+//    private List<Notification> notifications;
+
+	@JsonIgnore
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "vendor", cascade = CascadeType.ALL)
 	private List<VendorActivityReview> reviews;
 
 	@JsonIgnore
-	@OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL)
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "vendor", cascade = CascadeType.ALL)
 	private List<VendorImages> vendorImages;
 
 	@JsonIgnore
-	@OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL)
-	private List<VendorActivity> vendorActivities;
+	@OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<VendorImages> images;
 
+	/* 使用Transient防止被序列化，用於Service層賦值 */
 	@Transient
 	private String logoImgBase64;
+
 }

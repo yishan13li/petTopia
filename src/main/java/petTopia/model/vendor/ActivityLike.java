@@ -1,6 +1,8 @@
 package petTopia.model.vendor;
 
+
 import jakarta.persistence.Column;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -9,12 +11,17 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import petTopia.model.user.MemberBean;
 
+
+@Entity
+@Table(name = "activity_like")
 @Getter
 @Setter
 @NoArgsConstructor
-@Entity
-@Table(name = "activity_like")
 public class ActivityLike {
 
 	@Id
@@ -22,9 +29,12 @@ public class ActivityLike {
 	@Column(name = "id")
 	private Integer id;
 
-	@Column(name = "member_id")
-	private Integer memberId;
+	@ManyToOne
+	@JoinColumn(name = "member_id", nullable = false)
+	private MemberBean member;
 
-	@Column(name = "vendor_activity_id")
-	private Integer vendorActivityId;
+	@JsonIgnore
+	@ManyToOne
+	@JoinColumn(name = "vendor_activity_id", nullable = false)
+	private VendorActivity vendorActivity;
 }
