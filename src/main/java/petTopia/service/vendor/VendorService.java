@@ -42,8 +42,13 @@ public class VendorService {
 			
 			byte[] logoImg = vendor.getLogoImg();
 			String mimeType = ImageConverter.getMimeType(logoImg);
-			String base64 = "data:%s;base64,".formatted(mimeType) + Base64.getEncoder().encodeToString(logoImg);
-			vendor.setLogoImgBase64(base64);
+			
+			if(logoImg==null) {
+				vendor.setLogoImgBase64(null);
+			}else {
+				String base64 = "data:%s;base64,".formatted(mimeType) + Base64.getEncoder().encodeToString(logoImg);
+				vendor.setLogoImgBase64(base64);
+			}		
 			
 			return vendor;
 		}

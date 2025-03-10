@@ -8,6 +8,10 @@ public class ImageConverter {
 	
 	/* 讀取檔案之MimeType */
 	public static String getMimeType(byte[] imageBytes) {
+	    if (imageBytes == null) {
+	        return "image/jpg";
+	    }
+	    
 		try {
 			ByteArrayInputStream inputStream = new ByteArrayInputStream(imageBytes);
 			String mimeType = URLConnection.guessContentTypeFromStream(inputStream);
