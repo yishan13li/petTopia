@@ -23,7 +23,7 @@ public class ActivityFrontEndRouteController {
 	}
 	
 	@GetMapping("/activity/detail/{activityId}")
-	public String activityDetail(@PathVariable Integer activityId, Model model) {
+	public String activityDetail(@PathVariable("activityId")Integer activityId, Model model) {
 		
 		/* 該活動資料之賦值 */
 		VendorActivity activity = vendorActivityService.findActivityById(activityId);
