@@ -12,12 +12,12 @@ import petTopia.model.vendor.UserRole;
 import petTopia.model.vendor.Vendor;
 import petTopia.model.vendor.VendorActivity;
 import petTopia.model.vendor.VendorCategory;
-import petTopia.repository.vendor_admin.VendorActivityRepository;
-import petTopia.repository.vendor_admin.VendorCategoryRepository;
-import petTopia.repository.vendor_admin.VendorRepository;
+import petTopia.repository.vendor.VendorActivityRepository;
+import petTopia.repository.vendor.VendorCategoryRepository;
+import petTopia.repository.vendor.VendorRepository;
 
 @Service
-public class VendorService {
+public class VendorServiceAdmin {
 
 	@Autowired
 	private UserService userService;
@@ -41,7 +41,7 @@ public class VendorService {
 
 	public Optional<Vendor> getVendorProfile(String email, String password) {
 		Optional<User> user = getUserByEmailAndPassword(email, password);
-		if (user.isPresent() && user.get().getUserRole() == UserRole.vendor) {
+		if (user.isPresent()) {
 			return vendorRepository.findById(user.get().getUserId());
 		}
 		return Optional.empty();

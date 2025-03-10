@@ -48,7 +48,7 @@ public class VendorActivityReviewService {
 			VendorActivityReview newReview = new VendorActivityReview();
 			newReview.setMemberId(memberId);
 			newReview.setVendor(vendor); 
-			newReview.setVendorActivityId(activityId);
+			newReview.setVendorActivity(activityOptional);
 			newReview.setReviewContent(content);
 			newReview.setReviewTime(new Date());
 			vendorActivityReviewRepository.save(newReview);

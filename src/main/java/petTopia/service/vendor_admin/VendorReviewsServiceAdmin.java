@@ -8,14 +8,14 @@ import org.springframework.stereotype.Service;
 
 import petTopia.model.vendor.ReviewPhoto;
 import petTopia.model.vendor.VendorReview;
-import petTopia.repository.vendor_admin.ReviewPhotoRepository;
-import petTopia.repository.vendor_admin.VendorReviewsRepository;
+import petTopia.repository.vendor.ReviewPhotoRepository;
+import petTopia.repository.vendor.VendorReviewRepository;
 
 @Service
-public class VendorReviewsService {
+public class VendorReviewsServiceAdmin {
 
 	@Autowired
-	private VendorReviewsRepository vendorReviewRepository;
+	private VendorReviewRepository vendorReviewRepository;
 
 	@Autowired
 	private ReviewPhotoRepository reviewPhotoRepository;

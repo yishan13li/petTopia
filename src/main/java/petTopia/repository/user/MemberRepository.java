@@ -2,8 +2,8 @@ package petTopia.repository.user;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import petTopia.model.user.Member;
+import petTopia.model.user.MemberBean;
 
-public interface MemberRepository extends JpaRepository<Member, Integer> {
+public interface MemberRepository extends JpaRepository<MemberBean, Integer> {
 
 }

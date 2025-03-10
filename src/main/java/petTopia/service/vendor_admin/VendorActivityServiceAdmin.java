@@ -7,11 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import petTopia.model.vendor.VendorActivity;
+import petTopia.repository.vendor.VendorActivityRepository;
 import petTopia.repository.vendor_admin.VendorActivityImagesRepository;
-import petTopia.repository.vendor_admin.VendorActivityRepository;
 
 @Service
-public class VendorActivityService {
+public class VendorActivityServiceAdmin {
 
 	@Autowired
 	private VendorActivityRepository vendorActivityRepository;

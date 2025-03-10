@@ -23,21 +23,20 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
-import jakarta.websocket.server.PathParam;
 import petTopia.model.vendor.ReviewPhoto;
 import petTopia.model.vendor.VendorReview;
-import petTopia.repository.vendor_admin.ReviewPhotoRepository;
-import petTopia.repository.vendor_admin.VendorReviewsRepository;
-import petTopia.service.vendor_admin.VendorReviewsService;
+import petTopia.repository.vendor.ReviewPhotoRepository;
+import petTopia.repository.vendor.VendorReviewRepository;
+import petTopia.service.vendor_admin.VendorReviewsServiceAdmin;
 
 @Controller
 public class VendorReviewsController {
 
 	@Autowired
-	private VendorReviewsService vendorReviewsService;
+	private VendorReviewsServiceAdmin vendorReviewsService;
 
 	@Autowired
-	private VendorReviewsRepository vendorReviewsRepository;
+	private VendorReviewRepository vendorReviewRepository;
 
 	@Autowired
 	private ReviewPhotoRepository reviewPhotoRepository;
@@ -50,7 +49,7 @@ public class VendorReviewsController {
 	@ResponseBody
 	@GetMapping("/api/vendor_admin/reviews/{vendorId}")
 	public ResponseEntity<?> getAllReviews() {
-		List<VendorReview> reviews = vendorReviewsRepository.findAll();
+		List<VendorReview> reviews = vendorReviewRepository.findAll();
 		if (reviews.isEmpty()) {
 			return ResponseEntity.ok(Collections.emptyList()); // ✅ 返回空数组 []
 		}
@@ -76,7 +75,7 @@ public class VendorReviewsController {
 
 	@GetMapping("/review_photos/ids")
 	public ResponseEntity<?> findPhotoIdByVendorReviewId(@RequestParam Integer vendorReviewId) {
-		Optional<VendorReview> op = vendorReviewsRepository.findById(vendorReviewId);
+		Optional<VendorReview> op = vendorReviewRepository.findById(vendorReviewId);
 
 		List<Integer> photoIdList = new ArrayList<>();
 
@@ -129,7 +128,7 @@ public class VendorReviewsController {
 			vendorReviews.setRatingPrice(review.getRatingPrice());
 			vendorReviews.setRatingService(review.getRatingService());
 
-			VendorReview savedReview = vendorReviewsRepository.save(vendorReviews);
+			VendorReview savedReview = vendorReviewRepository.save(vendorReviews);
 
 			// 如果有上传图片，保存图片
 			if (photo != null && !photo.isEmpty()) {
@@ -156,7 +155,7 @@ public class VendorReviewsController {
 	@ResponseBody
 	@DeleteMapping("/api/vendor_admin/review/delete/{reviewId}")
 	public ResponseEntity<?> deleteReview(@PathVariable Integer reviewId) {
-		Optional<VendorReview> review = vendorReviewsRepository.findById(reviewId);
+		Optional<VendorReview> review = vendorReviewRepository.findById(reviewId);
 		Map<String, String> response = new HashMap<>();
 		if (review.isPresent()) {
 			boolean deleted = vendorReviewsService.deleteReview(reviewId);

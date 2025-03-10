@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import petTopia.model.vendor.VendorActivityReview;
-import petTopia.repository.vendor_admin.VendorActivityReviewRepository;
+import petTopia.repository.vendor.VendorActivityReviewRepository;
 
 @Controller
 public class VendorActivityReviewsController {

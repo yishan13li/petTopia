@@ -10,10 +10,10 @@ import petTopia.model.vendor.CertificationTag;
 import petTopia.model.vendor.Vendor;
 import petTopia.model.vendor.VendorCertification;
 import petTopia.model.vendor.VendorCertificationTag;
+import petTopia.repository.vendor.VendorRepository;
 import petTopia.repository.vendor_admin.CertificationTagRepository;
 import petTopia.repository.vendor_admin.VendorCertificationRepository;
 import petTopia.repository.vendor_admin.VendorCertificationTagRepository;
-import petTopia.repository.vendor_admin.VendorRepository;
 
 @Service
 public class VendorCertificationService {

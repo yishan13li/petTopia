@@ -25,16 +25,16 @@ import org.springframework.web.multipart.MultipartFile;
 import petTopia.model.vendor.Vendor;
 import petTopia.model.vendor.VendorCategory;
 import petTopia.model.vendor.VendorImages;
-import petTopia.repository.vendor_admin.VendorCategoryRepository;
-import petTopia.repository.vendor_admin.VendorImagesRepository;
-import petTopia.repository.vendor_admin.VendorRepository;
-import petTopia.service.vendor_admin.VendorService;
+import petTopia.repository.vendor.VendorCategoryRepository;
+import petTopia.repository.vendor.VendorImagesRepository;
+import petTopia.repository.vendor.VendorRepository;
+import petTopia.service.vendor_admin.VendorServiceAdmin;
 
 @Controller
 
 public class VendorProfileController {
 	@Autowired
-	private VendorService vendorService;
+	private VendorServiceAdmin vendorService;
 
 	@Autowired
 	private VendorRepository vendorRepository;

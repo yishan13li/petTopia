@@ -32,9 +32,9 @@ public class User {
 	@Column(nullable = false, unique = true)
 	private String email;
 
-	@Enumerated(EnumType.STRING)
-    @Column(nullable = false ,name = "user_role")
-    private UserRole userRole;
+//	@Enumerated(EnumType.STRING)
+//    @Column(nullable = false ,name = "user_role")
+//    private UserRole userRole;
 
 	public User(String password, String email) {
 		super();

@@ -28,12 +28,12 @@ import petTopia.model.vendor.ActivityType;
 import petTopia.model.vendor.Vendor;
 import petTopia.model.vendor.VendorActivity;
 import petTopia.model.vendor.VendorActivityImages;
+import petTopia.repository.vendor.VendorActivityRepository;
+import petTopia.repository.vendor.VendorRepository;
 import petTopia.repository.vendor_admin.ActivityPeopleNumberRepository;
 import petTopia.repository.vendor_admin.VendorActivityImagesRepository;
-import petTopia.repository.vendor_admin.VendorActivityRepository;
-import petTopia.repository.vendor_admin.VendorRepository;
 import petTopia.service.vendor_admin.ActivityTypeService;
-import petTopia.service.vendor_admin.VendorActivityService;
+import petTopia.service.vendor_admin.VendorActivityServiceAdmin;
 
 @Controller
 public class VendorActivityController {
@@ -42,7 +42,7 @@ public class VendorActivityController {
 	private VendorRepository vendorRepository;
 
 	@Autowired
-	private VendorActivityService vendorActivityService;
+	private VendorActivityServiceAdmin vendorActivityServiceAdmin;
 
 	@Autowired
 	private VendorActivityRepository vendorActivityRepository;
@@ -78,7 +78,7 @@ public class VendorActivityController {
 
 	@GetMapping("/vendor_admin/vendor_admin_activityDetail")
 	public String getVendorActivityDetail(@RequestParam Integer id, Model model) {
-		Optional<VendorActivity> activity = vendorActivityService.getVendorActivityById(id);
+		Optional<VendorActivity> activity = vendorActivityServiceAdmin.getVendorActivityById(id);
 		List<Integer> vendorActivityImageIdList = new ArrayList<>();
 		if (activity.isPresent()) {
 			VendorActivity vendorActivity = activity.get();
@@ -254,7 +254,7 @@ public class VendorActivityController {
 	@ResponseBody
 	@GetMapping("/api/vendor_admin/activity/{vendorId}")
 	public ResponseEntity<List<VendorActivity>> getVendorActivitiesByVendorId(@PathVariable Integer vendorId) {
-		List<VendorActivity> activities = vendorActivityService.getVendorActivityByVendorId(vendorId);
+		List<VendorActivity> activities = vendorActivityServiceAdmin.getVendorActivityByVendorId(vendorId);
 
 		if (!activities.isEmpty()) {
 			return ResponseEntity.ok(activities);
@@ -272,7 +272,7 @@ public class VendorActivityController {
 	@DeleteMapping("/{id}")
 	public ResponseEntity<Map<String, String>> deleteVendorActivity(@PathVariable Integer id) {
 		Optional<VendorActivity> vendorActivity = vendorActivityRepository.findById(id);
-		vendorActivityService.deleteVendorActivity(id);
+		vendorActivityServiceAdmin.deleteVendorActivity(id);
 		Vendor vendor = vendorActivity.get().getVendor();
 		updateActivityCount(vendor);
 		Map<String, String> response = new HashMap<>();
