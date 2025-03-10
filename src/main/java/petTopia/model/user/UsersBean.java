@@ -26,9 +26,9 @@ public class UsersBean {
     @Column(nullable = false)
     private String email;
 
-//    @Column(name = "user_role", nullable = false, length = 50)
-//    @Enumerated(EnumType.STRING)
-//    private UserRole userRole;
+    @Column(name = "user_role", nullable = false, length = 50)
+    @Enumerated(EnumType.STRING)
+    private UserRole userRole;
 
     @Column(name = "email_verified")
     private boolean emailVerified = false;
