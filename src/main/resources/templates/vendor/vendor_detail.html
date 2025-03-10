@@ -429,7 +429,7 @@
   <!-- 留言區 -->
   <th:block th:each="review : ${reviewList}">
     <section>
-      <div class="comment">
+      <div class="comment" th:data-id="${review.reviewId}">
         <div class="container rounded-3" style="background-color: #F9F3EC; padding: 20px">
           <div class="row">
             <div class="col-lg-3">
@@ -447,11 +447,11 @@
 
                 <div class="d-flex flex-wrap mt-3">
                   <a class="btn btn-outline-dark btn-1g text-uppercase fs-5 rounded-4 me-4"
-                    onclick="rewriteComment(this)">
+                    onclick="rewriteComment(this)" th:data-id="${review.reviewId}">
                     修改
                   </a>
                   <a class="btn btn-outline-dark btn-lg text-uppercase fs-5 rounded-4 me-4"
-                    onclick="deleteComment(this)">
+                    onclick="deleteComment(this)" th:data-id="${review.reviewId}">
                     刪除
                   </a>
                 </div>
@@ -721,13 +721,6 @@
       document.body.style.overflow = "scroll";
     }
 
-    // function submitForm() {
-    //   let inputValue = document.getElementById('inputField').value;
-    //   alert("你輸入的是: " + inputValue);
-    //   alert("現在是測試用之後改掉");
-    //   closePopup(); // 提交後關閉表單
-    // }
-
     function submitForm() {
       let vendorId = /*[[${vendor.id}]]*/null;
       let content = document.getElementById('inputField').value;
@@ -765,16 +758,57 @@
 
   <!-- 個別留言視窗JS -->
 
-  <script>
+  <script th:inline="javascript">
     function deleteComment(content) {
       const isConfirmed = window.confirm("確定要刪除這個評論嗎？");
 
+      let reviewId = content.getAttribute('data-id');
+      let vendorId = /*[[${vendor.id}]]*/null;
+      let data = {
+        memberId: 19,  // 這裡改成實際的會員 ID
+        vendorId: vendorId
+      };
+
+
+      // if (isConfirmed) {
+      //   let commentDiv = content.closest('.comment');
+      //   let reviewId = commentDiv.getAttribute('data-id'); // 之後邏輯改成符合之memeber和vendor才會顯示刪除按鈕
+      //   if (commentDiv) {
+      //     let targetDiv = document.querySelector(`.comment[data-id='${reviewId}']`);
+      //     if (targetDiv) {
+      //       targetDiv.style.display = 'none'; // 隱藏對應的 .comment
+      //     }
+      //   }
+      // }
+
       if (isConfirmed) {
-        const commentDiv = content.closest('.comment');
-        if (commentDiv) {
-          commentDiv.style.display = 'none';
-        }
+
+        fetch("/vendor/delete_review", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        })
+          .then(response => response.json())
+          .then(result => {
+            if (result.success) {
+
+              let targetDiv = document.querySelector(`.comment[data-id='${reviewId}']`);
+              if (targetDiv) {
+                targetDiv.style.display = 'none';
+              }
+              console.log("我有被執行");
+              alert("評論刪除成功");
+            } else {
+              alert("評論刪除失敗");
+            }
+          })
+          .catch(error => {
+            console.error("發生錯誤:", error);
+          });
+
       }
+
+
     }
 
     let currentCommentP = null; // 用來存當前要修改的 <p> 標籤

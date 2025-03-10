@@ -17,6 +17,7 @@ import lombok.Setter;
 public class VendorReviewDto {
     
     /* 評價資訊 */
+	private Integer reviewId;
     private Integer vendorId;
     private Date reviewTime;
     private String reviewContent;

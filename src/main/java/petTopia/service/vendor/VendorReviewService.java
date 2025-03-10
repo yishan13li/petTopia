@@ -38,7 +38,7 @@ public class VendorReviewService {
 		return vendorReviewList;
 	}
 
-	/* 上傳多張圖片(未成功) */
+	/* 上傳多張圖片 */
 	@Transactional
 	public void addReviewPhotos(Integer reviewId, List<MultipartFile> reviewPhotos) throws IOException {
 		
@@ -113,6 +113,7 @@ public class VendorReviewService {
 		VendorReviewDto dto = new VendorReviewDto();
 
 		/* 設定評價資訊 */
+		dto.setReviewId(review.getId());
 		dto.setVendorId(review.getVendorId());
 		dto.setReviewTime(review.getReviewTime());
 		dto.setReviewContent(review.getReviewContent());
@@ -148,6 +149,12 @@ public class VendorReviewService {
 	/* 刪除某成員對某店家之評論及評分 */
 	public void deleteReviewByMemberIdAndVendorId(Integer memberId, Integer vendorId) {
 		VendorReview vendorReview = vendorReviewRepository.findByMemberIdAndVendorId(memberId, vendorId);
+		
+		/* 將評論內容及時間設為空，避免刪掉星星評分 */
+//		vendorReview.setReviewContent(null);
+//		vendorReview.setReviewTime(null);
+//		vendorReviewRepository.save(vendorReview);
+		
 		Integer reviewId = vendorReview.getId();
 		vendorReviewRepository.deleteById(reviewId);
 	}

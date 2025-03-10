@@ -52,12 +52,26 @@ public class VendorFrontEndApiController {
 		return response;
 	}
 
+//	@PostMapping("/vendor/give_star_review")
+//	public String giveStarReview(Integer memberId, Integer vendorId, Integer ratingEnv, Integer ratingPrice,
+//			Integer ratingService) {
+//		vendorReviewService.addOrModifyVendorStarReview(memberId, vendorId, ratingEnv, ratingPrice, ratingService);
+//
+//		return "/vendor/vendor_detail.html";
+//	}
+	@ResponseBody
 	@PostMapping("/vendor/give_star_review")
-	public String giveStarReview(Integer memberId, Integer vendorId, Integer ratingEnv, Integer ratingPrice,
-			Integer ratingService) {
+	public Map<String, Object> giveStarReview(@RequestBody Map<String, Integer> data) {
+		Integer memberId = data.get("memberId");
+		Integer vendorId = data.get("vendorId");
+		Integer ratingEnv = data.get("ratingEnv");
+		Integer ratingPrice = data.get("ratingPrice");
+		Integer ratingService = data.get("ratingService");
 		vendorReviewService.addOrModifyVendorStarReview(memberId, vendorId, ratingEnv, ratingPrice, ratingService);
 
-		return "/vendor/vendor_detail.html";
+		Map<String, Object> response = new HashMap<>();
+		response.put("sucess", true);
+		return response;
 	}
 
 //	@PostMapping("/vendor/give_vendor_like")
@@ -69,9 +83,9 @@ public class VendorFrontEndApiController {
 
 	@ResponseBody
 	@PostMapping("/vendor/give_vendor_like")
-	public Map<String, Object> giveVendorLike(@RequestBody Map<String, Integer> requestData) {
-		Integer memberId = requestData.get("memberId");
-		Integer vendorId = requestData.get("vendorId");
+	public Map<String, Object> giveVendorLike(@RequestBody Map<String, Integer> data) {
+		Integer memberId = data.get("memberId");
+		Integer vendorId = data.get("vendorId");
 
 		boolean isLiked = vendorLikeService.addOrCancelVendorLike(memberId, vendorId);
 
@@ -80,10 +94,22 @@ public class VendorFrontEndApiController {
 		return response;
 	}
 
+//	@DeleteMapping("/vendor/delete_review")
+//	public String deleteReview(Integer memberId, Integer vendorId) {
+//		vendorReviewService.deleteReviewByMemberIdAndVendorId(memberId, vendorId);
+//		return "/vendor/vendor_detail.html";
+//	}
+	
+	@ResponseBody
 	@DeleteMapping("/vendor/delete_review")
-	public String deleteReview(Integer memberId, Integer vendorId) {
+	public Map<String, Object> deleteReview(@RequestBody Map<String, Integer> data) {
+		Integer memberId = data.get("memberId");
+		Integer vendorId = data.get("vendorId");
+		
 		vendorReviewService.deleteReviewByMemberIdAndVendorId(memberId, vendorId);
-		return "/vendor/vendor_detail.html";
+		Map<String, Object> response = new HashMap<>();
+		response.put("success", true);
+		return response;
 	}
 
 	@ResponseBody
