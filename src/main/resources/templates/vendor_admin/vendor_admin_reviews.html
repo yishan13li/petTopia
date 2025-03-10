@@ -164,7 +164,7 @@ h4 {
         }
         
         function fetchReviews() {
-            axios.get('/api/vendor_admin/review?vendorId=1')
+            axios.get('/api/vendor_admin/review?vendorId=18')
                 .then(response => {
                     ratingsData.reviews = response.data; // Axios 回傳的資料存入變數
                     console.log(response.data);
