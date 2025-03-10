@@ -1,6 +1,7 @@
 package petTopia.service.shop;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
@@ -113,6 +114,9 @@ public class OrderService {
 	        Coupon coupon = couponRepo.findById(couponId)
 	            .orElseThrow(() -> new IllegalArgumentException("找不到對應的優惠券"));
 	        discountAmount = couponService.getDiscountAmountByCoupon(coupon, subtotal);
+	    
+	        // 四捨五入到整數
+	        discountAmount = discountAmount.setScale(0, RoundingMode.HALF_UP);
 	    }
 
 	    // 取得運費（允許 null，預設 0）
@@ -126,6 +130,9 @@ public class OrderService {
 	    // 計算最終總金額
 	    BigDecimal orderTotal = subtotal.subtract(discountAmount).add(shippingFee);
 
+        // 四捨五入到整數
+        orderTotal = orderTotal.setScale(0, RoundingMode.HALF_UP);
+        
 	    // 回傳 DTO
 	    return new OrderSummaryAmoutDto(subtotal, discountAmount, shippingFee, orderTotal);
 	}
@@ -163,6 +170,9 @@ public class OrderService {
         // 計算最終金額：商品總金額 - 折扣 + 運費
         BigDecimal orderTotal = subtotal.subtract(discountAmount).add(shippingFee);
     	
+        // 四捨五入到整數
+        orderTotal = orderTotal.setScale(0, RoundingMode.HALF_UP);
+        
         //==================建立訂單==================
         
         //找訂單狀態   //待出貨

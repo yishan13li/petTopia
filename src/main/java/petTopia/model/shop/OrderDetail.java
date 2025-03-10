@@ -38,12 +38,12 @@ public class OrderDetail {
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
-    @Column(name = "unit_price", nullable = false)
+    @Column(name = "unit_price", nullable = false, precision = 10, scale = 0)
     private BigDecimal unitPrice;
 
-    @Column(name = "discount_price")
+    @Column(name = "discount_price", precision = 10, scale = 0)
     private BigDecimal discountPrice;
 
-    @Column(name = "total_price", nullable = false)
+    @Column(name = "total_price", nullable = false, precision = 10, scale = 0)
     private BigDecimal totalPrice;
 }

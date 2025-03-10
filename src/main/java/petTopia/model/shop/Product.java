@@ -38,10 +38,10 @@ public class Product {
 	@Column(name = "stock_quantity", nullable = false)
 	private Integer stockQuantity;
 
-    	@Column(name = "unit_price", nullable = false, precision = 10, scale = 2)
+    	@Column(name = "unit_price", nullable = false, precision = 10, scale = 0)
 	private BigDecimal unitPrice;
 
-	@Column(name = "discount_price", precision = 10, scale = 2)
+	@Column(name = "discount_price", precision = 10, scale = 0)
 	private BigDecimal discountPrice;
 
 	@Column(name = "created_time", insertable = false, updatable = false)

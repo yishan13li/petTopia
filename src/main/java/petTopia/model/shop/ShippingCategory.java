@@ -26,7 +26,7 @@ public class ShippingCategory {
     @Column(name = "name", nullable = false, unique = true)
     private String name;
 
-    @Column(name = "shipping_cost", nullable = false, columnDefinition = "DECIMAL(10,2) DEFAULT 0")
+    @Column(name = "shipping_cost", nullable = false, columnDefinition = "DECIMAL(10,0) DEFAULT 0")
     private BigDecimal shippingCost;
 
     @Column(name = "shipping_day", nullable = false, columnDefinition = "INT DEFAULT 7")

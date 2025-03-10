@@ -28,10 +28,10 @@ public class Coupon {
     @Column(name = "discount_type", nullable = false)
     private Boolean discountType; // 0 for fixed amount, 1 for discount percentage
 
-    @Column(name = "discount_value", nullable = false)
+    @Column(name = "discount_value", nullable = false, precision = 10, scale = 0)
     private BigDecimal discountValue;
 
-    @Column(name = "min_order_value", nullable = false)
+    @Column(name = "min_order_value", nullable = false, precision = 10, scale = 0)
     private BigDecimal minOrderValue;
 
     @Column(name = "limit_count", nullable = false)

@@ -39,7 +39,7 @@ public class Order {
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    @Column(name = "subtotal", nullable = false)
+    @Column(name = "subtotal", nullable = false, precision = 10, scale = 0)
     private BigDecimal subtotal;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -47,13 +47,13 @@ public class Order {
     @JoinColumn(name = "coupon_id")
     private Coupon coupon;
 
-    @Column(name = "discount_amount", nullable = false)
+    @Column(name = "discount_amount", nullable = false, precision = 10, scale = 0)
     private BigDecimal discountAmount;
 
-    @Column(name = "shipping_fee", nullable = false)
+    @Column(name = "shipping_fee", nullable = false, precision = 10, scale = 0)
     private BigDecimal shippingFee;
 
-    @Column(name = "total_amount", nullable = false)
+    @Column(name = "total_amount", nullable = false, precision = 10, scale = 0)
     private BigDecimal totalAmount;
 
     @ManyToOne

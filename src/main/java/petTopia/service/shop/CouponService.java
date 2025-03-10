@@ -1,6 +1,7 @@
 package petTopia.service.shop;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -118,7 +119,7 @@ public class CouponService {
 	        }
 
 	        // 返回最終金額：商品總金額 - 折扣金額
-	        return discountAmount;
+	        return discountAmount.setScale(0, RoundingMode.HALF_UP);
 	    }
 	    
 	    @Transactional

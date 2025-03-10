@@ -33,7 +33,7 @@ public class Payment {
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
-    @Column(name = "payment_amount", nullable = false)
+    @Column(name = "payment_amount", nullable = false, precision = 10, scale = 0)
     private BigDecimal paymentAmount;
 
     @ManyToOne
