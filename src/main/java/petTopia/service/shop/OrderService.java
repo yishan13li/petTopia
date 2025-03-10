@@ -37,6 +37,8 @@ import petTopia.model.shop.OrderStatus;
 import petTopia.model.shop.Payment;
 import petTopia.model.shop.PaymentCategory;
 import petTopia.model.shop.Product;
+import petTopia.model.shop.ProductColor;
+import petTopia.model.shop.ProductSize;
 import petTopia.model.shop.Shipping;
 import petTopia.model.shop.ShippingAddress;
 import petTopia.model.shop.ShippingCategory;
@@ -241,7 +243,7 @@ public class OrderService {
         return order;
     }
     
-    //把order轉成orderHistoryDto
+  //把order轉成orderHistoryDto
     private OrderHistoryDto convertToOrderHistoryDto(Order order) {
         OrderHistoryDto orderHistory = new OrderHistoryDto();
         orderHistory.setOrderId(order.getId());
@@ -254,20 +256,38 @@ public class OrderService {
         orderHistory.setPaymentStatus(payment != null ? payment.getPaymentStatus().getName() : "待付款"); // 設定付款狀態
         orderHistory.setPaymentCategory(payment.getPaymentCategory().getName());
         
-        Shipping shipping=shippingRepo.findByOrderId(order.getId());
+        Shipping shipping = shippingRepo.findByOrderId(order.getId());
         orderHistory.setShippingCategory(shipping.getShippingCategory().getName());
+
         // 查詢該訂單的商品明細
         List<OrderDetail> orderDetails = orderDetailRepo.findByOrderId(order.getId());
 
         // 使用 getOrderItemDto 方法來轉換商品明細
         List<OrderItemDto> orderItemDtos = orderDetails.stream()
-            .map(orderDetailService::getOrderItemDto)
+            .map(orderDetail -> {
+                OrderItemDto orderItemDto = orderDetailService.getOrderItemDto(orderDetail);
+
+                // 確保 ProductSize 和 ProductColor 可以為 null
+                if (orderItemDto != null) {
+                    ProductSize productSize = orderDetail.getProduct().getProductSize();
+                    ProductColor productColor = orderDetail.getProduct().getProductColor();
+
+                    // 如果 productSize 不為 null，則設置其名稱
+                    orderItemDto.setProductSize(productSize != null ? productSize.getName() : null);
+
+                    // 如果 productColor 不為 null，則設置其名稱
+                    orderItemDto.setProductColor(productColor != null ? productColor.getName() : null);
+                }
+
+                return orderItemDto;
+            })
             .collect(Collectors.toList());
 
         orderHistory.setOrderItems(orderItemDtos);
 
         return orderHistory;
     }
+
 
     public Page<OrderHistoryDto> getOrderHistoryFilter(
     	    Integer memberId, String orderStatus, Date startDate, Date endDate, String keyword, 

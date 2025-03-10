@@ -17,6 +17,8 @@ import petTopia.model.shop.Order;
 import petTopia.model.shop.OrderDetail;
 import petTopia.model.shop.Payment;
 import petTopia.model.shop.Product;
+import petTopia.model.shop.ProductColor;
+import petTopia.model.shop.ProductSize;
 import petTopia.model.shop.Shipping;
 import petTopia.repository.shop.OrderDetailRepository;
 import petTopia.repository.shop.OrderRepository;
@@ -70,20 +72,28 @@ public class OrderDetailService {
         return orderDetails;
     }
     
-    //將訂單的商品細節轉成orderItem
+  //將訂單的商品細節轉成orderItem
     public OrderItemDto getOrderItemDto(OrderDetail orderDetail) {
-    	OrderItemDto orderItemDto = new OrderItemDto();
-    	orderItemDto.setProductPhoto(orderDetail.getProduct().getPhoto());
-    	orderItemDto.setProductName(orderDetail.getProduct().getProductDetail().getName());
-    	orderItemDto.setProductSize(orderDetail.getProduct().getProductSize().getName());
-    	orderItemDto.setProductColor(orderDetail.getProduct().getProductColor().getName());
-    	orderItemDto.setQuantity(orderDetail.getQuantity());
-    	orderItemDto.setUnitPrice(orderDetail.getUnitPrice());
-    	orderItemDto.setDiscountPrice(orderDetail.getDiscountPrice());
-    	orderItemDto.setTotalPrice(orderDetail.getTotalPrice());
-    	
-    	return orderItemDto;
+        OrderItemDto orderItemDto = new OrderItemDto();
+        orderItemDto.setProductPhoto(orderDetail.getProduct().getPhoto());
+        orderItemDto.setProductName(orderDetail.getProduct().getProductDetail().getName());
+
+        // 檢查ProductSize是否為null，避免NullPointerException
+        ProductSize productSize = orderDetail.getProduct().getProductSize();
+        orderItemDto.setProductSize(productSize != null ? productSize.getName() : null);
+
+        // 檢查ProductColor是否為null，避免NullPointerException
+        ProductColor productColor = orderDetail.getProduct().getProductColor();
+        orderItemDto.setProductColor(productColor != null ? productColor.getName() : null);
+
+        orderItemDto.setQuantity(orderDetail.getQuantity());
+        orderItemDto.setUnitPrice(orderDetail.getUnitPrice());
+        orderItemDto.setDiscountPrice(orderDetail.getDiscountPrice());
+        orderItemDto.setTotalPrice(orderDetail.getTotalPrice());
+
+        return orderItemDto;
     }
+
     
     // 查詢訂單的詳情
     public OrderDetailDto getOrderDetailById(Integer orderId) {
