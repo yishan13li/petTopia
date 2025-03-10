@@ -1,9 +1,7 @@
 package petTopia.model.shop;
 
 import java.util.Date;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -24,8 +22,8 @@ import petTopia.model.user.Member;
 @Entity
 @Table(name="cart")
 public class Cart {
-
-	@Id
+	
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
@@ -41,7 +39,7 @@ public class Cart {
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
-    @Column(name = "created_date", nullable = false, insertable = false, updatable = false)
+    @Column(name = "created_date", insertable = false, updatable = false)
     private Date createdDate;
     
 }
