@@ -1,16 +1,14 @@
 package petTopia.model.shop;
 
-import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,26 +19,26 @@ import petTopia.model.user.Member;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name="cart")
-public class Cart {
-	
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+@Table(name = "member_coupon")
+public class MemberCoupon {
+
+    @EmbeddedId
+    private MemberCouponId id; // 使用複合主鍵
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    @MapsId("memberId") // 這樣可以直接透過 memberId 取得會員
     @JoinColumn(name = "member_id", referencedColumnName = "id")
     private Member member;
 
     @ManyToOne
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
-
-    @Column(name = "quantity", nullable = false)
-    private Integer quantity;
-
-    @Column(name = "created_date", insertable = false, updatable = false)
-    private Date createdDate;
+    @MapsId("couponId") // 這樣可以直接透過 couponId 取得優惠券
+    @JoinColumn(name = "coupons_id", referencedColumnName = "id")
+    private Coupon coupon;
     
+    @Column(name = "usage_count")
+    private Integer usageCount; // 新增剩餘次數
+    
+    @Column(name="status", columnDefinition = "bit default 1")
+    private Boolean status;
 }

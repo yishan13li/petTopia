@@ -28,7 +28,6 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class Product {
 
 	@Id
@@ -39,16 +38,13 @@ public class Product {
 	@Column(name = "stock_quantity", nullable = false)
 	private Integer stockQuantity;
 
-	@Column(name = "unit_price", nullable = false)
+    	@Column(name = "unit_price", nullable = false, precision = 10, scale = 2)
 	private BigDecimal unitPrice;
 
-	@Column(name = "discount_price")
+	@Column(name = "discount_price", precision = 10, scale = 2)
 	private BigDecimal discountPrice;
 
-//	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss EEEE", timezone = "GMT+8") // JSON 時間格式化
-//	@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") // 在 thymeleaf 要用 {{}} 強制轉換
-//	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "created_time", nullable = false, insertable = false, updatable = false)
+	@Column(name = "created_time", insertable = false, updatable = false)
 	private Date createdTime;
 
 	@Column(name = "status", nullable = false)
@@ -70,5 +66,4 @@ public class Product {
 	@JoinColumn(name = "product_size_id")
 	private ProductSize productSize;
 	
-
 }

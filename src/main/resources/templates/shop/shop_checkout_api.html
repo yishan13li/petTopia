@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org/">
+
+<head>
+  <title>訂單確認</title>
+  <meta charset="utf-8">
+  <th:block th:replace="~{layout/all_head::head}"></th:block>
+
+  <style>
+    .table {
+      table-layout: fixed;
+      width: 100%;
+    }
+
+    td {
+      padding: 10px 15px;
+    }
+	
+  </style>
+  <script th:src="@{/user_static/js/axios.min.js}"></script>
+</head>
+
+<body>
+  <header th:replace="~{layout/shop_header :: header}"></header>
+
+  <section id="checkout">
+    <div class="container">
+      <div class="row my-5 py-5 justify-content-center">
+        <div class="col-md-12">
+          <!-- 訂單內容 -->
+          <h3 class="mb-4 text-center">訂單確認</h3>
+          <div class="card card-bg">
+            <div class="card-body">
+              <table class="table align-middle text-center" style="table-layout: fixed; width: 100%;">
+                <thead>
+                  <tr class="text-center">
+                    <th style="width: 30%;" class="text-start">已選商品</th>
+                    <th style="width: 20%;" class="text-start">規格</th>
+                    <th style="width: 15%;">單價</th>
+                    <th style="width: 10%;">數量</th>
+                    <th style="width: 15%;">商品總價</th>
+                  </tr>
+                </thead>
+					 <tbody id="cartBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+		  <div class="container">
+		    <div class="row">
+				<!-- 收件資訊同會員資訊 -->
+				<div class="col-md-7">
+				  <h3 class="mb-3 text-center">收件資訊</h3>
+				  <div class="mb-3 d-flex align-items-center">
+				    <input type="checkbox" class="form-check-input" id="sameMember" onclick="fillWithMemberInfo()">
+				    <label class="form-check-label ms-2" for="sameMember">同會員資訊</label>
+				  </div>
+
+				  <!-- 收件人姓名 -->
+				  <div class="mb-3 d-flex align-items-center">
+				    <label for="name" class="form-label me-3" style="min-width: 120px;">收件人姓名</label>
+				    <input type="text" class="form-control" id="name" placeholder="請輸入收件人姓名" name="receiverName" required>
+				  </div>
+
+				  <!-- 收件地址 -->
+				  <div class="mb-2 d-flex align-items-center">
+				    <label for="city" class="form-label me-3" style="min-width: 120px;">收件地址</label>
+				    <select class="form-control" id="city" name="city" required style="height: 40px; width: 120px;">
+				      <option value="" disabled selected>請選擇縣市</option>
+				      <!-- 動態填充縣市 -->
+				    </select>
+				    <input type="text" class="form-control ms-3" id="street" name="street" placeholder="請輸入收件地址" required style="height: 40px; flex-grow: 1;">
+				  </div>
+
+				  <!-- 同上次訂單收件地址 -->
+				  <div class="mb-3 d-flex align-items-center" style="margin-left: 140px;">
+				    <input type="checkbox" class="form-check-input" id="sameAddress" onclick="fillWithLastOrderAddress()">
+				    <label class="form-check-label ms-2" for="sameAddress">最近一次訂單收件地址</label>
+				  </div>
+
+				  <!-- 收件人電話 -->
+				  <div class="mb-3 d-flex align-items-center">
+				    <label for="phone" class="form-label me-3" style="min-width: 120px;">收件人電話</label>
+				    <input type="text" class="form-control" id="phone" name="receiverPhone" placeholder="請輸入收件人電話" required>
+				  </div>
+
+				  <!-- 運送方式 -->
+				  <div class="mb-3 d-flex">
+				    <label class="form-label me-3" style="min-width: 120px;">配送方式</label>
+				    <div class="d-flex flex-column" id="shippingCategoriesContainer">
+				      <!-- 這裡的內容將由 JavaScript 動態填充 -->
+				    </div>
+				  </div>
+		  </div>
+
+		  <div class="col-md-4 offset-md-1">
+		  <!-- 優惠券 -->
+		      <div class="mb-5 mt-4 d-flex justify-content-center">
+		          <div class="w-100 text-center">
+		              <h3 for="coupon" class="form-label mb-4">使用優惠券</h3>
+		              <button id="couponButton" type="button" class="btn w-100 d-flex align-items-center justify-content-center"
+		                  style="height:50px" data-bs-toggle="modal" data-bs-target="#couponModal">
+		                  選擇優惠券
+		              </button>
+		          </div>
+
+		          <!-- 優惠券選擇模態視窗 -->
+		          <div class="modal fade" id="couponModal" tabindex="-1" aria-labelledby="couponModalLabel"
+		              aria-hidden="true">
+		              <div class="modal-dialog">
+		                  <div class="modal-content">
+		                      <div class="modal-header">
+		                          <h5 class="modal-title" id="couponModalLabel">選擇優惠券</h5>
+		                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+		                      </div>
+		                      <div class="modal-body">
+		                          <div class="list-group">
+		                              <p class="fw-bold" style="margin-bottom: 0;">可用優惠券</p>
+		                              <hr style="margin-top: 5px; margin-bottom: 5px;">
+		                              <!-- 這裡的優惠券列表將由 JavaScript 動態加載 -->
+									  <div id="availableCouponsList"></div>
+								  </div>
+
+		                          <!-- 顯示未滿額的優惠券 -->
+		                          <div class="list-group mt-3">
+		                              <p class="fw-bold" style="margin-bottom: 0;">未滿額優惠券</p>
+		                              <hr style="margin-top: 5px; margin-bottom: 5px;">
+		                              <!-- 這裡的未滿額優惠券將由 JavaScript 動態加載 -->
+									  <div id="notMeetCouponsList"></div>
+								  </div>
+		                      </div>
+		                      <div class="modal-footer">
+		                          <button type="button" class="btn coupon-close-btn" data-bs-dismiss="modal">
+		                              Close
+		                          </button>
+		                      </div>
+		                  </div>
+		              </div>
+		          </div>
+		      </div>
+
+		  <!-- 付款方式 -->
+		  <div class="card mt-5 mb-4">
+		    <h3 class="mb-4 text-center">付款方式</h3>
+		    <div class="d-flex justify-content-center gap-5 align-items-center" id="paymentCategoriesContainer">
+		      <!-- 付款方式的單選按鈕會通過 JavaScript 動態加載 -->
+		    </div>
+		  </div>
+		  
+		      </div>
+		    </div>
+		  </div>
+
+		  <!-- 訂單總計區域 -->
+		  <div class="card">
+		    <div class="card-body">
+		      <h3 class="mb-4 text-center">訂單總金額</h3>
+		      <div class="d-flex justify-content-between">
+		        <p>商品總金額</p>
+		  	<p class="subtotal" id="subtotal"></p>
+
+		      </div>
+		      <div class="d-flex justify-content-between">
+		        <p>運費</p>
+		        <p class="shipping-cost" id=ShippingCost>$0</p> <!-- 預設運費，會由 JS 動態更新 -->
+		      </div>
+		      <div class="d-flex justify-content-between">
+		        <p>優惠折扣</p>
+		        <p class="discount">-$0</p> <!-- 預設優惠折扣，會由 JS 動態更新 -->
+		      </div>
+		      <hr>
+		      <div class="d-flex justify-content-between">
+		        <h5>結帳總金額</h5>
+		        <h5 class="final-total" id=finalTotal>$0</h5> <!-- 計算出來的結帳總金額，會由 JS 動態更新 -->
+		      </div>
+
+          <div class="d-flex justify-content-center mt-4">
+            <button type="submit" class="btn"
+              style=" width: 50%; height: 50px; font-size: 18px; transition: background-color 0.3s;">
+              下訂單
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script th:src="@{/user_static/js/jquery-1.11.0.min.js}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe"
+    crossorigin="anonymous"></script>
+  <script th:src="@{/user_static/js/plugins.js}"></script>
+  <script th:src="@{/user_static/js/script.js}"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script th:src="@{/user_static/js/city.js}"></script>
+  <script th:src="@{/user_static/js/coupon.js}"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+  <script>
+    let memberData = null; // 儲存會員資料
+    let addressData = null; // 儲存訂單地址資料
+    let cancelTokenSource = null; // 用於取消請求
+
+    // 模擬請求，獲取會員資料
+    async function fetchMemberData() {
+      if (memberData) {
+        return memberData;
+      }
+
+      if (cancelTokenSource) {
+        cancelTokenSource.cancel("Request canceled due to new request.");
+      }
+
+      cancelTokenSource = axios.CancelToken.source();
+
+      try {
+        const response = await axios.get('/shop/member', {
+          cancelToken: cancelTokenSource.token,
+        });
+        memberData = response.data; // 儲存會員資料
+        return memberData;
+      } catch (error) {
+        if (axios.isCancel(error)) {
+          console.log("Request canceled:", error.message);
+        } else {
+          console.error("Error fetching member data:", error);
+        }
+      }
+    }
+
+    // 模擬請求，獲取訂單地址資料
+    async function fetchAddressData() {
+      if (addressData) {
+        return addressData;
+      }
+
+      if (cancelTokenSource) {
+        cancelTokenSource.cancel("Request canceled due to new request.");
+      }
+
+      cancelTokenSource = axios.CancelToken.source();
+
+      try {
+        const response = await axios.get('/shop/shipping/address', {
+          cancelToken: cancelTokenSource.token,
+        });
+        addressData = response.data; // 儲存地址資料
+        return addressData;
+      } catch (error) {
+        if (axios.isCancel(error)) {
+          console.log("Request canceled:", error.message);
+        } else {
+          console.error("Error fetching address data:", error);
+        }
+      }
+    }
+
+	async function fillWithMemberInfo() {
+	    const member = await fetchMemberData();  // 獲取會員資料
+	    if (!member) return;
+
+	    const memberName = member.name;
+	    const memberPhone = member.phone;
+	    const memberAddress = member.address;
+
+	    let memberCity = '';
+	    let memberStreet = memberAddress;
+
+	    const cityKeyword = ['縣', '市', '島'];
+	    let cityIndex = -1;
+
+	    // 嘗試拆解地址
+	    for (let keyword of cityKeyword) {
+	        cityIndex = memberAddress.indexOf(keyword);
+	        if (cityIndex !== -1) break;
+	    }
+
+	    if (cityIndex !== -1) {
+	        memberCity = memberAddress.substring(0, cityIndex + 1);
+	        memberStreet = memberAddress.substring(cityIndex + 1).trim();
+	    }
+
+	    // 填充表單欄位
+	    document.getElementById("name").value = memberName;
+	    document.getElementById("phone").value = memberPhone;
+	    document.getElementById("city").value = memberCity;
+	    document.getElementById("street").value = memberStreet;
+
+	}
+
+
+    // 填充最近訂單的地址
+    async function fillWithLastOrderAddress() {
+      const address = await fetchAddressData();
+      const lastCity = address.city;
+      const lastStreet = address.street;
+
+      document.getElementById("city").value = lastCity;
+      document.getElementById("street").value = lastStreet;
+
+    }
+
+    // 監控欄位變更，若有變更則取消勾選框
+    function monitorChanges() {
+      const nameField = document.getElementById("name");
+      const phoneField = document.getElementById("phone");
+      const cityField = document.getElementById("city");
+      const addressField = document.getElementById("street");
+      const sameMemberCheckBox = document.getElementById("sameMember");
+      const sameAddressCheckBox = document.getElementById("sameAddress");
+
+      nameField.addEventListener('input', () => {
+        sameMemberCheckBox.checked = false;
+        document.getElementById("sameMember").checked = false;
+      });
+
+      phoneField.addEventListener('input', () => {
+        sameMemberCheckBox.checked = false;
+        document.getElementById("sameMember").checked = false;
+      });
+
+      cityField.addEventListener('input', () => {
+        sameMemberCheckBox.checked = false;
+        sameAddressCheckBox.checked = false;
+      });
+
+      addressField.addEventListener('input', () => {
+        sameMemberCheckBox.checked = false;
+        sameAddressCheckBox.checked = false;
+      });
+
+	  sameMemberCheckBox.addEventListener('change', async () => {
+	      const cityField = document.getElementById("city");
+	      const addressField = document.getElementById("street");
+	      const sameAddressCheckBox = document.getElementById("sameAddress");
+
+	      // 如果勾選了 "同會員資料"
+	      if (sameMemberCheckBox.checked) {
+	          await fillWithMemberInfo(); // 填入會員資料
+
+	          const memberCity = cityField.value;
+	          const memberStreet = addressField.value;
+
+	          const address = await fetchAddressData(); // 獲取訂單地址
+	          const lastCity = address.city;
+	          const lastStreet = address.street;
+
+	          // 比較會員資料和訂單地址，若不同則取消勾選 "同地址"
+	          if (memberCity !== lastCity || memberStreet !== lastStreet) {
+	              sameAddressCheckBox.checked = false;
+	          }
+	      } else {
+	          // 如果取消勾選 "同會員資料"，檢查 "同地址" 是否被勾選
+	          if (sameAddressCheckBox.checked) {
+	              await fillWithLastOrderAddress();  // 回填最近訂單地址
+	          } else {
+	              cityField.value = "";
+	              addressField.value = "";
+	          }
+	      }
+	  });
+
+
+      sameAddressCheckBox.addEventListener('change', async () => {
+        const cityField = document.getElementById("city");
+        const addressField = document.getElementById("street");
+        const sameMemberCheckBox = document.getElementById("sameMember");
+
+        if (!sameAddressCheckBox.checked) {
+          if (sameMemberCheckBox.checked) {
+            await fillWithMemberInfo();  // 填入會員資料
+          } else {
+            cityField.value = "";
+            addressField.value = "";
+          }
+        }
+      });
+    }
+
+    window.onload = function() {
+      monitorChanges();
+    };
+  </script>
+
+  <script>
+  	let checkoutData = null; // 用來存儲後端返回的 checkout 整合資料
+
+  	document.addEventListener("DOMContentLoaded", function () {
+  	  if (checkoutData) {
+  	    renderCheckoutData(checkoutData);
+  	  } else {
+  	    axios.get("/shop/checkout2")
+  	      .then(response => {
+  	        checkoutData = response.data; // 保存後端返回的整合資料
+  	        renderCheckoutData(checkoutData);
+  	      })
+  	      .catch(error => {
+  	        console.error("Error fetching checkout data:", error);
+  	      });
+  	  }
+  	});
+
+  	function renderCheckoutData(data) {
+  	  // 渲染購物車商品
+  	  renderCartItems(data.cartItems);
+  	  // 渲染運送方式
+  	  renderShippingMethods(data.shippingCategories);
+  	  // 渲染支付方式
+  	  renderPaymentMethods(data.paymentCategories);
+	  
+	  renderSubtotal(data.subtotal);
+  	}
+
+  	function renderCartItems(cartItems) {
+  	  const cartBody = document.getElementById("cartBody");
+  	  cartBody.innerHTML = ""; // 清空表格
+
+  	  cartItems.forEach(cartItem => {
+  	    let discountPrice = cartItem.product.discountPrice;
+  	    let unitPrice = cartItem.product.unitPrice;
+  	    let productTotal = discountPrice ? discountPrice * cartItem.quantity : unitPrice * cartItem.quantity;
+
+  	    cartBody.innerHTML += `
+  	      <tr class="border-bottom product">
+  	        <td>
+  	          <div class="d-flex align-items-center">
+  	            <img src="${cartItem.product.productPhoto.photo}" alt="Product Image" class="img-thumbnail" style="width: 100px;">
+  	            <div class="ms-3 text-start">
+  	              <h5><a href="/product/details/${cartItem.product.id}" class="text-dark">${cartItem.product.productDetail.name}</a></h5>
+  	            </div>
+  	          </div>
+  	        </td>
+  	        <td class="text-start">
+  	          <p class="mb-0">顏色: ${cartItem.product.productColor.name}</p>
+  	          <p class="mb-0">尺寸: ${cartItem.product.productSize.name}</p>
+  	        </td>
+  	        <td class="px-3">
+  	          ${discountPrice ? `<span style="text-decoration: line-through;color: #999;">$${unitPrice}</span>` : ""}
+  	          <span ${discountPrice ? 'style="color: red;"' : ""}>$${discountPrice || unitPrice}</span>
+  	        </td>
+  	        <td class="text-center px-3">${cartItem.quantity}</td>
+  	        <td class="px-3">
+  	          ${discountPrice ? `<span style="text-decoration: line-through; color: #999;">$${unitPrice * cartItem.quantity}</span>` : ""}
+  	          <span ${discountPrice ? 'style="color: red;"' : ""}>$${productTotal}</span>
+  	        </td>
+  	      </tr>
+  	    `;
+  	  });
+  	}
+
+  	function renderShippingMethods(shippingCategories) {
+  	  const container = document.getElementById('shippingCategoriesContainer');
+  	  container.innerHTML = ''; // 清空原有的內容
+
+  	  shippingCategories.forEach(shipping => {
+  	    const div = document.createElement('div');
+  	    div.className = "form-check";
+
+  	    const input = document.createElement('input');
+  	    input.className = "form-check-input";
+  	    input.type = "radio";
+  	    input.name = "shipping";
+  	    input.value = shipping.id;
+  	    input.id = "shipping_" + shipping.id;
+  	    input.setAttribute("data-shipping-cost", shipping.shippingCost);
+
+  	    const label = document.createElement('label');
+  	    label.className = "form-check-label ms-2";
+  	    label.setAttribute("for", "shipping_" + shipping.id);
+  	    label.textContent = `${shipping.name} (運費: ${Number(shipping.shippingCost).toFixed(0)} 元), 預計送達: ${shipping.shippingDay} 天`;
+
+  	    div.appendChild(input);
+  	    div.appendChild(label);
+  	    container.appendChild(div);
+  	  });
+
+	  // **重新綁定運送方式變更事件**
+	  document.querySelectorAll('input[name="shipping"]').forEach(function (radio) {
+	      radio.addEventListener('change', function () {
+	          const shippingCost = parseFloat(this.getAttribute('data-shipping-cost')) || 0;
+	          document.querySelector('.shipping-cost').textContent = `$${shippingCost.toFixed(0)}`;
+	          updateTotal(); // 重新計算總金額
+	      });
+	  });
+  	}
+
+  	function renderPaymentMethods(paymentCategories) {
+  	  const container = document.getElementById('paymentCategoriesContainer');
+  	  container.innerHTML = ''; // 清空原有的內容
+
+  	  paymentCategories.forEach(category => {
+  	    const div = document.createElement('div');
+  	    div.className = "form-check";
+
+  	    const input = document.createElement('input');
+  	    input.className = "form-check-input";
+  	    input.type = "radio";
+  	    input.name = "payment";
+  	    input.value = category.id;
+  	    input.id = "payment-" + category.id;
+
+  	    const label = document.createElement('label');
+  	    label.className = "form-check-label";
+  	    label.setAttribute("for", "payment-" + category.id);
+  	    label.textContent = category.name;
+
+  	    div.appendChild(input);
+  	    div.appendChild(label);
+  	    container.appendChild(div);
+  	  });
+  	}
+	
+	function renderSubtotal(subtotal) {
+	  const subtotalElement = document.getElementById('subtotal'); // 假設你有一個元素用來顯示小計
+	  if (subtotalElement) {
+	    subtotalElement.textContent = `$${subtotal.toFixed(0)}`; // 格式化金額顯示
+	  }
+	}
+  </script>
+
+</body>
+
+</html>

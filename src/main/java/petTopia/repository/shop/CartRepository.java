@@ -21,6 +21,7 @@ public interface CartRepository extends JpaRepository<Cart, Integer> {
     @Transactional
     @Query("DELETE FROM Cart c WHERE c.member.id = :memberId")
     void deleteByMemberId(Integer memberId);  // 根據 memberId 刪除購物車內容
+
     
     Cart findByMemberIdAndProductId(Integer memberId, Integer productId);
     

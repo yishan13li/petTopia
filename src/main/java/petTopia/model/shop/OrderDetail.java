@@ -1,11 +1,11 @@
 package petTopia.model.shop;
 
-import java.util.Date;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.math.BigDecimal;
+
+import java.math.BigDecimal;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -15,23 +15,21 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import petTopia.model.user.Member;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name="cart")
-public class Cart {
-	
+@Table(name = "order_details")
+public class OrderDetail {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    @JoinColumn(name = "member_id", referencedColumnName = "id")
-    private Member member;
+    @ManyToOne
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
 
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
@@ -40,7 +38,12 @@ public class Cart {
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
-    @Column(name = "created_date", insertable = false, updatable = false)
-    private Date createdDate;
-    
+    @Column(name = "unit_price", nullable = false)
+    private BigDecimal unitPrice;
+
+    @Column(name = "discount_price")
+    private BigDecimal discountPrice;
+
+    @Column(name = "total_price", nullable = false)
+    private BigDecimal totalPrice;
 }

@@ -1,7 +1,6 @@
 package petTopia.model.shop;
 
 import java.util.Objects;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -13,7 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Entity
+Entity
 @Table(name = "product_size")
 @Getter
 @Setter
@@ -42,5 +41,5 @@ public class ProductSize {
     public int hashCode() {
         return Objects.hash(this.getId());  // 使用 getId() 方法計算 hash code
     }
-	    
+
 }

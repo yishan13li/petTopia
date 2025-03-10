@@ -37,6 +37,6 @@ public class ProductCategory {
 	
 	@JsonIgnore
 	@OneToMany(mappedBy = "productCategory", fetch = FetchType.LAZY)
-    private List<ProductDetail> productDetails = new ArrayList<>();
-	
+    	private List<ProductDetail> productDetails = new ArrayList<>();
+
 }

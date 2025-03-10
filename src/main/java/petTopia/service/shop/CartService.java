@@ -6,9 +6,10 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-//import petTopia.dto.shop.CartItemForCheckoutDto;
 import petTopia.model.shop.Cart;
 import petTopia.model.shop.Product;
+
+import petTopia.dto.shop.CartItemForCheckoutDto;
 import petTopia.model.user.Member;
 import petTopia.repository.shop.CartRepository;
 
@@ -49,29 +50,29 @@ public class CartService {
     }
     
     // 計算購物車的總金額
-//    public BigDecimal calculateTotalPriceForCheckout(List<CartItemForCheckoutDto> cartItems) {
-//        BigDecimal total = BigDecimal.ZERO; // 初始化為 0
-//
-//        for (CartItemForCheckoutDto item : cartItems) {
-//            // 取得商品的價格（折扣價或原價）
-//            BigDecimal price;
-//
-//            // 檢查折扣價是否為 null，若為 null 則使用單價
-//            if (item.getDiscountPrice() != null) {
-//                price = item.getDiscountPrice();
-//            } else {
-//                price = item.getUnitPrice();
-//            }
-//
-//            // 取得數量並轉換為 BigDecimal
-//            BigDecimal quantity = new BigDecimal(item.getQuantity());
-//
-//            // 計算總金額並加到 total
-//            total = total.add(price.multiply(quantity)); // 使用 add() 方法進行加法
-//        }
-//
-//        return total; // 返回計算後的總金額
-//    }
+    public BigDecimal calculateTotalPriceForCheckout(List<CartItemForCheckoutDto> cartItems) {
+        BigDecimal total = BigDecimal.ZERO; // 初始化為 0
+
+        for (CartItemForCheckoutDto item : cartItems) {
+            // 取得商品的價格（折扣價或原價）
+            BigDecimal price;
+
+            // 檢查折扣價是否為 null，若為 null 則使用單價
+            if (item.getDiscountPrice() != null) {
+                price = item.getDiscountPrice();
+            } else {
+                price = item.getUnitPrice();
+            }
+
+            // 取得數量並轉換為 BigDecimal
+            BigDecimal quantity = new BigDecimal(item.getQuantity());
+
+            // 計算總金額並加到 total
+            total = total.add(price.multiply(quantity)); // 使用 add() 方法進行加法
+        }
+
+        return total; // 返回計算後的總金額
+    }
 
 
     // 清空用戶的購物車
@@ -112,4 +113,5 @@ public class CartService {
     	
     	
     }
+
 }
