@@ -2,8 +2,6 @@ package petTopia.model.vendor;
 
 import java.util.Date;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -16,37 +14,31 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import petTopia.model.user.MemberBean;
 
 @Entity
-@Table(name = "vendor_activity_review")
+@Table(name = "activity_registration")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class VendorActivityReview {
+public class ActivityRegistration {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
 
-	@JsonIgnore
-	@ManyToOne
-	@JoinColumn(name = "vendor_id", nullable = false)
-	private Vendor vendor;
-
-//    @ManyToOne
-//    @JoinColumn(name = "member_id", nullable = false)
-//    private Member member;
-
-	@Column(name = "review_time", nullable = false)
-	private java.util.Date reviewTime;
-
-	@Column(name = "review_content", nullable = false, length = 255)
-	private String reviewContent;
-
-	@JsonIgnore
 	@ManyToOne
 	@JoinColumn(name = "vendor_activity_id", nullable = false)
 	private VendorActivity vendorActivity;
 
+	@ManyToOne
+	@JoinColumn(name = "member_id", nullable = false)
+	private MemberBean member;
+
+	@Column(name = "registration_time", nullable = false, updatable = false)
+	private java.util.Date registrationTime = new Date();
+
+	@Column(name = "status", nullable = false)
+	private String status = "pending";
 }

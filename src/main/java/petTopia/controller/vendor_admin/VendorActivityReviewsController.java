@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,9 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import petTopia.model.vendor.VendorActivityReview;
-import petTopia.model.vendor.VendorReview;
 import petTopia.repository.vendor_admin.VendorActivityReviewRepository;
-import petTopia.repository.vendor_admin.VendorReviewsRepository;
 
 @Controller
 public class VendorActivityReviewsController {
@@ -26,16 +25,21 @@ public class VendorActivityReviewsController {
 	@Autowired
 	private VendorActivityReviewRepository vendorActivityReviewRepository;
 
+	@GetMapping("/vendor_admin/activityReviews")
+	public String activityReviewsPage() {
+		return "vendor_admin/NewFile1";
+	}
+
 	@ResponseBody
 	@GetMapping("/api/vendor_admin/activityreviews")
 	public ResponseEntity<?> getReviewsByVendorActivityId(@RequestParam Integer vendorActivityId) {
 		List<VendorActivityReview> vendorActivityReviews = vendorActivityReviewRepository
 				.findByVendorActivityId(vendorActivityId);
-		System.err.println(vendorActivityReviews);
+//		System.err.println(vendorActivityReviews);
 		if (vendorActivityReviews.isEmpty()) {
 			return ResponseEntity.ok(Collections.emptyList()); // ✅ 返回空数组 []
 		}
-		return ResponseEntity.ok(vendorActivityReviews);
+		return new ResponseEntity<>(vendorActivityReviews, HttpStatus.OK);
 	}
 
 	@ResponseBody

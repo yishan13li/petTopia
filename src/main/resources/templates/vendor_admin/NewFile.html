@@ -22,8 +22,8 @@
 		<!-- 		</div> -->
 
 		<!-- 搜尋欄 -->
-		<input type="text" id="searchQuery" class="form-control mb-3"
-			placeholder="搜尋評價內容...">
+<!-- 		<input type="text" id="searchQuery" class="form-control mb-3" -->
+<!-- 			placeholder="搜尋評價內容..."> -->
 
 		<!-- 評價表格 -->
 		<div class="table-responsive">
@@ -107,52 +107,7 @@ function displayActivities() {
                 reviewSection.style.display = 'none';
             }
         }
-// function toggleReviewDetails(event, row, review, index) {
-//     let existingDetailRow = document.querySelector(`.detail-row-${index}`);
-//     if (existingDetailRow) {
-//         existingDetailRow.remove();
-//         return;
-//     }
 
-//     document.querySelectorAll('.review-detail-row').forEach(row => row.remove()); //确保每次只展开一个详情，而不会有多个详情行同时存在
-
-//     const detailRow = document.createElement('tr');
-//     detailRow.classList.add(`review-detail-row`, `detail-row-${index}`);
-
-//     // 使用 axios 发送请求获取照片 ID
-// //     axios.get(`/review_photos/ids?vendorReviewId=${review.id}`)
-// //         .then(response => {
-// //             const photoIds = response.data;  // 假设后端返回的照片 ID 是一个数组
-// //             let photoHtml = '';
-// // 			console.log(photoIds);
-// //             // 根据获得的 photoIds 获取图片
-// //             photoIds.forEach(photoId => {
-// //                 photoHtml += `<img src="http://localhost:8080/review_photos/download?photoId=${photoId}" alt="Review Photo" style="max-width: 100px; max-height: 100px; margin: 5px;" loading="lazy">`;
-// //             });
-
-//             // 在此之后，动态生成 detailRow 内容
-//             detailRow.innerHTML = `
-//                 <td colspan="5">
-//                     <div class="review-detail">
-//                         <strong>環境評分：</strong> ${generateStars(Math.round(review.ratingEnvironment))}(${review.ratingEnvironment})&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-//                         <strong>價格評分：</strong> ${generateStars(Math.round(review.ratingPrice))}(${review.ratingPrice})&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-//                         <strong>服務評分：</strong> ${generateStars(Math.round(review.ratingService))} (${review.ratingService})
-//                     </div>
-//                     <div>
-                
-//                         <div class="review-detail">
-//                             ${photoHtml}  <!-- 确保这里正确拼接了每张图片的HTML -->
-//                         </div>
-//                     </div>
-//                 </td>
-//             `;
-
-//             row.insertAdjacentElement('afterend', detailRow);
-// //         })
-// //         .catch(error => {
-// //             console.error('获取评论照片失败:', error);
-// //         });
-// }
 
 
 function toggleReviewDetails(event, row, review, index) {
@@ -210,27 +165,7 @@ function toggleReviewDetails(event, row, review, index) {
             document.getElementById('overallRating').textContent = reviews.length ? (reviews.reduce((sum, r) => sum + parseFloat(calculateAvg(r)), 0) / reviews.length).toFixed(1) : '-';
         }
 
-        function updateChart() {
-            const ctx = document.getElementById('ratingChart').getContext('2d');
-            const avgEnv = reviews.reduce((sum, r) => sum + r.ratingEnvironment, 0) / reviews.length || 0;
-            const avgPrice = reviews.reduce((sum, r) => sum + r.ratingPrice, 0) / reviews.length || 0;
-            const avgService = reviews.reduce((sum, r) => sum + r.ratingService, 0) / reviews.length || 0;
-            const avgOverall = parseFloat(document.getElementById('overallRating').textContent) || 0;
-            
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['環境', '價格', '服務', '總平均評分'],
-                    datasets: [{
-                        label: '平均評分',
-                        data: [avgEnv, avgPrice, avgService, avgOverall],
-                        backgroundColor: ['rgba(54, 162, 235, 0.5)', 'rgba(255, 159, 64, 0.5)', 'rgba(75, 192, 192, 0.5)', 'rgba(153, 102, 255, 0.5)'],
-                        borderWidth: 1
-                    }]
-                },
-                options: { scales: { y: { beginAtZero: true, max: 5 } } }
-            });
-        }
+       
 
         document.getElementById('searchQuery').addEventListener('input', updateReviewsTable);
         window.onload = fetchReviews;
