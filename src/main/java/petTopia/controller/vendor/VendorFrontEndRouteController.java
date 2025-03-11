@@ -1,6 +1,5 @@
 package petTopia.controller.vendor;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +37,7 @@ public class VendorFrontEndRouteController {
 	}
 
 	@GetMapping("/vendor/detail/{vendorId}")
-	public String vendorDetail(@PathVariable("vendorId")Integer vendorId, Model model) {
+	public String vendorDetail(@PathVariable("vendorId") Integer vendorId, Model model) {
 
 		/* 該店家資料之賦值 */
 		Vendor vendor = vendorService.findVendorById(vendorId);
@@ -50,11 +49,11 @@ public class VendorFrontEndRouteController {
 
 		/* 該店家評論之賦值 */
 		List<VendorReviewDto> reviewList = vendorReviewService.getReviewListByVendorId(vendorId);
-		model.addAttribute("reviewList", (reviewList != null) ? reviewList : new ArrayList<>());
+		model.addAttribute("reviewList", reviewList); // (reviewList != null) ? reviewList : new ArrayList<>())
 
 		/* 該店家所有圖片賦值 */
 		List<VendorImages> imageList = vendorImagesService.findImagesByVendorId(vendorId);
-		model.addAttribute("imageList", (imageList != null) ? imageList : new ArrayList<>());
+		model.addAttribute("imageList", imageList); // (imageList != null) ? imageList : new ArrayList<>()
 
 		return "/vendor/vendor_detail.html";
 	}

@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import jakarta.transaction.Transactional;
 import petTopia.dto.vendor.VendorReviewDto;
 import petTopia.model.user.MemberBean;
 import petTopia.model.vendor.ReviewPhoto;
@@ -39,7 +38,6 @@ public class VendorReviewService {
 	}
 
 	/* 上傳多張圖片 */
-	@Transactional
 	public void addReviewPhotos(Integer reviewId, List<MultipartFile> reviewPhotos) throws IOException {
 
 		List<ReviewPhoto> photoList = new ArrayList<>();
@@ -158,4 +156,23 @@ public class VendorReviewService {
 		vendorReviewRepository.deleteById(reviewId);
 	}
 
+	/* 藉由ID尋找評論 */
+	public VendorReview findReviewById(Integer reviewId) {
+		Optional<VendorReview> optional = vendorReviewRepository.findById(reviewId);
+		if (optional != null) {
+			VendorReview review = optional.get();
+			return review;
+		}
+		return null;
+	}
+
+	/* 藉由ID修改評論 */
+	public VendorReview rewriteReviewById(Integer reviewId, String content) {
+		Optional<VendorReview> optional = vendorReviewRepository.findById(reviewId);
+		VendorReview review = optional.get();
+		review.setReviewContent(content);
+		review.setReviewTime(new Date());
+		vendorReviewRepository.save(review);
+		return review;
+	}
 }
