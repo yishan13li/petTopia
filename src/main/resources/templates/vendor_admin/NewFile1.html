@@ -56,7 +56,7 @@
 			<div class="container mt-5">
 				<h2>店家活動與評論管理</h2>
 
-				
+
 
 				<!-- 活動列表 -->
 				<h3>店家活動列表</h3>
@@ -154,7 +154,7 @@
 		}
 
 		// 刪除評論
-		function deleteReview(reviewId) {
+		function deleteReview(reviewId, activityId) {
 			axios.delete(`/api/vendor_admin/activityreviews/delete/${reviewId}`)
 				.then(response => {
 					if (response.data.message === '刪除成功') {
@@ -176,41 +176,79 @@
 			loadActivities();
 
 			// 顯示/隱藏評論
+// 			document.querySelector('#activitiesTable').addEventListener('click', function(event) {
+// 				if (event.target.classList.contains('viewReviews')) {
+// 					const activityRow = event.target.closest('tr');
+// 					const activityId = activityRow.getAttribute('data-id');
+
+// 					// 查找是否存在该活动的评论行
+// 					let reviewsRow = document.querySelector(`#reviews-${activityId}`);
+// 					if (!reviewsRow) {
+// 						// 如果没有找到，创建新的评论行
+// 						reviewsRow = document.createElement('tr');
+// 						reviewsRow.id = `reviews-${activityId}`; // 为该行指定一个唯一ID
+// 						reviewsRow.innerHTML = `
+// 							<td colspan="4">
+// 								<div class="reviews-container"></div>
+// 							</td>
+// 						`;
+// 						activityRow.insertAdjacentElement('afterend', reviewsRow);  // 将评论行插入到当前活动行后面
+// 					}
+
+// 					// 如果评论行显示，隐藏；否则显示
+// 					if (reviewsRow.style.display === 'none' || reviewsRow.style.display === '') {
+// 						loadReviews(activityId);
+// 						reviewsRow.style.display = 'table-row';  // 顯示評論行，與外層表格一致
+// 					} else {
+// 						reviewsRow.style.display = 'none';  // 隱藏評論行
+// 					}
+// 				}
+// 			});
+			
 			document.querySelector('#activitiesTable').addEventListener('click', function(event) {
-				if (event.target.classList.contains('viewReviews')) {
-					const activityRow = event.target.closest('tr');
-					const activityId = activityRow.getAttribute('data-id');
+    if (event.target.classList.contains('viewReviews')) {
+        const activityRow = event.target.closest('tr');
+        const activityId = activityRow.getAttribute('data-id');
 
-					// 查找是否存在该活动的评论行
-					let reviewsRow = document.querySelector(`#reviews-${activityId}`);
-					if (!reviewsRow) {
-						// 如果没有找到，创建新的评论行
-						reviewsRow = document.createElement('tr');
-						reviewsRow.id = `reviews-${activityId}`; // 为该行指定一个唯一ID
-						reviewsRow.innerHTML = `
-							<td colspan="4">
-								<div class="reviews-container"></div>
-							</td>
-						`;
-						activityRow.insertAdjacentElement('afterend', reviewsRow);  // 将评论行插入到当前活动行后面
-					}
+        // 隐藏所有已经展开的评论行
+        document.querySelectorAll('[id^="reviews-"]').forEach(row => {
+            if (row.id !== `reviews-${activityId}`) {
+                row.style.display = 'none';
+            }
+        });
 
-					// 如果评论行显示，隐藏；否则显示
-					if (reviewsRow.style.display === 'none' || reviewsRow.style.display === '') {
-						loadReviews(activityId);
-						reviewsRow.style.display = 'table-row';  // 顯示評論行，與外層表格一致
-					} else {
-						reviewsRow.style.display = 'none';  // 隱藏評論行
-					}
-				}
-			});
+        // 查找是否存在该活动的评论行
+        let reviewsRow = document.querySelector(`#reviews-${activityId}`);
+        if (!reviewsRow) {
+            // 如果没有找到，创建新的评论行
+            reviewsRow = document.createElement('tr');
+            reviewsRow.id = `reviews-${activityId}`;
+            reviewsRow.innerHTML = `
+                <td colspan="4">
+                    <div class="reviews-container"></div>
+                </td>
+            `;
+            activityRow.insertAdjacentElement('afterend', reviewsRow);
+        }
+
+        // 切换评论行的显示状态
+        if (reviewsRow.style.display === 'none' || reviewsRow.style.display === '') {
+            loadReviews(activityId);
+            reviewsRow.style.display = 'table-row';
+        } else {
+            reviewsRow.style.display = 'none';
+        }
+    }
+});
+
 
 			// 刪除評論操作
 			document.addEventListener('click', function(event) {
-				if (event.target.classList.contains('deleteReview')) {
-					const reviewId = event.target.getAttribute('data-id');
-					deleteReview(reviewId);
-				}
+			    if (event.target.classList.contains('deleteReview')) {
+			        const reviewId = event.target.getAttribute('data-id');
+			        const activityId = event.target.closest('tr').previousElementSibling.getAttribute('data-id'); // 取得活動ID
+			        deleteReview(reviewId, activityId);
+			    }
 			});
 		});
 	</script>

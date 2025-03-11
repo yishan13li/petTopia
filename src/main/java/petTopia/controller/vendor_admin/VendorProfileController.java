@@ -68,6 +68,8 @@ public class VendorProfileController {
 			model.addAttribute("vendorLogoImgBase64", vendorLogoImgBase64);
 			return "vendor_admin/vendor_admin_profile";
 		}
+		
+		
 
 //		System.out.println(user.get().getUserId());
 //		if (user.isPresent() && user.get().getUserRole() == UserRole.vendor) {
@@ -88,6 +90,43 @@ public class VendorProfileController {
 //			}
 //		}
 		return "error"; // 返回錯誤頁面
+	}
+	
+	@ResponseBody
+	@GetMapping("api/vendor_admin/profile/{id}")
+    public ResponseEntity<?> getVendorById(@PathVariable Integer id) {
+        Optional<Vendor> vendor = vendorRepository.findById(id);
+        if (vendor != null) {
+            return ResponseEntity.ok(Map.of("vendor", vendor));
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Vendor not found");
+        }
+    }
+	
+	@ResponseBody
+	@GetMapping("api/vendor_admin/profile")
+	public ResponseEntity<Map<String, Object>> getVendorProfile(@RequestParam Integer id) {
+//	    Optional<Vendor> vendorDetail = vendorService.getVendorProfile(email, password);
+	    Optional<Vendor> vendorDetail = vendorRepository.findById(id);
+	    Map<String, Object> response = new HashMap<>();
+	    
+	    if (vendorDetail.isPresent()) {
+	        Vendor vendor = vendorDetail.get();
+	        String vendorLogoImgBase64 = vendorService.getVendorLogoBase64(vendor);
+	        List<VendorCategory> allcategory = vendorService.getAllVendorCategories();
+
+	        // 获取该店家的活动总数
+	        int activityCount = vendorService.getActivityCountByVendor(vendor.getId());
+
+	        // 將資料組成 Map 回傳
+	        response.put("vendor", vendor);
+	        response.put("allcategory", allcategory);
+	        response.put("vendorLogoImgBase64", vendorLogoImgBase64);
+
+	        return ResponseEntity.ok(response);
+	    } else {
+	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+	    }
 	}
 
 	// 根據登入用戶的 ID 獲取對應的商家(登入後)

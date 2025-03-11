@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import petTopia.model.user.UsersBean;
 import petTopia.model.vendor.User;
 import petTopia.repository.vendor_admin.UserRepository;
 
@@ -19,7 +20,7 @@ public class UserService {
 //	private VendorService vendorService;
 //
 //	@Override
-	public Optional<User> getUserByEmailAndPassword(String email, String password) {
+	public Optional<UsersBean> getUserByEmailAndPassword(String email, String password) {
 		return userRepository.findByEmailAndPassword(email, password);
 	}
 //
