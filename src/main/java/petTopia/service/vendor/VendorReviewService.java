@@ -175,4 +175,11 @@ public class VendorReviewService {
 		vendorReviewRepository.save(review);
 		return review;
 	}
+
+	/* 藉由ID修改刪除 */
+	public void deleteReviewById(Integer reviewId) {
+		vendorReviewRepository.deleteById(reviewId);
+	}	
+	
+	
 }

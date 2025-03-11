@@ -43,6 +43,7 @@ public class VendorFrontEndApiController {
 
 		vendorReviewService.addOrModifyVendorTextReview(memberId, vendorId, content);
 
+		
 		Map<String, Object> response = new HashMap<>();
 		response.put("success", true);
 		return response;
@@ -74,16 +75,16 @@ public class VendorFrontEndApiController {
 		return response;
 	}
 
-	@DeleteMapping("/vendor/delete_review")
-	public Map<String, Object> deleteReview(@RequestBody Map<String, Integer> data) {
-		Integer memberId = data.get("memberId");
-		Integer vendorId = data.get("vendorId");
-
-		vendorReviewService.deleteReviewByMemberIdAndVendorId(memberId, vendorId);
-		Map<String, Object> response = new HashMap<>();
-		response.put("success", true);
-		return response;
-	}
+//	@DeleteMapping("/vendor/delete_review")
+//	public Map<String, Object> deleteReview(@RequestBody Map<String, Integer> data) {
+//		Integer memberId = data.get("memberId");
+//		Integer vendorId = data.get("vendorId");
+//
+//		vendorReviewService.deleteReviewByMemberIdAndVendorId(memberId, vendorId);
+//		Map<String, Object> response = new HashMap<>();
+//		response.put("success", true);
+//		return response;
+//	}
 
 	@GetMapping("/vendor/find_by_category")
 	public List<Vendor> findVendorByCategory(Integer categoryId) {
@@ -129,6 +130,15 @@ public class VendorFrontEndApiController {
 
 		Map<String, Object> response = new HashMap<>();
 		response.put("review", review);
+		return response;
+	}
+	
+	@DeleteMapping("/api/vendor/review/{reviewId}/delete")
+	public Map<String, Object> deleteReview(@PathVariable Integer reviewId) {
+
+		vendorReviewService.deleteReviewById(reviewId);
+		Map<String, Object> response = new HashMap<>();
+		response.put("success", true);
 		return response;
 	}
 

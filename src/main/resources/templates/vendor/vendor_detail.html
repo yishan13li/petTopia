@@ -582,13 +582,11 @@
   <div id="popupComment" class="overlay">
     <div class="popup">
       <h3><b>留言</b></h3>
-      <form action="/vendor/user_give_review">
-        <textarea id="inputField" name="context" placeholder="輸入感想" rows="6" col="40" style="resize: none"></textarea>
-        <br>
-        <button class="btn btn-outline-dark btn-1g text-uppercase fs-5 rounded-4" onclick="submitForm()">送出</button>
-        &emsp;
-        <button class="btn btn-outline-dark btn-1g text-uppercase fs-5 rounded-4" onclick="closePopup()">取消</button>
-      </form>
+      <textarea id="newInputField" name="context" placeholder="輸入感想" rows="6" col="40" style="resize: none"></textarea>
+      <br>
+      <button class="btn btn-outline-dark btn-1g text-uppercase fs-5 rounded-4" onclick="submitForm()">送出</button>
+      &emsp;
+      <button class="btn btn-outline-dark btn-1g text-uppercase fs-5 rounded-4" onclick="closePopup()">取消</button>
     </div>
   </div>
 
@@ -743,7 +741,7 @@
   <script th:inline="javascript">
     function openPopup() {
       document.getElementById('popupComment').style.display = 'flex';
-      // document.getElementById('inputField').value = "";
+      document.getElementById('newInputField').value = "";
       document.body.style.overflow = "hidden";
     }
 
@@ -755,20 +753,19 @@
 
     function submitForm() {
       let vendorId = /*[[${vendor.id}]]*/null;
-      let content = document.getElementById('inputField').value;
-
-      let data = {
-        memberId: 19,  // 這裡之後要改
-        vendorId: vendorId,
-        content: content
-      };
+      let content = document.getElementById('newInputField').value;
 
       fetch("/vendor/give_text_review", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
+        body: JSON.stringify({
+          memberId: 18,  // 這裡之後要改
+          vendorId: vendorId,
+          content: content
+        })
       })
-        .then(response => response.json())
+        .then(response => response.json()
+        )
         .then(result => {
           if (result.success) {
             alert("留言新增成功");
@@ -794,25 +791,20 @@
     let selectedReviewId = null;
 
     function deleteComment(content) {
-      const isConfirmed = window.confirm("確定要刪除這個評論嗎？"); // 之後邏輯改成符合之memeber和vendor才會顯示刪除按鈕
+      const isConfirmed = window.confirm("確定刪除評論？"); // 之後邏輯要新增符合之memeber才會顯示刪除按鈕
+      console.log(reviewId);
 
       let reviewId = content.getAttribute('data-id');
-      let vendorId = /*[[${vendor.id}]]*/null;
 
       if (isConfirmed) {
 
-        fetch("/vendor/delete_review", {
+        fetch(`http://localhost:8080/api/vendor/review/${reviewId}/delete`, {
           method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            memberId: 19,  // 之後改成實際會員ID
-            vendorId: vendorId
-          })
+          headers: { "Content-Type": "application/json" }
         })
           .then(response => response.json())
           .then(result => {
             if (result.success) {
-
               let targetDiv = document.querySelector(`.comment[data-id='${reviewId}']`);
               if (targetDiv) {
                 targetDiv.style.display = 'none';
@@ -830,7 +822,7 @@
 
     }
 
-    function rewriteComment(content) {
+    function rewriteComment(content) { // 之後邏輯要新增符合之memeber才會顯示修改按鈕
       let reviewId = content.getAttribute('data-id');
       selectedReviewId = reviewId;
 
