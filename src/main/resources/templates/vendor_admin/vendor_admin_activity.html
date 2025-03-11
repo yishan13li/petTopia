@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>活動管理</title>
+<link rel="icon" type="image/png" sizes="16x16"
+	th:href="@{/admin_static/images/favicon.png}">
+<link th:href="@{/admin_static/css/style.css}" rel="stylesheet">
+<link rel="stylesheet"
+	th:href="@{https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css}">
+<link rel="stylesheet"
+	th:href="@{https://cdn.datatables.net/2.2.2/css/dataTables.dataTables.css}">
+<style type="text/css">
+.container {
+	width: 95%; /* 調整成95%讓表格更寬 */
+	max-width: none; /* 移除最大寬度限制 */
+}
+
+.form-select {
+	width: 150px;
+}
+
+.imgact {
+	width: 150px;
+	height: 150px;
+	object-fit: cover;
+	border-radius: 5px;
+}
+
+.floating-button {
+	position: fixed;
+	bottom: 20px;
+	right: 20px;
+	width: 60px;
+	height: 60px;
+	background-color: #007bff;
+	color: white;
+	border: none;
+	border-radius: 50%;
+	font-size: 30px;
+	text-align: center;
+	line-height: 60px;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+	cursor: pointer;
+}
+
+td.dt-type-numeric {
+	text-align: center !important; /* 讓所有數字欄位也置中 */
+}
+
+th.dt-type-numeric {
+	text-align: center !important; /* 讓所有數字欄位也置中 */
+}
+
+thead th {
+	text-align: center !important;
+	vertical-align: middle !important;
+}
+
+th {
+	white-space: nowrap; /* 防止標題換行 */
+	padding: 10px 20px;
+	white-space: nowrap; /* 增加內距 */
+}
+
+#eventTable {
+	width: 100%;
+	table-layout: fixed; /* 讓表格固定寬度 */
+}
+
+#eventTable th, #eventTable td {
+	text-align: center; /* 讓文字置中 */
+	white-space: nowrap; /* 防止自動換行，確保等比例縮小 */
+	overflow: hidden;
+	text-overflow: ellipsis; /* 文字超出時顯示省略號 */
+}
+
+/* td.pending { */
+/* 	color: red; */
+/* } */
+
+/* td.approved { */
+/* 	color: green; */
+/* } */
+.btn-sm {
+	width: 50px;
+}
+</style>
+</head>
+
+<body>
+	<!--*******************
+        Preloader start
+    ********************-->
+	<div id="preloader">
+		<div class="sk-three-bounce">
+			<div class="sk-child sk-bounce1"></div>
+			<div class="sk-child sk-bounce2"></div>
+			<div class="sk-child sk-bounce3"></div>
+		</div>
+	</div>
+	<!--*******************
+        Preloader end
+    ********************-->
+	<!--**********************************
+        Main wrapper start
+    ***********************************-->
+	<div id="main-wrapper">
+
+		<div th:replace="~{layout/vendor_admin_header}"></div>
+
+		<div class="content-body">
+			<div class="container mt-2">
+				<select id="eventFilter" class="form-select">
+					<option value="all">顯示全部</option>
+					<option value="ongoing">顯示進行中</option>
+					<option value="ended">顯示已結束</option>
+				</select>
+				<button class="floating-button" onclick="openAddEventModal()">+</button>
+				<table id="eventTable"
+					class="table table-bordered table-hover text-center">
+					<thead class="table-primary">
+						<tr>
+							<th>活動首圖</th>
+							<th>活動名稱</th>
+							<th>活動時間</th>
+							<th>地點</th>
+							<th>活動類型</th>
+							<th>是否需要報名</th>
+							<th>報名人數/最大人數</th>
+							<th>瀏覽人數</th>
+							<th>操作</th>
+						</tr>
+					</thead>
+					<tbody id="eventTableBody">
+
+					</tbody>
+				</table>
+			</div>
+			<!--**********************************
+            Footer start
+        ***********************************-->
+
+		</div>
+	</div>
+
+
+
+	<script th:src="@{/admin_static/vendor/chartist/js/chartist.min.js}"></script>
+
+	<script th:src="@{/admin_static/vendor/moment/moment.min.js}"></script>
+	<script th:src="@{https://code.jquery.com/jquery-3.6.0.min.js}"></script>
+	<script
+		th:src="@{https://cdn.datatables.net/2.2.2/js/dataTables.min.js}"></script>
+
+	<script>
+	$(document).ready(function () {
+        $('#eventTable').DataTable({
+            destroy: true,
+            autoWidth: false,
+            columnDefs: [{ targets: 4, type: "string" }],
+        language: {
+            "processing": "處理中...",
+            "lengthMenu": "顯示 _MENU_ 筆資料",
+            "zeroRecords": "沒有找到相關資料",
+            "info": "顯示第 _START_ 到 _END_ 筆資料，共 _TOTAL_ 筆",
+            "infoEmpty": "目前沒有資料",
+            "infoFiltered": "(從 _MAX_ 筆資料過濾)",
+            "search": "搜尋：",
+            "paginate": {
+                "first": "第一頁",
+                "last": "最後一頁",
+                "next": "下一頁",
+                "previous": "上一頁"
+            },
+            "emptyTable": "目前表格內沒有資料",
+            "loadingRecords": "載入中...",
+        }
+        });
+
+        fetchEvents();
+    });
+
+    function fetchEvents() {
+        axios.get('http://localhost:8080/api/vendor_admin/activity/1')
+            .then(response => {
+                console.log(response.data);
+                window.allEvents = response.data; //有活動數據存入 window.allEvents 變數，方便後續篩選使用
+                document.getElementById("eventFilter").addEventListener("change", filterEvents); //監聽篩選選單的變化，當使用者更改篩選條件時，會執行 filterEvents() 來更新表格顯示的內容
+                filterEvents();
+            })
+            .catch(error => {
+                console.error('Error fetching events:', error);
+            });
+    }
+
+    function filterEvents() {
+        let filterValue = document.getElementById("eventFilter").value;
+        let filteredData = window.allEvents.filter(event => {
+            let currentDate = new Date();
+            let startTime = new Date(event.startTime);
+            let endTime = new Date(event.endTime);
+
+            if (filterValue === "ongoing") {
+                return startTime >= currentDate && endTime >= currentDate;
+            } else if (filterValue === "ended") {
+                return endTime < currentDate;
+            }
+            return true;
+        });
+
+        updateEventTable(filteredData);
+    }
+
+    function updateEventTable(filteredData) {
+        let table = $('#eventTable').DataTable();
+        table.clear();
+
+        let promises = filteredData.map(event => {
+            return axios.get(`http://localhost:8080/photos/ids?vendorActivityId=${event.id}`)
+                .then(response => {
+                    let imageIds = response.data;
+                    let firstImageUrl = imageIds.length > 0 ? `http://localhost:8080/photos/download?photoId=${imageIds[0]}` : '';
+                    return [
+                        `<img src="${firstImageUrl}" class="img-fluid rounded imgact" alt="活動圖片">`,
+                        `<a href="javascript:void(0);" class="event-name" data-id="${event.id}">${event.name}</a>`,  // 使用 `data-id` 儲存活動ID
+                        `${formatDate(event.startTime)} - ${formatDate(event.endTime)}`,
+                        event.address,
+                        event.activityType.name,
+                        event.registrationRequired ? '需報名' : '不需報名',
+                        event.activityPeopleNumber ? `${event.activityPeopleNumber.currentParticipants} / ${event.activityPeopleNumber.maxParticipants}` : "未設定",
+                        event.numberVisitor,
+                        `<button class="btn btn-danger btn-sm" onclick="deleteRow(event, this, ${event.id})">刪除</button>`
+                    ];
+                })
+                .catch(error => {
+                    console.error('Error fetching image IDs for activity:', error);
+                    return null;
+                });
+        });
+
+        Promise.all(promises).then(rows => {
+            rows.forEach(row => {
+                if (row) {
+                    table.row.add(row);
+                }
+            });
+            table.draw();
+
+            // 綁定點擊事件
+            $('#eventTable tbody').on('click', 'tr', function() {
+                let activityId = $(this).find('.event-name').data('id');  // 使用 `data-id` 取得活動ID
+                if (activityId) {
+                    window.location.href = `/vendor_admin/vendor_admin_activityDetail?id=${activityId}`;
+                }
+            });
+        });
+    }
+
+    function formatDate(dateString) {
+        let date = new Date(dateString);
+        return date.toLocaleDateString("zh-TW") + " " + date.toLocaleTimeString("zh-TW", { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function deleteRow(event, button, activityId) {
+        event.stopPropagation(); //防止點擊「刪除」時 tr 觸發點擊事件導致跳轉詳情頁
+        if (confirm("確定要刪除這個活動嗎？")) {
+            axios.delete(`/${activityId}`)
+                .then(() => {
+                    let table = $('#eventTable').DataTable();
+                    table.row($(button).closest("tr")).remove().draw();
+                })
+                .catch(error => {
+                    console.error('Error deleting activity:', error);
+                });
+        }
+    }
+
+    function openAddEventModal() {
+    	window.location.href = "/vendor_admin/activity/addPage"
+    }
+        
+      
+    </script>
+
+	<script
+		th:src="@{https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js}"></script>
+</body>
+
+</html>

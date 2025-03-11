@@ -13,7 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.transaction.Transactional;
 import petTopia.dto.vendor.VendorReviewDto;
-import petTopia.model.user.Member;
+import petTopia.model.user.MemberBean;
 import petTopia.model.vendor.ReviewPhoto;
 import petTopia.model.vendor.VendorReview;
 import petTopia.repository.user.MemberRepository;
@@ -28,7 +28,7 @@ public class VendorReviewService {
 
 	@Autowired
 	private MemberRepository memberRepository;
-	
+
 	@Autowired
 	private ReviewPhotoRepository reviewPhotoRepository;
 
@@ -41,25 +41,24 @@ public class VendorReviewService {
 	/* 上傳多張圖片 */
 	@Transactional
 	public void addReviewPhotos(Integer reviewId, List<MultipartFile> reviewPhotos) throws IOException {
-		
-		List<ReviewPhoto> photoList=new ArrayList<>();
-		
-		for(MultipartFile photo:reviewPhotos) {
+
+		List<ReviewPhoto> photoList = new ArrayList<>();
+
+		for (MultipartFile photo : reviewPhotos) {
 			ReviewPhoto reviewPhoto = new ReviewPhoto();
-			
+
 			Optional<VendorReview> optional = vendorReviewRepository.findById(reviewId);
 			VendorReview vendorReview = optional.get();
-			
+
 			reviewPhoto.setVendorReview(vendorReview);
 			reviewPhoto.setPhoto(photo.getBytes()); // 取得byte[]
 			reviewPhotoRepository.save(reviewPhoto);
-			
+
 			photoList.add(reviewPhoto);
 		}
-		
+
 	}
-	
-	
+
 	/* 新增或修改文字評論 */
 	public void addOrModifyVendorTextReview(Integer memberId, Integer vendorId, String content) {
 		VendorReview vendorReview = vendorReviewRepository.findByMemberIdAndVendorId(memberId, vendorId);
@@ -108,7 +107,7 @@ public class VendorReviewService {
 	}
 
 	/* 將Member和VendorReview轉換成DTO */
-	public VendorReviewDto ConvertVendorReviewToDto(Member member, VendorReview review) {
+	public VendorReviewDto ConvertVendorReviewToDto(MemberBean member, VendorReview review) {
 
 		VendorReviewDto dto = new VendorReviewDto();
 
@@ -124,7 +123,7 @@ public class VendorReviewService {
 		/* 設定會員資訊 */
 		dto.setMemberId(member.getId());
 		dto.setName(member.getName());
-		dto.setGender(member.isGender());
+		dto.setGender(member.getGender());
 		dto.setProfilePhoto(member.getProfilePhoto());
 
 		return dto;
@@ -135,26 +134,26 @@ public class VendorReviewService {
 		List<VendorReview> reviewList = vendorReviewRepository.findByVendorId(vendorId);
 
 		List<VendorReviewDto> dtoList = reviewList.stream().map(review -> {
-			Optional<Member> optional = memberRepository.findById(review.getMemberId());
+			Optional<MemberBean> optional = memberRepository.findById(review.getMemberId());
 			if (optional.isEmpty()) {
 				return null;
 			}
-			Member member = optional.get();
+			MemberBean member = optional.get();
 			return ConvertVendorReviewToDto(member, review);
 		}).collect(Collectors.toList());
 
 		return dtoList;
 	}
-	
+
 	/* 刪除某成員對某店家之評論及評分 */
 	public void deleteReviewByMemberIdAndVendorId(Integer memberId, Integer vendorId) {
 		VendorReview vendorReview = vendorReviewRepository.findByMemberIdAndVendorId(memberId, vendorId);
-		
+
 		/* 將評論內容及時間設為空，避免刪掉星星評分 */
 //		vendorReview.setReviewContent(null);
 //		vendorReview.setReviewTime(null);
 //		vendorReviewRepository.save(vendorReview);
-		
+
 		Integer reviewId = vendorReview.getId();
 		vendorReviewRepository.deleteById(reviewId);
 	}

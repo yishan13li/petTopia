@@ -38,4 +38,6 @@ public class ReviewPhoto {
 	@Lob
 	@Column(name = "photo", nullable = false)
 	private byte[] photo;
+
 }
+

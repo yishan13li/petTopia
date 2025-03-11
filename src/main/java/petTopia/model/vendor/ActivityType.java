@@ -1,10 +1,12 @@
 package petTopia.model.vendor;
 
+
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.CascadeType;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -28,10 +30,11 @@ public class ActivityType {
 	@Column(name = "id")
 	private Integer id;
 
-	@Column(name = "name")
+	@Column(name = "name", nullable = false, unique = true)
 	private String name;
 
 	@JsonIgnore
 	@OneToMany(mappedBy = "activityType", cascade = CascadeType.ALL)
 	private List<VendorActivity> VendorActivities;
+
 }
