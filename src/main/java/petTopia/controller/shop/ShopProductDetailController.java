@@ -1,6 +1,7 @@
 package petTopia.controller.shop;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +19,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import petTopia.model.shop.Cart;
 import petTopia.model.shop.Product;
@@ -39,6 +44,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class ShopProductDetailController {
 
 	@Autowired
+	private ObjectMapper objectMapper;
+	
+	@Autowired
 	private MemberService memberService;
 	@Autowired
 	private ProductService productService;
@@ -48,6 +56,7 @@ public class ShopProductDetailController {
 	private CartService cartService;
 	
 	// 商品詳情頁面
+	/*
 	@GetMapping
 	public String showShopProductDetail(@RequestParam Integer productDetailId, Model model) {
 
@@ -92,6 +101,71 @@ public class ShopProductDetailController {
 		}
 		
 		return "shop/shop_product_detail";
+	}
+	*/
+	
+	// 商品詳情頁面 vue
+	@GetMapping
+	public ResponseEntity<?> showShopProductDetail(@RequestParam Integer productDetailId) {
+
+		ObjectNode responseBody = objectMapper.createObjectNode();
+		
+		// 獲取ProductDetail一樣的所有Poduct
+		List<Product> productList = productService.findByProductDetailId(productDetailId);
+		
+		// 獲取商品資訊(ProductDetail)
+		ProductDetail productDetail = productDetailService.findByProductDetailId(productDetailId);
+
+		// 獲取尺寸和顏色的List
+		List<ProductSize> sizeList = new ArrayList<ProductSize>();
+		List<ProductColor> colorList = new ArrayList<ProductColor>();
+		// 總庫存
+		Integer totalStockQuantity = 0;
+
+		if (productList != null) {
+			for (Product product : productList) {
+				
+				if (product.getProductSize() != null && !sizeList.contains(product.getProductSize())) {
+					sizeList.add(product.getProductSize());
+				}
+				if (product.getProductColor() != null && !colorList.contains(product.getProductColor())) {
+					colorList.add(product.getProductColor());
+				}
+				
+				// 計算總庫存
+				totalStockQuantity += product.getStockQuantity();
+
+			}
+			
+			// 依照ID排序sizeList&colorList
+			Collections.sort(sizeList, (ps1, ps2) -> Integer.compare(ps1.getId(), ps2.getId()));
+			Collections.sort(colorList, (ps1, ps2) -> Integer.compare(ps1.getId(), ps2.getId()));
+			
+			// 獲取productList內最低和最高價商品
+			Product minPriceProduct = productList.stream().min(Comparator.comparing(Product::getUnitPrice)).orElse(null);
+			Product maxPriceProduct = productList.stream().max(Comparator.comparing(Product::getUnitPrice)).orElse(null);
+
+			JsonNode productListJson = objectMapper.convertValue(productList, JsonNode.class);
+			JsonNode sizeListJson = objectMapper.convertValue(sizeList, JsonNode.class);
+			JsonNode colorListJson = objectMapper.convertValue(colorList, JsonNode.class);
+			JsonNode minPriceProductJson = objectMapper.convertValue(minPriceProduct, JsonNode.class);
+			JsonNode maxPriceProductJson = objectMapper.convertValue(maxPriceProduct, JsonNode.class);
+			JsonNode productDetailJson = objectMapper.convertValue(productDetail, JsonNode.class);
+			JsonNode totalStockQuantityJson = objectMapper.convertValue(totalStockQuantity, JsonNode.class);
+			
+			responseBody.set("productList", productListJson);
+			responseBody.set("sizeList", sizeListJson);
+			responseBody.set("colorList", colorListJson);
+			responseBody.set("minPriceProduct", minPriceProductJson);
+			responseBody.set("maxPriceProduct", maxPriceProductJson);
+			responseBody.set("productDetail", productDetailJson);
+			responseBody.set("totalStockQuantity", totalStockQuantityJson);
+			
+			return new ResponseEntity<ObjectNode>(responseBody, HttpStatus.OK);
+		}
+		
+		return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+			
 	}
 
 	// 商品詳情頁面 => 獲取商品資訊的圖片
