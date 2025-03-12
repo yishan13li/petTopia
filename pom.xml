@@ -78,6 +78,13 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
 		</dependency>
+		
+<dependency>
+    <groupId>org.jsoup</groupId>
+    <artifactId>jsoup</artifactId>
+    <version>1.19.1</version> 
+</dependency>
+
 		<!--  Spring Security - 用於會員認證和授權  -->
 <!--		<dependency>-->
 <!--			<groupId>org.springframework.boot</groupId>-->

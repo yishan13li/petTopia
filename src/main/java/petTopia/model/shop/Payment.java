@@ -49,4 +49,7 @@ public class Payment {
 
     @Column(name = "updated_date", nullable = false)
     private java.util.Date updatedDate;
+    
+    @Column(name = "trade_no")
+    private String tradeNo;
 }
