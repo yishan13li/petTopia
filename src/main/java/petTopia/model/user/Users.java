@@ -51,6 +51,9 @@ public class Users {
     @Enumerated(EnumType.STRING)
     private Provider provider = Provider.LOCAL;
 
+    @Column(name = "local_enabled")
+    private boolean localEnabled = false;
+
     public enum UserRole {
         MEMBER,
         VENDOR,
@@ -137,5 +140,13 @@ public class Users {
 
     public Provider getProvider() {
         return this.provider;
+    }
+
+    public boolean isLocalEnabled() {
+        return localEnabled;
+    }
+
+    public void setLocalEnabled(boolean localEnabled) {
+        this.localEnabled = localEnabled;
     }
 }

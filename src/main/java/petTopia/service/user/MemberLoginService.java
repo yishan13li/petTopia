@@ -42,6 +42,17 @@ public class MemberLoginService extends BaseUserService {
                 return result;
             }
 
+            // 檢查是否是第三方登入帳號且未啟用本地密碼
+            if (user.getProvider() != Users.Provider.LOCAL && !user.isLocalEnabled()) {
+                logger.warn("登入失敗：第三方登入帳號嘗試使用密碼登入，userId: {}, provider: {}", user.getId(), user.getProvider());
+                result.put("success", false);
+                result.put("message", "此帳號是使用" + user.getProvider().toString() + "註冊的，請使用對應的登入方式，或設定本地密碼");
+                result.put("isThirdPartyAccount", true);
+                result.put("provider", user.getProvider());
+                result.put("email", user.getEmail());
+                return result;
+            }
+
             if (!passwordEncoder.matches(password, user.getPassword())) {
                 logger.warn("登入失敗：密碼錯誤，userId: {}", user.getId());
                 result.put("success", false);
@@ -87,10 +98,14 @@ public class MemberLoginService extends BaseUserService {
     }
 
     public Users findByEmail(String email) {
-        return usersRepository.findByEmail(email);
+        return usersRepository.findByEmailAndUserRole(email, Users.UserRole.MEMBER);
     }
 
     public Users findById(Integer id) {
         return usersRepository.findById(id).orElse(null);
+    }
+
+    public Users updateUser(Users user) {
+        return usersRepository.save(user);
     }
 }

@@ -211,8 +211,12 @@
           <div class="user-info d-flex align-items-center" th:if="${session.memberName != null}">
             <div class="dropdown">
               <a href="#" class="mx-3 dropdown-toggle" data-bs-toggle="dropdown">
-                <img th:src="@{/user_static/images/default-avatar.png}" alt="用戶頭像" class="rounded-circle"
-                  style="width: 32px; height: 32px;">
+                <img th:if="${session.memberProfilePhotoBase64 != null}"
+                  th:src="@{/api/member/profile-photo}"
+                  alt="用戶頭像" class="rounded-circle" style="width: 32px; height: 32px;">
+                <img th:unless="${session.memberProfilePhotoBase64 != null}" 
+                  th:src="@{/user_static/images/default-avatar.png}"
+                  alt="預設頭像" class="rounded-circle" style="width: 32px; height: 32px;">
                 <span class="ms-2" th:text="${session.memberName}">會員名稱</span>
               </a>
               <ul class="dropdown-menu dropdown-menu-end">

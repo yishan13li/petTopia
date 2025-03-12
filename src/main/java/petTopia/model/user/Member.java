@@ -2,6 +2,7 @@ package petTopia.model.user;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import lombok.Data;
 
 @Entity
@@ -22,8 +23,8 @@ public class Member {
     @Column(nullable = true)
     private String phone;
 
-    @Temporal(TemporalType.TIMESTAMP)
-    private LocalDateTime birthdate;
+    @Column(name = "birthdate")
+    private LocalDate birthdate;
 
     @Column(nullable = false)
     private Boolean gender = false;  // false = 男性, true = 女性

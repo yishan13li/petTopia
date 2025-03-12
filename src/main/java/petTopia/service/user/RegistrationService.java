@@ -48,7 +48,7 @@ public class RegistrationService {
             logger.info("開始檢查 email 是否已存在：{}", email);
             
             // 檢查是否已存在相同email的帳號
-            Users existingUser = usersRepository.findByEmail(email);
+            Users existingUser = usersRepository.findByEmailAndUserRole(email, Users.UserRole.MEMBER);
             
             if (existingUser != null) {
                 String message;
@@ -152,6 +152,6 @@ public class RegistrationService {
 
     public Users findByEmail(String email) {
         // 查找任何類型的帳號（會員、商家、本地、Google）
-        return usersRepository.findByEmail(email.toLowerCase().trim());
+        return usersRepository.findByEmailAndUserRole(email.toLowerCase().trim(), Users.UserRole.MEMBER);
     }
 }

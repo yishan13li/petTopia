@@ -3,12 +3,15 @@ package petTopia.service.user;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.servlet.http.HttpSession;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Optional;
 import petTopia.model.user.Member;
 import petTopia.model.user.Users;
 import petTopia.repository.user.MemberRepository;
 import petTopia.repository.user.UsersRepository;
+import petTopia.util.SessionManager;
 
 @Service
 @Transactional
@@ -18,9 +21,12 @@ public class MemberService {
 
     @Autowired
     private UsersRepository usersRepository;
+    
+    @Autowired
+    private SessionManager sessionManager;
 
     @Transactional
-    public Member createOrUpdateMember(Member member) {
+    public Member createOrUpdateMember(Member member, HttpSession session) {
         try {
             validateMemberInput(member);
     
@@ -32,12 +38,13 @@ public class MemberService {
             // 查詢 `member` 是否已存在
             Optional<Member> existingMemberOpt = memberRepository.findById(member.getId());
     
+            Member savedMember;
             if (existingMemberOpt.isPresent()) {
                 // 更新已存在的 `Member`
                 Member existingMember = existingMemberOpt.get();
                 existingMember.setName(member.getName());
                 existingMember.setPhone(member.getPhone());
-                existingMember.setBirthdate(member.getBirthdate());
+                existingMember.setBirthdate(member.getBirthdate());  // 直接設置 LocalDate
                 existingMember.setGender(member.getGender());
                 existingMember.setAddress(member.getAddress());
                 existingMember.setUpdatedDate(LocalDateTime.now());
@@ -47,13 +54,23 @@ public class MemberService {
                     existingMember.setProfilePhoto(member.getProfilePhoto());
                 }
     
-                return memberRepository.save(existingMember);
+                savedMember = memberRepository.save(existingMember);
             } else {
-                // **如果 `member` 不存在，則新增**
+                // 如果 `member` 不存在，則新增
                 member.setStatus(false);
                 member.setUpdatedDate(LocalDateTime.now());
-                return memberRepository.save(member);
+                savedMember = memberRepository.save(member);
             }
+            
+            // 更新session
+            if (session != null) {
+                sessionManager.updateMemberInfo(session, savedMember.getName(), user.getEmail());
+                if (member.getProfilePhoto() != null) {
+                    sessionManager.updateProfilePhoto(session, savedMember.getProfilePhoto());
+                }
+            }
+            
+            return savedMember;
         } catch (Exception e) {
             e.printStackTrace();  // 添加錯誤日誌
             throw new RuntimeException("保存會員資料失敗: " + e.getMessage());
@@ -77,15 +94,25 @@ public class MemberService {
         return memberRepository.save(member);
     }
 
-    public void updateProfilePhoto(Integer memberId, byte[] photoData) {
+    @Transactional
+    public void updateProfilePhoto(Integer memberId, byte[] photoData, HttpSession session) {
         Member member = getMemberById(memberId);
-        member.setProfilePhoto(photoData);
-        member.setUpdatedDate(LocalDateTime.now());
-        memberRepository.save(member);
+        if (member != null) {
+            member.setProfilePhoto(photoData);
+            member.setUpdatedDate(LocalDateTime.now());
+            memberRepository.save(member);
+            
+            if (session != null) {
+                sessionManager.updateProfilePhoto(session, photoData);
+            }
+        }
     }
 
-    public void deleteMember(Integer id) {
+    public void deleteMember(Integer id, HttpSession session) {
         memberRepository.deleteById(id);
+        if (session != null) {
+            sessionManager.clearSession(session);
+        }
     }
 
     private void validateMemberInput(Member member) {
@@ -99,9 +126,7 @@ public class MemberService {
             throw new IllegalArgumentException("用戶ID不匹配");
         }
         
-        if (member.getName() == null || member.getName().trim().isEmpty()) {
-            throw new IllegalArgumentException("姓名不能為空");
-        }
+
     }
 
     public boolean verifyMember(Integer userId) {

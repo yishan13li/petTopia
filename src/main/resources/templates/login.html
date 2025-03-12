@@ -164,33 +164,49 @@
   <div class="login-container">
     <h2 class="mb-4">會員登入</h2>
     <!-- 成功消息显示 -->
-    <div th:if="${messages != null}">
-      <div th:each="message : ${messages.values()}" class="alert alert-success">
-        <span th:text="${message}"></span>
-      </div>
+    <div th:if="${success}" class="alert alert-success">
+      <span th:text="${success}"></span>
     </div>
     <!-- 错误消息显示 -->
-    <div th:if="${errors != null}">
-      <div th:each="error : ${errors.values()}" class="alert alert-danger">
-        <span th:text="${error}"></span>
-        <!-- 如果是Google账号错误,显示Google登录按钮 -->
-        <div th:if="${error.contains('Google')}" class="mt-2">
-          <a href="/oauth2/authorization/google" class="btn btn-danger btn-sm">
-            <img src="/user_static/icon/Google_icon.png" alt="Google" style="width: 20px; height: 20px; margin-right: 5px;"> 
-            使用 Google 登入
-          </a>
-        </div>
-        <!-- 如果是Facebook账号错误,显示Facebook登录按钮 -->
-        <div th:if="${error.contains('Facebook')}" class="mt-2">
-          <a href="/oauth2/authorization/facebook" class="btn btn-primary btn-sm">
-            <img src="/user_static/icon/Facebook_icon.png" alt="Facebook" style="width: 20px; height: 20px; margin-right: 5px;"> 
-            使用 Facebook 登入
-          </a>
-        </div>
+    <div th:if="${error}" class="alert alert-danger">
+      <span th:text="${error}"></span>
+      <!-- 如果是第三方登入帳號，顯示相應的選項 -->
+      <div th:if="${showLocalPasswordSetup}" class="mt-3">
+        <p>您可以：</p>
+        <ul>
+          <li>
+            <a th:if="${provider == 'GOOGLE'}" href="/oauth2/authorization/google" class="btn btn-danger btn-sm">
+              <img src="/user_static/icon/Google_icon.png" alt="Google" style="width: 20px; height: 20px; margin-right: 5px;"> 
+              使用 Google 登入
+            </a>
+            <a th:if="${provider == 'FACEBOOK'}" href="/oauth2/authorization/facebook" class="btn btn-primary btn-sm">
+              <img src="/user_static/icon/Facebook_icon.png" alt="Facebook" style="width: 20px; height: 20px; margin-right: 5px;"> 
+              使用 Facebook 登入
+            </a>
+          </li>
+          <li class="mt-2">
+            <a th:href="@{/local-password/setup(email=${userEmail})}" class="btn btn-outline-primary btn-sm">
+              設置本地密碼
+            </a>
+          </li>
+        </ul>
       </div>
     </div>
     <div th:if="${param.oauth2Success}" class="alert alert-success">
       <span>OAuth2 登入成功</span>
+    </div>
+
+    <div id="messageArea" class="mb-3">
+      <div th:if="${param.isThirdPartyAccount}" class="alert alert-info">
+        <p>此帳號是使用 <strong th:text="${param.provider}"></strong> 註冊的。</p>
+        <p>您可以：</p>
+        <ul>
+          <li>使用 <strong th:text="${param.provider}"></strong> 登入</li>
+          <li><a th:href="@{/local-password/setup(email=${param.email})}">設置本地密碼</a> 以使用電子郵件登入</li>
+        </ul>
+      </div>
+      <div th:if="${param.message}" class="alert alert-success" th:text="${param.message}"></div>
+      <div th:if="${param.error}" class="alert alert-danger" th:text="${param.error}"></div>
     </div>
 
     <form th:action="@{/login}" method="POST">

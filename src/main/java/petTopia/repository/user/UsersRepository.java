@@ -14,8 +14,7 @@ public interface UsersRepository extends JpaRepository<Users, Integer> {
     // 基本的 CRUD 操作由 JpaRepository 提供
     
     // 查詢任何類型的帳號（會員、商家、本地、Google）
-    @Query("SELECT u FROM Users u WHERE LOWER(u.email) = LOWER(:email)")
-    Users findByEmail(String email);
+    List<Users> findByEmail(String email);
     
     Users findByEmailAndPassword(String email, String password);
     
