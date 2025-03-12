@@ -16,6 +16,6 @@ public class PaymentResponseDto {
     private boolean success;
     private BigDecimal paymentAmount;
     private String paymentUrl;
-    
+    private String checkValue;
     
 }
