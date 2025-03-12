@@ -7,19 +7,19 @@ import lombok.Data;
 @Entity
 @Table(name = "member")
 @Data
-public class MemberBean {
+public class Member {
 
 	 @Id
 	    private Integer id;  // 與 user id 相同
 
 	    @OneToOne
 	    @JoinColumn(name = "id", referencedColumnName = "id")  
-	    private UsersBean user;  // 用這個屬性來建立與 UsersBean 的關聯
+	    private Users user;  // 用這個屬性來建立與 Users 的關聯
 
-    @Column(name = "name", nullable = false)
+    @Column(name = "name", nullable = true)
     private String name;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String phone;
 
     @Temporal(TemporalType.TIMESTAMP)
@@ -34,9 +34,8 @@ public class MemberBean {
     @Column(name = "profile_photo")
     private byte[] profilePhoto;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "BIT DEFAULT 0")
     private Boolean status = false;  // 預設為未認證 (0)
-
 
     @Column(name = "updated_date")
     private LocalDateTime updatedDate;

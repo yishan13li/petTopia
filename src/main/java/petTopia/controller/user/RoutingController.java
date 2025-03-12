@@ -9,32 +9,27 @@ import java.util.HashMap;
 public class RoutingController {
     @GetMapping("/secure/login")
     public String login() {
-        return "secure/login"; // 去掉前綴斜杠
+        return "secure/login";
     }
     
     @GetMapping("/pages/product")
     public String product() {
-        return "pages/product"; // 去掉前綴斜杠
+        return "pages/product";
     }
     
     @GetMapping("/pages/display")
     public String display() {
-        return "pages/display"; // 去掉前綴斜杠
+        return "pages/display";
     }
     
     @GetMapping("/vendor")
     public String showVendorPage() {
-        return "vendor_login";  // 確保視圖名稱也更新
+        return "vendor_login";
     }
     
     @GetMapping("/vendor_register")
     public String showVendorRegisterPage(Model model) {
         model.addAttribute("errors", new HashMap<String, String>());
         return "vendor_register";
-    }
-    
-    @GetMapping("/member_profile")
-    public String showMemberProfile() {
-        return "member_profile";
     }
 }

@@ -6,7 +6,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpSession;
-import petTopia.model.user.UsersBean;
+import petTopia.model.user.Users;
 import petTopia.service.user.AdminService;
 
 import java.util.HashMap;
@@ -33,7 +33,7 @@ public class AdminController {
             HttpSession session,
             Model model) {
         
-        UsersBean admin = adminService.adminLogin(email, password);
+        Users admin = adminService.adminLogin(email, password);
         
         if (admin != null && admin.isAdmin()) {
             session.setAttribute("admin", admin);
@@ -47,7 +47,7 @@ public class AdminController {
     // 顯示管理後台
     @GetMapping("/dashboard")
     public String showDashboard(HttpSession session, Model model) {
-        UsersBean admin = (UsersBean) session.getAttribute("admin");
+        Users admin = (Users) session.getAttribute("admin");
         if (admin == null || !admin.isAdmin()) {
             return "redirect:/admin/login";
         }
@@ -66,7 +66,7 @@ public class AdminController {
             HttpSession session) {
         
         Map<String, Object> response = new HashMap<>();
-        UsersBean admin = (UsersBean) session.getAttribute("admin");
+        Users admin = (Users) session.getAttribute("admin");
         
         if (admin == null || !admin.isAdmin()) {
             response.put("success", false);

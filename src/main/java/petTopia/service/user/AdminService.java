@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import petTopia.model.user.UsersBean;
+import petTopia.model.user.Users;
 import petTopia.repository.user.UsersRepository;
 
 import java.util.List;
@@ -16,8 +16,8 @@ public class AdminService {
     private UsersRepository usersRepository;
     
     // 管理員登入
-    public UsersBean adminLogin(String email, String password) {
-        UsersBean admin = usersRepository.findByEmailAndUserRole(email, UsersBean.UserRole.ADMIN);
+    public Users adminLogin(String email, String password) {
+        Users admin = usersRepository.findByEmailAndUserRole(email, Users.UserRole.ADMIN);
         if (admin != null && password.equals(admin.getPassword())) {
             return admin;
         }
@@ -25,24 +25,24 @@ public class AdminService {
     }
     
     // 獲取所有用戶列表
-    public List<UsersBean> getAllUsers() {
+    public List<Users> getAllUsers() {
         return usersRepository.findAll();
     }
     
     // 獲取所有會員
-    public List<UsersBean> getAllMembers() {
-        return usersRepository.findByUserRole(UsersBean.UserRole.MEMBER);
+    public List<Users> getAllMembers() {
+        return usersRepository.findByUserRole(Users.UserRole.MEMBER);
     }
     
     // 獲取所有商家
-    public List<UsersBean> getAllVendors() {
-        return usersRepository.findByUserRole(UsersBean.UserRole.VENDOR);
+    public List<Users> getAllVendors() {
+        return usersRepository.findByUserRole(Users.UserRole.VENDOR);
     }
     
     // 停用/啟用用戶
     @Transactional
     public void toggleUserStatus(Integer userId, Boolean isActive) {
-        UsersBean user = usersRepository.findById(userId)
+        Users user = usersRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("用戶不存在"));
         user.setEmailVerified(isActive);  // 使用 emailVerified 作為啟用狀態
         usersRepository.save(user);
@@ -50,8 +50,8 @@ public class AdminService {
     
     // 創建管理員帳號
     @Transactional
-    public UsersBean createAdmin(UsersBean admin, boolean isSuperAdmin) {
-        admin.setUserRole(UsersBean.UserRole.ADMIN);
+    public Users createAdmin(Users admin, boolean isSuperAdmin) {
+        admin.setUserRole(Users.UserRole.ADMIN);
         admin.setIsSuperAdmin(isSuperAdmin);
         admin.setAdminLevel(isSuperAdmin ? 1 : 0);
         return usersRepository.save(admin);

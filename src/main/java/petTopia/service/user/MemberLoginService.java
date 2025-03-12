@@ -1,22 +1,24 @@
 package petTopia.service.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import petTopia.model.user.UsersBean;
-import petTopia.model.user.MemberBean;
+import petTopia.model.user.Users;
+import petTopia.model.user.Member;
 import petTopia.repository.user.UsersRepository;
 import petTopia.repository.user.MemberRepository;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 @Transactional
 public class MemberLoginService extends BaseUserService {
+    private static final Logger logger = LoggerFactory.getLogger(MemberLoginService.class);
+    
     @Autowired
     private UsersRepository usersRepository;
 
@@ -26,74 +28,55 @@ public class MemberLoginService extends BaseUserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public Map<String, Object> registerMember(UsersBean user, MemberBean member) {
-        Map<String, Object> result = new HashMap<>();
-        
-        try {
-            // 1. 檢查是否已註冊為會員
-            UsersBean existingMember = usersRepository.findByEmailAndUserRole(
-                user.getEmail(), 
-                UsersBean.UserRole.MEMBER
-            );
-            
-            if (existingMember != null) {
-                result.put("success", false);
-                result.put("message", "此 email 已註冊為會員");
-                return result;
-            }
-
-            // 2. 加密密碼
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
-            
-            // 3. 保存用戶信息
-            UsersBean savedUser = usersRepository.save(user);
-            
-            // 4. 設置會員信息
-            member.setId(savedUser.getId());
-            member.setUser(savedUser);
-            
-            // 5. 保存會員信息
-            memberRepository.save(member);
-            
-            result.put("success", true);
-            result.put("message", "註冊成功");
-            result.put("userId", savedUser.getId());
-            
-        } catch (Exception e) {
-            result.put("success", false);
-            result.put("message", "註冊失敗：" + e.getMessage());
-        }
-        
-        return result;
-    }
-
     public Map<String, Object> memberLogin(String email, String password) {
         Map<String, Object> result = new HashMap<>();
-        
+        logger.info("開始會員登入流程，email: {}", email);
+
         try {
-            UsersBean user = usersRepository.findByEmailAndUserRole(email, UsersBean.UserRole.MEMBER);
-            
+            Users user = usersRepository.findByEmailAndUserRole(email, Users.UserRole.MEMBER);
+
             if (user == null) {
+                logger.warn("登入失敗：會員帳號不存在，email: {}", email);
                 result.put("success", false);
                 result.put("message", "會員帳號不存在");
                 return result;
             }
-            
+
             if (!passwordEncoder.matches(password, user.getPassword())) {
+                logger.warn("登入失敗：密碼錯誤，userId: {}", user.getId());
                 result.put("success", false);
                 result.put("message", "密碼錯誤");
                 return result;
             }
+
+            // 檢查郵箱驗證狀態
+            if (!user.isEmailVerified()) {
+                logger.warn("登入失敗：郵箱未驗證，userId: {}", user.getId());
+                result.put("success", false);
+                result.put("message", "您的郵箱尚未驗證，請查收驗證郵件並完成驗證");
+                result.put("needVerification", true);
+                return result;
+            }
+
+            // 獲取會員信息
+            Member member = memberRepository.findByUserId(user.getId()).orElse(null);
             
             result.put("success", true);
-            result.put("message", "登入成功");
+            result.put("message", "登入成功，歡迎回來！");
             result.put("user", user);
-            
+            result.put("userId", user.getId());
+            result.put("memberName", member != null ? member.getName() : user.getEmail().split("@")[0]);
+            result.put("userRole", user.getUserRole());
+            result.put("email", user.getEmail());
+            result.put("loggedInUser", user);
+            logger.info("會員登入成功，userId: {}, email: {}", user.getId(), user.getEmail());
+
         } catch (Exception e) {
+            logger.error("會員登入過程發生錯誤", e);
             result.put("success", false);
             result.put("message", "登入失敗：" + e.getMessage());
         }
-        
+
         return result;
     }
 
@@ -103,11 +86,11 @@ public class MemberLoginService extends BaseUserService {
         }
     }
 
-    public UsersBean findByEmail(String email) {
+    public Users findByEmail(String email) {
         return usersRepository.findByEmail(email);
     }
 
-    public UsersBean findById(Integer id) {
+    public Users findById(Integer id) {
         return usersRepository.findById(id).orElse(null);
     }
-} 
+}

@@ -9,7 +9,7 @@ import lombok.Data;
 @Entity
 @Table(name = "vendor")
 @Data
-public class VendorBean {
+public class Vendor {
 
     @Id
     @Column(name = "id")
@@ -18,7 +18,7 @@ public class VendorBean {
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId  // 重要：使用 user 的 id 作為 vendor 的 id
     @JoinColumn(name = "id")
-    private UsersBean user;
+    private Users user;
 
     private String name;
     private String description;
