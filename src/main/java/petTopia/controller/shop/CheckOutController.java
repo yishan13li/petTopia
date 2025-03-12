@@ -79,29 +79,6 @@ public class CheckOutController {
         return ResponseEntity.ok(response);
     }
 
-    
-    @GetMapping("/checkout2")   //for th+json
-    public ResponseEntity<Object> getCheckoutInfo2(HttpSession session) {
-        Member member = (Member) session.getAttribute("member");
-        if (member == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "請先登入"));
-        }
-        
-        Integer memberId = member.getId();
-        List<Cart> cartItems = cartService.getCartItems(memberId);
-        BigDecimal subtotal = cartService.calculateTotalPrice(cartItems);
-        List<ShippingCategory> shippingCategories = shippingCategoryRepo.findAll();
-        List<PaymentCategory> paymentCategories = paymentCategoryRepo.findAll();
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("cartItems", cartItems.isEmpty() ? Collections.emptyList() : cartItems);
-        response.put("subtotal", subtotal);
-        response.put("shippingCategories", shippingCategories);
-        response.put("paymentCategories", paymentCategories);
-        
-        return ResponseEntity.ok(response);
-    }
-    
     @GetMapping("/member")
     public ResponseEntity<Object> getMemberInfo(HttpSession session) {
         Member member = (Member) session.getAttribute("member");
@@ -153,7 +130,7 @@ public class CheckOutController {
         Member member = (Member) session.getAttribute("member");
         Integer memberId = member.getId();
         
-        Integer couponId = (Integer) checkoutData.get("couponId");
+        Integer couponId = checkoutData.get("couponId") != null ? (Integer) checkoutData.get("couponId") : null;
         Integer shippingCategoryId = (Integer) checkoutData.get("shippingCategoryId");
         Integer paymentCategoryId = (Integer) checkoutData.get("paymentCategoryId");
         
