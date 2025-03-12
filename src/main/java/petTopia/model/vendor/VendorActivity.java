@@ -25,8 +25,8 @@ import jakarta.persistence.TemporalType;
 
 @Entity
 @Table(name = "vendor_activity")
-@Getter
-@Setter
+//@Getter
+//@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 
@@ -88,4 +88,114 @@ public class VendorActivity {
 
 	@OneToOne(mappedBy = "vendorActivity", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private ActivityPeopleNumber activityPeopleNumber;
+
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	public Vendor getVendor() {
+		return vendor;
+	}
+
+	public void setVendor(Vendor vendor) {
+		this.vendor = vendor;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public java.util.Date getStartTime() {
+		return startTime;
+	}
+
+	public void setStartTime(java.util.Date startTime) {
+		this.startTime = startTime;
+	}
+
+	public java.util.Date getEndTime() {
+		return endTime;
+	}
+
+	public void setEndTime(java.util.Date endTime) {
+		this.endTime = endTime;
+	}
+
+	public boolean getisRegistrationRequired() {
+		return isRegistrationRequired;
+	}
+
+	public void setIsRegistrationRequired(boolean isRegistrationRequired) {
+		this.isRegistrationRequired = isRegistrationRequired;
+	}
+
+	public ActivityType getActivityType() {
+		return activityType;
+	}
+
+	public void setActivityType(ActivityType activityType) {
+		this.activityType = activityType;
+	}
+
+	public java.util.Date getRegistrationDate() {
+		return registrationDate;
+	}
+
+	public void setRegistrationDate(java.util.Date registrationDate) {
+		this.registrationDate = registrationDate;
+	}
+
+	public int getNumberVisitor() {
+		return numberVisitor;
+	}
+
+	public void setNumberVisitor(int numberVisitor) {
+		this.numberVisitor = numberVisitor;
+	}
+
+	public String getAddress() {
+		return address;
+	}
+
+	public void setAddress(String address) {
+		this.address = address;
+	}
+
+	public List<VendorActivityImages> getImages() {
+		return images;
+	}
+
+	public void setImages(List<VendorActivityImages> images) {
+		this.images = images;
+	}
+
+	public ActivityPeopleNumber getActivityPeopleNumber() {
+		return activityPeopleNumber;
+	}
+
+	public void setActivityPeopleNumber(ActivityPeopleNumber activityPeopleNumber) {
+		this.activityPeopleNumber = activityPeopleNumber;
+	}
+
+	public void setVendorActivityImages(List<VendorActivityImages> vendorActivityImages) {
+		this.vendorActivityImages = vendorActivityImages;
+	}
+	
+	
 }

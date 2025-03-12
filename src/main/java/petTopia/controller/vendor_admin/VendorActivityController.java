@@ -111,6 +111,34 @@ public class VendorActivityController {
 		return "error";
 	}
 
+	@ResponseBody
+	@GetMapping("api/vendor_admin/vendor_admin_activityDetail")
+	public ResponseEntity<?> getVendorActivityDetail(@RequestParam Integer id) {
+		Optional<VendorActivity> activity = vendorActivityServiceAdmin.getVendorActivityById(id);
+		if (activity.isPresent()) {
+			VendorActivity vendorActivity = activity.get();
+			ActivityPeopleNumber activityPeopleNumber = vendorActivity.getActivityPeopleNumber();
+			List<ActivityType> activityTypes = activityTypeService.getAllActivityTypes();
+
+			// 轉換成 JSON
+			Map<String, Object> response = new HashMap<>();
+			response.put("vendorActivity", vendorActivity);
+			response.put("vendorActivityImageIdList",
+					vendorActivity.getImages().stream().map(VendorActivityImages::getId).toList());
+			response.put("activityPeopleNumber", activityPeopleNumber);
+			response.put("activityTypes", activityTypes);
+
+			// 報名選項
+			List<Map<String, Object>> registrationOptions = new ArrayList<>();
+			registrationOptions.add(Map.of("value", "true", "label", "需要報名"));
+			registrationOptions.add(Map.of("value", "false", "label", "不需報名"));
+			response.put("registrationOptions", registrationOptions);
+
+			return ResponseEntity.ok(response);
+		}
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body("活動不存在");
+	}
+
 	@GetMapping("/vendor_admin/activity/addPage")
 	public String showAddActivityPage(Model model) {
 		List<ActivityType> activityTypes = activityTypeService.getAllActivityTypes();
@@ -154,7 +182,7 @@ public class VendorActivityController {
 			vendorActivity.setEndTime(endTime);
 
 			Boolean isRegistrationRequired = Boolean.parseBoolean(is_registration_required);
-			vendorActivity.setRegistrationRequired(isRegistrationRequired); // 設置布林值
+			vendorActivity.setIsRegistrationRequired(isRegistrationRequired); // 設置布林值
 			List<VendorActivityImages> vendorActivityImagesList = new ArrayList<>();
 
 			for (MultipartFile oneFile : files) {
@@ -189,7 +217,7 @@ public class VendorActivityController {
 	@ResponseBody
 	@PostMapping("/api/vendor_activity/update")
 	public ResponseEntity<?> updateActivity(@RequestParam("activity_id") Integer activityId,
-			@RequestParam("vendor_id") Integer vendorId, @RequestParam String activity_name,
+			@RequestParam("vendor_id") Integer vendorId, @RequestParam("activity_name") String activity_name,
 			@RequestParam ActivityType activity_type_id, @RequestParam String activity_description,
 			@RequestParam String activity_address,
 			@RequestParam("start_time") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") Date startTime,
@@ -212,7 +240,7 @@ public class VendorActivityController {
 			vendorActivity.setActivityType(activity_type_id);
 
 			Boolean isRegistrationRequired = Boolean.parseBoolean(is_registration_required);
-			vendorActivity.setRegistrationRequired(isRegistrationRequired); // 設置布林值
+			vendorActivity.setIsRegistrationRequired(isRegistrationRequired); // 設置布林值
 			// 3. 刪除指定的圖片
 			if (deletedImageIds != null && !deletedImageIds.isEmpty()) {
 				vendorActivityImagesRepository.deleteAllById(deletedImageIds);
