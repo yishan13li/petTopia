@@ -34,6 +34,11 @@ public class OrderController {
 	@Autowired
 	private OrderDetailService orderDetailService;
 	
+    @GetMapping("/orderHistory2")
+    public String orderHistoryPage(HttpSession session) {
+        return "shop/shop_orderHistory";
+    }
+    
     @GetMapping("/orders/{orderId}")
     public ResponseEntity<OrderDetailDto> getOrderDetail(HttpSession session,@PathVariable("orderId") Integer orderId) {
         try {
