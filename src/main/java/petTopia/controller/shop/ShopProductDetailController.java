@@ -55,55 +55,6 @@ public class ShopProductDetailController {
 	@Autowired
 	private CartService cartService;
 	
-	// 商品詳情頁面
-	/*
-	@GetMapping
-	public String showShopProductDetail(@RequestParam Integer productDetailId, Model model) {
-
-		// 獲取ProductDetail一樣的所有Poduct
-		List<Product> productList = productService.findByProductDetailId(productDetailId);
-		
-		// 獲取商品資訊(ProductDetail)
-		ProductDetail productDetail = productDetailService.findByProductDetailId(productDetailId);
-
-		// 獲取尺寸和顏色的List
-		List<ProductSize> sizeList = new ArrayList<ProductSize>();
-		List<ProductColor> colorList = new ArrayList<ProductColor>();
-		// 總庫存
-		Integer totalStockQuantity = 0;
-
-		if (productList != null) {
-			for (Product product : productList) {
-				
-				if (product.getProductSize() != null && !sizeList.contains(product.getProductSize())) {
-					sizeList.add(product.getProductSize());
-				}
-				if (product.getProductColor() != null && !colorList.contains(product.getProductColor())) {
-					colorList.add(product.getProductColor());
-				}
-				
-				// 計算總庫存
-				totalStockQuantity += product.getStockQuantity();
-
-			}
-			
-			// 獲取productList內最低和最高價商品
-			Product minPriceProduct = productList.stream().min(Comparator.comparing(Product::getUnitPrice)).orElse(null);
-			Product maxPriceProduct = productList.stream().max(Comparator.comparing(Product::getUnitPrice)).orElse(null);
-
-			model.addAttribute("productList", productList);
-			model.addAttribute("sizeList", sizeList);
-			model.addAttribute("colorList", colorList);
-			model.addAttribute("minPriceProduct", minPriceProduct);
-			model.addAttribute("maxPriceProduct", maxPriceProduct);
-			model.addAttribute("productDetail", productDetail);
-			model.addAttribute("totalStockQuantity", totalStockQuantity);
-		}
-		
-		return "shop/shop_product_detail";
-	}
-	*/
-	
 	// 商品詳情頁面 vue
 	@GetMapping
 	public ResponseEntity<?> showShopProductDetail(@RequestParam Integer productDetailId) {
@@ -188,25 +139,38 @@ public class ShopProductDetailController {
 
 	}
 
-	// 商品詳情頁面 => 獲取確認商品規格的Product
+	// 商品詳情頁面 => 獲取確認商品規格的Product & 獲取會員購物車該商品的數量
 	@ResponseBody
 	@PostMapping("/api/getConfirmProductByDetailIdSizeIdColorId")
 	public ResponseEntity<?> getConfirmProduct(
+			@RequestParam Integer memberId,
 			@RequestParam Integer productDetailId, 
 			@RequestParam Optional<Integer> productSizeId,
-			@RequestParam Optional<Integer> productColorId, 
-			Model model) {
+			@RequestParam Optional<Integer> productColorId) {
 
+		Map<String, Object> responseData = new HashMap<>();
+		
 		// 獲取確認商品規格的Product
 		Product product = productService.getConfirmProduct(
 				productDetailId, productSizeId.orElse(null), productColorId.orElse(null));
+		
+		// 會員購物車內該商品的數量
+		Integer productQuantityInCart = 0;
+		Cart cart = cartService.getCartByMemberAndProduct(memberId, product);
+		
+		if (cart != null) {
+			productQuantityInCart = cart.getQuantity();
+			responseData.put("productQuantityInCart", productQuantityInCart);
+		}
 
 		if (product != null) {
 
 			System.out.println(product.getId());
 			System.out.println(product.getProductDetail().getName());
 			
-			return new ResponseEntity<Product>(product, HttpStatus.OK);
+			responseData.put("product", product);
+			
+			return new ResponseEntity<Map<String, Object>>(responseData, HttpStatus.OK);
 
 		}
 
@@ -214,14 +178,13 @@ public class ShopProductDetailController {
 
 	}
 	
-	// 商品詳情頁面 => 選擇一個規格後篩選Product
+	// 商品詳情頁面 => 選擇一個規格後篩選Product vue
 	@ResponseBody
-	@GetMapping("/api/getProductByOption")
+	@PostMapping("/api/getProductByOption")
 	public ResponseEntity<?> getProductByOption(
 			@RequestParam Integer productDetailId, 
 			@RequestParam Integer optionId,
-			@RequestParam String optionName, 
-			Model model) {
+			@RequestParam String optionName) {
 
 		Map<String, Object> responseData = new HashMap<>();
 

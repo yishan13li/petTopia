@@ -114,4 +114,15 @@ public class CartService {
     	
     }
 
+    // 根據商品獲取會員購物車
+    public Cart getCartByMemberAndProduct(Integer memberId, Product product) {
+    	Cart cart = cartRepo.findByMemberIdAndProductId(memberId, product.getId());
+    	if (cart != null) {
+    		return cart;
+    	}
+    	
+    	return null;
+    }
+    
+    
 }
