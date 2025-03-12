@@ -1,9 +1,5 @@
 package petTopia.controller.vendor;
-
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -39,57 +35,20 @@ public class VendorVueController {
 	}
 	
     @GetMapping("/vendor/{vendorId}")
-    public ResponseEntity<Map<String, Object>> getVendorDetail(@PathVariable("vendorId") Integer vendorId) {
-
-        Map<String, Object> response = new HashMap<>();
-
+    public ResponseEntity<Vendor> getVendorDetail(@PathVariable Integer vendorId) {
         Vendor vendor = vendorService.findVendorById(vendorId);
-        response.put("vendor", vendor);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(vendor);
     }
     
     @GetMapping("/vendor/{vendorId}/review")
-    public ResponseEntity<Map<String, Object>> getVendorReview(@PathVariable("vendorId") Integer vendorId) {
-        Map<String, Object> response = new HashMap<>();
-
+    public ResponseEntity<List<VendorReviewDto>> getVendorReview(@PathVariable Integer vendorId) {
         List<VendorReviewDto> reviewList = vendorReviewService.getReviewListByVendorId(vendorId);
-        response.put("reviewList", reviewList);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(reviewList);
     }
     
     @GetMapping("/vendor/{vendorId}/image")
-    public ResponseEntity<Map<String, Object>> getVendorImage(@PathVariable("vendorId") Integer vendorId) {
-        Map<String, Object> response = new HashMap<>();
-
+    public ResponseEntity<List<VendorImages>> getVendorImage(@PathVariable("vendorId") Integer vendorId) {
 		List<VendorImages> imageList = vendorImagesService.findImagesByVendorId(vendorId);
-
-        response.put("imageList", imageList);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(imageList);
     }
-
-//	@GetMapping("/vendor/detail/{vendorId}")
-//	public String vendorDetail(@PathVariable("vendorId") Integer vendorId, Model model) {
-//
-//		/* 該店家資料之賦值 */
-//		Vendor vendor = vendorService.findVendorById(vendorId);
-//		model.addAttribute("vendor", vendor);
-//
-//		/* 所有店家資料之賦值 */
-//		List<Vendor> vendorList = vendorService.findAllVendor();
-//		model.addAttribute("vendorList", vendorList);
-//
-//		/* 該店家評論之賦值 */
-//		List<VendorReviewDto> reviewList = vendorReviewService.getReviewListByVendorId(vendorId);
-//		model.addAttribute("reviewList", reviewList); // (reviewList != null) ? reviewList : new ArrayList<>())
-//
-//		/* 該店家所有圖片賦值 */
-//		List<VendorImages> imageList = vendorImagesService.findImagesByVendorId(vendorId);
-//		model.addAttribute("imageList", imageList); // (imageList != null) ? imageList : new ArrayList<>()
-//
-//		return "/vendor/vendor_detail.html";
-//	}
-
 }
