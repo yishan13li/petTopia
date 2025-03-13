@@ -155,6 +155,8 @@ public class CheckOutController {
                                               HttpSession session,
                                               @RequestHeader(value = "Accept", defaultValue = "application/json") String acceptHeader) throws Exception {
 
+        System.out.println("📥 收到前端請求：" + checkoutData);
+
         // 從 Session 中獲取會員資訊
         Member member = (Member) session.getAttribute("member");
         Integer memberId = member.getId();
@@ -173,21 +175,15 @@ public class CheckOutController {
 
         BigDecimal paymentAmount = (amount != null) ? new BigDecimal(amount) : null;
 
-        // 進一步處理 amount
-
-        // 計算應付款金額，防止前端惡意修改
-        OrderSummaryAmoutDto orderSummary = orderService.calculateOrderSummary(memberId, couponId, shippingCategoryId);
-//        BigDecimal calculatedTotalAmount = orderSummary.getOrderTotal();
-
         // 建立訂單，將收件資訊傳入
         Map<String, Object> orderResponse = orderService.createOrder(member, memberId, couponId, shippingCategoryId, paymentCategoryId, paymentAmount, street, city, receiverName, receiverPhone);
         Order order = (Order) orderResponse.get("order");
 
-     // 如果選擇信用卡付款
+        // 如果選擇信用卡付款 (paymentCategoryId == 1)
         if (paymentCategoryId == 1) {
             // 調用 processCreditCardPayment 來處理付款並返回支付參數資料
             PaymentResponseDto paymentResponse = paymentService.processCreditCardPayment(order, paymentCategoryId);
-            
+
             if (paymentResponse != null) {
                 // 如果請求頭是 JSON 格式，返回支付參數資料
                 if ("application/json".equals(acceptHeader)) {
@@ -200,71 +196,23 @@ public class CheckOutController {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "付款頁面生成失敗"));
             }
         }
-        // 如果無法處理，返回 500 錯誤
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "無法處理請求"));
+
+        // 如果付款方式不是信用卡 (paymentCategoryId != 1)，直接返回訂單建立成功
+        return ResponseEntity.ok(Map.of("message", "訂單建立成功，請查看訂單詳情",
+                "orderId", order.getId()));
     }
+
 
 
     @PostMapping("/payment/ecpay/callback")
-    public ResponseEntity<String> handleEcpayCallback(@RequestBody Map<String, String> ecpayResponse) throws Exception {
-        // 調用 service 來處理 ECPay 回調邏輯
-        String result = paymentService.handleEcpayCallback(ecpayResponse);
-
-        // 根據處理結果返回適當的 HTTP 回應
-        if ("OK".equals(result)) {
-            return ResponseEntity.ok("OK");  // ECPay 需要此訊息
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+    public ResponseEntity<String> handleEcpayCallback(@RequestBody Map<String, String> ecpayResponse) {
+        try {
+            // 呼叫 Service 層處理回調邏輯
+            String response = paymentService.handleEcpayCallback(ecpayResponse);
+            return ResponseEntity.ok(response); // 確保回應是 "1|OK" 或 "0|Error: XXX"
+        } catch (Exception e) {
+            return ResponseEntity.ok("0|Error: " + e.getMessage()); // 發生錯誤時，仍符合 ECPay 格式
         }
     }
 
-
-
-//    @GetMapping("/cart")
-//    public ResponseEntity<Object> getCartItems(HttpSession session) {
-//        Member member = (Member) session.getAttribute("member");
-//        Integer memberId = member.getId();
-//        List<Cart> cartItems = cartService.getCartItems(memberId);
-//        return cartItems.isEmpty()
-//            ? ResponseEntity.ok(Map.of("message", "您的購物車是空的，請先選擇商品"))
-//            : ResponseEntity.ok(cartItems);
-//    }
-//
-//    @GetMapping("/cart/total")
-//    public ResponseEntity<Object> getCartTotal(HttpSession session) {
-//        Member member = (Member) session.getAttribute("member");
-//        Integer memberId = member.getId();
-//        List<Cart> cartItems = cartService.getCartItems(memberId);
-//        BigDecimal subtotal = cartService.calculateTotalPrice(cartItems);
-//        return ResponseEntity.ok(Map.of("subtotal", subtotal));
-//    }
-//
-//
-//
-//    @GetMapping("/shipping/categories")
-//    public ResponseEntity<Object> getShippingCategories() {
-//        List<ShippingCategory> shippingCategories = shippingCategoryRepo.findAll();
-//        return ResponseEntity.ok(shippingCategories);
-//    }
-//
-//
-//
-//    @GetMapping("/payment/categories")
-//    public ResponseEntity<Object> getPaymentCategories() {
-//        List<PaymentCategory> paymentCategories = paymentCategoryRepo.findAll();
-//        return ResponseEntity.ok(paymentCategories);
-//    }
-//    
-//    @GetMapping("/calculate-order-summary")
-//    public ResponseEntity<OrderSummaryAmoutDto> calculateOrderSummary(
-//    	HttpSession session,
-//        @RequestParam(required = false) Integer couponId,
-//        @RequestParam(required = false) Integer shippingCategoryId
-//    ) {
-//    	Member member = (Member) session.getAttribute("member");
-//    	Integer memberId = member.getId();
-//        OrderSummaryAmoutDto summary = orderService.calculateOrderSummary(memberId, couponId, shippingCategoryId);
-//        return ResponseEntity.ok(summary);
-//    }
-    
 }
