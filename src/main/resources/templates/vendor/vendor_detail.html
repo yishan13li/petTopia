@@ -498,10 +498,7 @@
 
   <!-- 留言區 -->
 
-
-
-
-
+  <!-- 店家列表 -->
   <section id="clothing" class="my-5 overflow-hidden">
     <div class="container pb-5">
 
@@ -530,17 +527,16 @@
                 </div>
 
               </div>
-
             </div>
-          </div>
+          </div>    
         </th:block>
 
       </div>
 
     </div>
-
-    </div>
   </section>
+
+  <!-- 店家列表 -->
 
   <!-- 收藏彈跳視窗 -->
 
@@ -792,7 +788,6 @@
 
     function deleteComment(content) {
       const isConfirmed = window.confirm("確定刪除評論？"); // 之後邏輯要新增符合之memeber才會顯示刪除按鈕
-      console.log(reviewId);
 
       let reviewId = content.getAttribute('data-id');
 

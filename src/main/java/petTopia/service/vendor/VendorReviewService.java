@@ -176,10 +176,21 @@ public class VendorReviewService {
 		return review;
 	}
 
-	/* 藉由ID修改刪除 */
+	/* 藉由ID刪除評論 */
 	public void deleteReviewById(Integer reviewId) {
 		vendorReviewRepository.deleteById(reviewId);
-	}	
-	
-	
+	}
+
+	/* 新增文字及圖片評論 */
+	public void addReview(Integer memberId, Integer vendorId, String content, List<MultipartFile> reviewPhotos) throws IOException {
+		VendorReview review = new VendorReview();
+		review.setMemberId(memberId);
+		review.setVendorId(vendorId);
+		review.setReviewContent(content);
+		review.setReviewTime(new Date());
+		vendorReviewRepository.save(review);
+		
+		Integer reviewId = review.getId();
+		addReviewPhotos(reviewId,reviewPhotos);
+	}
 }
