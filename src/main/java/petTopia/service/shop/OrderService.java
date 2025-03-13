@@ -207,17 +207,6 @@ public class OrderService {
 	    PaymentCategory paymentCategory = paymentCategoryRepo.findById(paymentCategoryId)
 	            .orElseThrow(() -> new IllegalArgumentException("找不到付款方式"));
 
-	    String paymentUrl = null;
-
-	    // **信用卡付款**
-	    if (paymentCategory.getId() == 1) {
-	        // **向 ECPay 發送請求並獲取付款網址**
-	        paymentUrl = paymentService.processCreditCardPayment(order, paymentCategoryId);
-
-	        // 訂單狀態設為 "待付款"，等待 ECPay 回調
-	        order.setOrderStatus(orderStatusRepo.findById(1)
-	            .orElseThrow(() -> new IllegalArgumentException("找不到待付款狀態")));
-	    }
 
 	    // **貨到付款**
 	    if (paymentCategory.getId() == 2) {
@@ -231,6 +220,14 @@ public class OrderService {
 	        // 直接將訂單狀態設為 "待出貨"
 	        order.setOrderStatus(orderStatusRepo.findById(2)
 	            .orElseThrow(() -> new IllegalArgumentException("找不到待出貨狀態")));
+	    } else {
+	        // **信用卡支付或其他支付方式處理**
+	        if (paymentCategory.getId() == 1) {  // 若是信用卡付款
+
+	            // 直接將訂單狀態設為 "待處理"    //等付款後再變成待出貨
+	            order.setOrderStatus(orderStatusRepo.findById(1)
+	                .orElseThrow(() -> new IllegalArgumentException("找不到待處理狀態")));
+	        }
 	    }
 
 	    orderRepo.save(order); // 更新訂單狀態
@@ -241,9 +238,6 @@ public class OrderService {
 	    // **回傳訂單資訊 & ECPay 付款網址**
 	    Map<String, Object> response = new HashMap<>();
 	    response.put("order", order);
-	    if (paymentUrl != null) {
-	        response.put("paymentUrl", paymentUrl);
-	    }
 
 	    return response;
 	}

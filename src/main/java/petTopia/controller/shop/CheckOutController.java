@@ -21,6 +21,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import jakarta.servlet.http.HttpSession;
 import petTopia.dto.shop.OrderSummaryAmoutDto;
+import petTopia.dto.shop.PaymentResponseDto;
 import petTopia.model.shop.Cart;
 import petTopia.model.shop.Coupon;
 import petTopia.model.shop.Order;
@@ -176,33 +177,28 @@ public class CheckOutController {
 
         // 計算應付款金額，防止前端惡意修改
         OrderSummaryAmoutDto orderSummary = orderService.calculateOrderSummary(memberId, couponId, shippingCategoryId);
-        BigDecimal calculatedTotalAmount = orderSummary.getOrderTotal();
+//        BigDecimal calculatedTotalAmount = orderSummary.getOrderTotal();
 
         // 建立訂單，將收件資訊傳入
         Map<String, Object> orderResponse = orderService.createOrder(member, memberId, couponId, shippingCategoryId, paymentCategoryId, paymentAmount, street, city, receiverName, receiverPhone);
         Order order = (Order) orderResponse.get("order");
 
-        // 如果選擇信用卡付款，這時候仍然不需要傳送支付金額
+     // 如果選擇信用卡付款
         if (paymentCategoryId == 1) {
-            // 調用 processCreditCardPayment 來處理付款並返回支付表單 HTML
-            String paymentHtmlForm = paymentService.processCreditCardPayment(order, paymentCategoryId);
-            if (paymentHtmlForm != null && !paymentHtmlForm.isEmpty()) {
-                // 如果請求頭是 JSON 格式
+            // 調用 processCreditCardPayment 來處理付款並返回支付參數資料
+            PaymentResponseDto paymentResponse = paymentService.processCreditCardPayment(order, paymentCategoryId);
+            
+            if (paymentResponse != null) {
+                // 如果請求頭是 JSON 格式，返回支付參數資料
                 if ("application/json".equals(acceptHeader)) {
-                    return ResponseEntity.ok(Map.of("message", "訂單建立成功，請前往付款", "paymentHtmlForm", paymentHtmlForm));
-                } 
-                // 如果請求頭是 HTML 格式，返回 HTML 表單
-                else if ("text/html".equals(acceptHeader)) {
-                    return ResponseEntity.ok(paymentHtmlForm);
+                    return ResponseEntity.ok(Map.of(
+                        "message", "訂單建立成功，請前往付款",
+                        "paymentData", paymentResponse
+                    ));
                 }
             } else {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "付款頁面生成失敗"));
             }
-        }
-
-        // 其他情況（例如貨到付款），返回訂單資訊
-        if ("application/json".equals(acceptHeader)) {
-            return ResponseEntity.ok(Map.of("message", "訂單建立成功", "orderId", order.getId()));
         }
         // 如果無法處理，返回 500 錯誤
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "無法處理請求"));
@@ -211,61 +207,17 @@ public class CheckOutController {
 
     @PostMapping("/payment/ecpay/callback")
     public ResponseEntity<String> handleEcpayCallback(@RequestBody Map<String, String> ecpayResponse) throws Exception {
-        String merchantTradeNo = ecpayResponse.get("MerchantTradeNo");  // 取得訂單編號
-        String paymentStatusCode = ecpayResponse.get("RtnCode"); // 付款結果 (1 = 成功)
-        String checkValue = ecpayResponse.get("CheckValue");  // 取得回傳的 CheckValue
+        // 調用 service 來處理 ECPay 回調邏輯
+        String result = paymentService.handleEcpayCallback(ecpayResponse);
 
-        // **透過 tradeNo 找到 Order**
-        try {
-            Integer orderId = Integer.valueOf(merchantTradeNo.replace("PetTopia", ""));   // 將 tradeNo 轉換為 Integer
-            Optional<Order> optionalOrder = orderRepo.findById(orderId);
-
-            if (optionalOrder.isPresent()) {
-                Order order = optionalOrder.get();
-                Payment payment = order.getPayment(); // **取得訂單的付款資訊**
-
-                if (payment != null) {
-                    // 驗證 CheckValue
-                    boolean isValidCheckValue = false;
-                    try {
-                        isValidCheckValue = ecpayUtils.isValidCheckValue(ecpayResponse, checkValue);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    if (!isValidCheckValue) {
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("CheckValue 驗證失敗！");
-                    }
-
-                    PaymentStatus paymentStatus;
-
-                    if ("1".equals(paymentStatusCode)) {
-                        // **ECPay 付款成功，設定狀態為 "已付款"**
-                        paymentStatus = paymentStatusRepo.findById(2)  // 假設 2 = 已付款
-                            .orElseThrow(() -> new IllegalArgumentException("找不到 '已付款' 狀態"));
-
-                        // 更新付款金額
-                        payment.setPaymentAmount(new BigDecimal(ecpayResponse.get("TradeAmt"))); // 從 ECPay 回傳的資料中獲得實際付款金額
-                    } else {
-                        // **ECPay 付款失敗，設定狀態為 "付款失敗"**
-                        paymentStatus = paymentStatusRepo.findById(3)  // 假設 3 = 付款失敗
-                            .orElseThrow(() -> new IllegalArgumentException("找不到 '付款失敗' 狀態"));
-                    }
-
-                    payment.setPaymentStatus(paymentStatus);  // **更新付款狀態**
-                    payment.setUpdatedDate(new Date()); // **記錄更新時間**
-                    paymentRepo.save(payment);  // **儲存付款狀態**
-
-                    return ResponseEntity.ok("OK");  // **回傳 "OK"，ECPay 需要這個訊息**
-                } else {
-                    return ResponseEntity.badRequest().body("找不到對應的付款紀錄");
-                }
-            } else {
-                return ResponseEntity.badRequest().body("找不到對應的訂單");
-            }
-        } catch (NumberFormatException e) {
-            return ResponseEntity.badRequest().body("訂單編號格式錯誤");
+        // 根據處理結果返回適當的 HTTP 回應
+        if ("OK".equals(result)) {
+            return ResponseEntity.ok("OK");  // ECPay 需要此訊息
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
         }
     }
+
 
 
 //    @GetMapping("/cart")

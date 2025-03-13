@@ -3,6 +3,7 @@ package petTopia.service.shop;
 import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -43,6 +44,8 @@ import petTopia.model.shop.Payment;
 import petTopia.model.shop.PaymentCategory;
 import petTopia.model.shop.PaymentStatus;
 import petTopia.repository.shop.OrderDetailRepository;
+import petTopia.repository.shop.OrderRepository;
+import petTopia.repository.shop.OrderStatusRepository;
 import petTopia.repository.shop.PaymentCategoryRepository;
 import petTopia.repository.shop.PaymentRepository;
 import petTopia.repository.shop.PaymentStatusRepository;
@@ -54,9 +57,6 @@ public class PaymentService {
 
     @Value("${ecpay.merchantId}")
     private String merchantId;
-
-    @Value("${ecpay.paymentUrl}")
-    private String paymentUrl;
 
     @Autowired
     private CartService cartService;
@@ -71,7 +71,13 @@ public class PaymentService {
     private PaymentCategoryRepository paymentCategoryRepo;
     
     @Autowired
+    private OrderRepository orderRepo;
+    
+    @Autowired
     private OrderDetailRepository orderDetailRepo;
+    
+    @Autowired
+    private OrderStatusRepository orderStatusRepo;
     
     @Autowired
     private EcpayUtils ecpayUtils; // 引入 EcpayUtils
@@ -83,48 +89,18 @@ public class PaymentService {
         paymentInfoDto.setPaymentStatus(order.getPayment().getPaymentStatus().getName());
         return paymentInfoDto;
     }
-
-    // 處理信用卡支付
-    public String processCreditCardPayment(Order order, Integer paymentCategoryId) throws Exception {
-        
-    	 log.info("開始處理信用卡付款, 訂單編號: {}", order.getId());
-    	// 根據 paymentCategoryId 查詢對應的 PaymentCategory
-        PaymentCategory paymentCategory = paymentCategoryRepo.findById(paymentCategoryId)
-                .orElseThrow(() -> new Exception("Invalid PaymentCategoryId")); // 如果沒有找到，丟出異常
-
-        BigDecimal orderTotal = order.getTotalAmount();
-
-        // 呼叫 ECPay 生成支付請求，獲取付款網址
-        PaymentResponseDto paymentResponse = sendECPayPaymentRequest(order);
-
-        Payment payment = new Payment();
-        payment.setOrder(order);
-
-        if (paymentResponse.isSuccess()) {
-            payment.setPaymentAmount(paymentResponse.getPaymentAmount());
-        } else {
-            payment.setPaymentAmount(BigDecimal.ZERO);
-        }
-
-        payment.setPaymentCategory(paymentCategory);
-        payment.setPaymentDate(new Date());
-        payment.setUpdatedDate(new Date());
-
-        if (paymentResponse.isSuccess()) {
-            setPaymentStatus(payment, 2);  // 設置為 "已付款"
-        } else {
-            setPaymentStatus(payment, 3);  // 設置為 "付款失敗"
-        }
-
-        paymentRepo.save(payment);
-
-        return paymentResponse.getPaymentUrl(); // **回傳 ECPay 付款網址**
-    }
-
+    
+    //訂單建立後為待處理(1)，先從訂單資訊取得ECpay需要的參數
     @Transactional
-    public PaymentResponseDto sendECPayPaymentRequest(Order order) throws Exception {
+    public PaymentResponseDto processCreditCardPayment(Order order, Integer paymentCategoryId) throws Exception {
+        log.info("開始處理信用卡付款, 訂單編號: {}", order.getId());
 
-        // 從訂單中獲取訂單明細 (OrderItem)
+        // 檢查是否為 paymentCategoryId == 1
+        if (paymentCategoryId != 1) {
+            throw new IllegalArgumentException("只有信用卡付款才可執行該方法");
+        }
+
+        // 根據訂單資訊產生ECpay需要的參數
         List<OrderDetail> orderDetails = orderDetailRepo.findByOrderId(order.getId());
 
         // 合併所有商品名稱
@@ -139,104 +115,129 @@ public class PaymentService {
         String itemName = itemNameBuilder.toString();
         String paymentAmount = order.getTotalAmount().toString();
 
-        // 建立 ECPay 參數 Map
-        Map<String, String> params = new LinkedHashMap<>();
-        params.put("MerchantID", merchantId);
-        params.put("MerchantTradeNo", "PetTopia" + order.getId());
-        params.put("MerchantTradeDate", new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date()));
-        params.put("PaymentType", "aio");
-        params.put("TotalAmount", paymentAmount);
-        params.put("TradeDesc", URLEncoder.encode("petTopia商品付款", StandardCharsets.UTF_8.toString()));
-        params.put("ItemName", URLEncoder.encode(itemName, StandardCharsets.UTF_8.toString()));
+        // 創建 PaymentResponseDto 並設置值
+        PaymentResponseDto paymentResponse = new PaymentResponseDto();
+        paymentResponse.setMerchantId(merchantId);
+        paymentResponse.setMerchantTradeNo("PetTopia" + order.getId());
+        paymentResponse.setMerchantTradeDate(new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date()));
+        paymentResponse.setPaymentType("aio");
+        paymentResponse.setTotalAmount(paymentAmount);
+        paymentResponse.setTradeDesc("petTopia商品付款");
+        paymentResponse.setItemName(itemName);
+        paymentResponse.setReturnURL("http://localhost:8080/shop/payment/ecpay/callback");
+//        paymentResponse.setOrderResultURL("http://localhost:5173/shop/orders/" + order.getId());
+        paymentResponse.setChoosePayment("Credit");
+        paymentResponse.setEncryptType("1");
 
-        params.put("ReturnURL", "http://localhost:8080/shop/payment/ecpay/callback");
-        params.put("OrderResultURL","http://localhost:5173/shop/orders/" + order.getId() );
-        params.put("ChoosePayment", "Credit");
-        params.put("EncryptType", "1");
-
-        System.out.println("印出itemname:"+itemName);
         // 計算 CheckValue
-        String checkValue = ecpayUtils.createCheckValue(params);
-        params.put("CheckMacValue", checkValue);
-        
-     // 產生 POST 表單 HTML
-        StringBuilder scriptHtml = new StringBuilder();
-        scriptHtml.append("<script>");
-        scriptHtml.append("var form = document.createElement('form');");
-        scriptHtml.append("form.method = 'POST';");
-        scriptHtml.append("form.action = '").append(paymentUrl).append("';");
+        String checkValue = ecpayUtils.createCheckValue(paymentResponse.toMap());
+        paymentResponse.setCheckMacValue(checkValue);
 
-        System.out.println(scriptHtml.toString());
-
-        // 在這裡，將所有必要的參數添加到表單中
-        for (Map.Entry<String, String> entry : params.entrySet()) {
-            scriptHtml.append("var input = document.createElement('input');");
-            scriptHtml.append("input.type = 'hidden';");
-            scriptHtml.append("input.name = '").append(entry.getKey()).append("';");
-            scriptHtml.append("input.value = '").append(entry.getValue()).append("';");
-            scriptHtml.append("form.appendChild(input);");
-        }
-
-        scriptHtml.append("document.body.appendChild(form);");
-        scriptHtml.append("form.submit();");
-        scriptHtml.append("</script>");
-
-        // 返回 HTML 和跳轉指令
-        return new PaymentResponseDto(true, new BigDecimal(paymentAmount), scriptHtml.toString(), checkValue);
-}
-
-
-    // **解析 ECPay API 回應，提取付款網址**
-    private String extractPaymentUrl(String ecpayResponse) {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode jsonNode = objectMapper.readTree(ecpayResponse);
-            if (jsonNode.has("PaymentURL")) {
-                return jsonNode.get("PaymentURL").asText(); // **從 JSON 取出付款網址**
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
+        // 返回支付參數資料
+        return paymentResponse;
     }
 
- // 處理 ECPay 回調，更新支付狀態
-    public void handleEcpayCallback(Map<String, String> callbackParams) throws Exception {
-        // 確認回傳的 CheckValue 是否有效，防止偽造回調
-        String checkValue = callbackParams.get("CheckValue");
-        if (!ecpayUtils.isValidCheckValue(callbackParams, checkValue)) {
-            throw new IllegalArgumentException("Invalid CheckValue from ECPay callback");
+    //告訴ECpay我有收到他回傳的狀態資料，並且核對檢查碼
+    public Map<String, String> returnStatusToEcpay(Map<String, String> callbackParams) throws Exception {
+        
+        Map<String, String> response = new HashMap<>();
+
+        // 取得 ECPay 回傳的交易狀態 (RtnCode)
+        String rtnCode = callbackParams.get("RtnCode");
+
+        // 根據RtnCode(支付狀態)來設定回應的 RtnCode 和 RtnMsg
+        if ("1".equals(rtnCode)) {  // 付款成功
+            response.put("RtnCode", "1");
+            response.put("RtnMsg", "OK");
+        } else {  // 付款失敗或其他情況
+            response.put("RtnCode", "0");
+            response.put("RtnMsg", "Error: Payment Failed");
+        }
+        
+        // 確認ECpay回傳的 CheckMacValue 是否有效，防止偽造回調
+        boolean isValid = ecpayUtils.isValidCheckValue(callbackParams);
+
+        // 根據檢查碼的驗證結果來決定是否需要更改回應
+        if (!isValid) {
+            response.put("RtnCode", "0");  // 重新設置為錯誤狀態
+            response.put("RtnMsg", "Error: Invalid CheckMacValue");
         }
 
+        return response;
+    }
+
+    // 處理 ECPay 回調，更新支付狀態
+    public String handleEcpayCallback(Map<String, String> callbackParams) throws Exception {
         // 取得回傳資料
         String merchantTradeNo = callbackParams.get("MerchantTradeNo");  // 這是你的訂單編號（MerchantTradeNo）
-        String paymentStatus = callbackParams.get("PaymentStatus");  // 支付狀態
+        String rtnCode = callbackParams.get("RtnCode");  // 支付狀態
         String tradeNo = callbackParams.get("TradeNo");  // 這是 ECPay 返回的交易編號
+        String tradeAmt = callbackParams.get("TradeAmt");  // 這是 ECPay 返回的交易金額
+        String paymentDateStr = callbackParams.get("PaymentDate");  // 這是 ECPay 返回的支付日期
 
-        // 將 merchantTradeNo 從 String 轉換為 Integer
-        Integer orderId = Integer.valueOf(merchantTradeNo);  // 注意這裡的轉換
+        // 去除 "PetTopia" 前綴，僅保留訂單編號部分
+        String orderIdStr = merchantTradeNo.replace("PetTopia", "");
 
-        // 根據 orderId 查找對應的支付記錄
-        Optional<Payment> paymentOptional = Optional.of(paymentRepo.findByOrderId(orderId)); // 這裡的 orderId 是 Integer 類型
-        if (!paymentOptional.isPresent()) {
-            throw new IllegalArgumentException("Payment record not found for order: " + merchantTradeNo);
+        // 將 orderIdStr 轉換為 Integer
+        Integer orderId = Integer.valueOf(orderIdStr);
+        BigDecimal paymentAmount = new BigDecimal(tradeAmt);
+
+        // 根據 orderId查找對應的訂單
+        Optional<Order> orderOptional = orderRepo.findById(orderId);
+        if (!orderOptional.isPresent()) {
+            throw new IllegalArgumentException("Order not found for merchantTradeNo: " + merchantTradeNo);
         }
 
-        Payment payment = paymentOptional.get();
+        Order order = orderOptional.get();
+        Payment payment = new Payment();
+        payment.setOrder(order);
 
-        // 根據回傳的支付狀態來更新訂單的支付狀態
-        if ("1".equals(paymentStatus)) { // 付款成功
-            setPaymentStatus(payment, 2); // 設為已付款
-        } else {
+        // 確認回傳的 CheckMacValue 是否有效，防止偽造回調
+        if (!ecpayUtils.isValidCheckValue(callbackParams) || "0".equals(rtnCode)) {
+            // 若 CheckMacValue 無效或者付款狀態為失敗（RtnCode為0），則設置為付款失敗
             setPaymentStatus(payment, 3); // 設為付款失敗
+            payment.setPaymentAmount(null);
+        } else if ("1".equals(rtnCode)) {
+            // 若 RtnCode為1，表示付款成功，設置為已付款
+            setPaymentStatus(payment, 2); // 設為已付款
+            payment.setPaymentAmount(paymentAmount);
+
+            // 更新訂單狀態為待出貨（2）
+            order.setOrderStatus(orderStatusRepo.findById(2)
+                .orElseThrow(() -> new IllegalArgumentException("找不到待出貨狀態")));
+            orderRepo.save(order);  // 更新訂單
+        }
+
+        // 確認 PaymentCategory 並設置
+        paymentCategoryRepo.findById(1).ifPresentOrElse(
+            paymentCategory -> payment.setPaymentCategory(paymentCategory),
+            () -> { throw new IllegalArgumentException("PaymentCategory not found"); }
+        );
+
+        // 定義日期格式，根據回傳的格式來設定
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+
+        // 解析字符串，轉換成 Date
+        Date paymentDate = null;
+        if (paymentDateStr != null && !paymentDateStr.isEmpty()) {
+            try {
+                paymentDate = dateFormat.parse(paymentDateStr);  // 解析成 Date 物件
+            } catch (ParseException e) {
+                e.printStackTrace();
+                throw new IllegalArgumentException("Invalid payment date format: " + paymentDateStr, e);
+            }
+        } else {
+            throw new IllegalArgumentException("Payment date is missing");
         }
 
         // 更新支付交易號等信息
         payment.setTradeNo(tradeNo);  // 保存 ECPay 返回的交易號
-        payment.setUpdatedDate(new Date());
-        paymentRepo.save(payment);
-    }
+        payment.setPaymentDate(paymentDate);  // 設置為 Payment 的 paymentDate 欄位
+        payment.setUpdatedDate(new Date());  // 設置為更新日期
+        paymentRepo.save(payment);  // 保存到資料庫
 
+        return "OK";  // 回傳 "OK" 以符合 ECPay 的需求
+    }
 
     // 處理貨到付款支付
     public boolean createCashOnDeliveryPayment(Order order, PaymentCategory paymentCategory) {

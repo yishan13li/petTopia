@@ -24,6 +24,7 @@ public class EcpayUtils {
         StringBuilder sb = new StringBuilder();
 
         for (Map.Entry<String, String> entry : sortedParams.entrySet()) {
+            // 排除 PaymentStatus 和 CheckMacValue
             if ("CheckMacValue".equals(entry.getKey())) {
                 continue;
             }
@@ -83,8 +84,15 @@ public class EcpayUtils {
         return hexString.toString();
     }
 
-    public boolean isValidCheckValue(Map<String, String> callbackParams, String checkValue) throws Exception {
-        String generatedCheckValue = createCheckValue(callbackParams);
-        return generatedCheckValue.equals(checkValue);
+    public boolean isValidCheckValue(Map<String, String> callbackParams) throws Exception {
+        // 1. 取出 ECPay 回傳的 CheckMacValue
+        String ecpayCheckMacValue = callbackParams.get("CheckMacValue");
+
+        // 2. 重新計算 CheckMacValue
+        String generatedCheckMacValue = createCheckValue(callbackParams);
+
+        // 3. 比對兩者是否相同
+        return generatedCheckMacValue.equals(ecpayCheckMacValue);
     }
+
 }
