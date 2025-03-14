@@ -13,6 +13,12 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import petTopia.dto.shop.ProductDetailDto;
 import petTopia.model.shop.Product;
@@ -25,12 +31,16 @@ import petTopia.service.shop.ProductService;
 public class ShopProductsController {
 
 	@Autowired
+	private ObjectMapper objectMapper;
+	
+	@Autowired
 	private ProductService productService;
 	@Autowired
 	private ProductDetailService productDetailService;
 	
-	
+
 	// 商品瀏覽頁面
+	/*
 	@GetMapping
 	public String showShopProducts(Model model) {
 		
@@ -52,6 +62,37 @@ public class ShopProductsController {
 		model.addAttribute("productDetailDtoList", productDetailDtoList);
 		
 		return "shop/shop_products";
+	}
+	*/
+	
+	// 商品瀏覽頁面 vue
+	@ResponseBody
+	@GetMapping
+	public ResponseEntity<?> showShopProducts() {
+		
+		ObjectNode responseBody = objectMapper.createObjectNode();
+		
+		// 獲取商品資訊(ProductDetail)
+		List<ProductDetail> productDetailList = productDetailService.findAll();
+		
+		// 獲取ProductDetail一樣的所有Poduct，選出最低價
+		List<ProductDetailDto> productDetailDtoList = new ArrayList<ProductDetailDto>();
+		for (ProductDetail productDetail : productDetailList) {
+			
+			ProductDetailDto productDetailDto = new ProductDetailDto();
+			Product minPriceProduct = productService.getMinPriceProduct(productDetail.getId());
+			
+			productDetailDto.setProductDetail(productDetail);
+			productDetailDto.setUnitPrice(minPriceProduct.getUnitPrice());
+			productDetailDtoList.add(productDetailDto);
+		}
+		
+		JsonNode productDetailDtoListJson  = objectMapper.convertValue(productDetailDtoList, JsonNode.class);
+		
+		responseBody.set("productDetailListDto", productDetailDtoListJson);
+		
+		return new ResponseEntity<ObjectNode>(responseBody, HttpStatus.OK);
+		
 	}
 	
 	// 商品瀏覽頁面 => 獲取商品資訊的第一個商品的圖片 
