@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -176,5 +177,18 @@ public class CartService {
     	
     	return null;
     }
+    
+    // 根據cartId刪除該商品的購物車
+    public Integer deleteCartById(Integer cartId) {
+    	Optional<Cart> cartOpt = cartRepo.findById(cartId);
+    	if (cartOpt.isPresent()) {
+    		Cart deleteCart =  cartOpt.get();
+    		cartRepo.delete(deleteCart);
+    		return cartId;
+    	}
+    	
+    	return null;
+    }
+    
     
 }

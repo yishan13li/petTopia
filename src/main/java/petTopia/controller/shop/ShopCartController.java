@@ -95,4 +95,22 @@ public class ShopCartController {
 
 	}
 
+	// 會員購物車頁面 => 獲取商品圖片
+	@GetMapping("/api/deleteCartById")
+	public ResponseEntity<?> deleteCartById(@RequestParam Integer cartId) {
+		
+		// 獲取該商品的購物車
+		Integer deleteCartId = cartService.deleteCartById(cartId);
+		
+		if (deleteCartId != null) {
+			return new ResponseEntity<Integer>(deleteCartId, HttpStatus.OK);
+		}
+
+		return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+
+	}
+
+	
+	
+	
 }
