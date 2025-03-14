@@ -153,5 +153,14 @@ public class CartService {
     	return null;
     }
     
+    // 獲取會員勾選要結帳的商品的購物車
+    public List<Cart> getCartByMemberIdAndProductIds(Integer memberId, List<Integer> productIds){
+    	List<Cart> carts = cartRepo.findByMemberIdAndProductIdIn(memberId, productIds);
+    	if (carts != null && carts.size() != 0) {
+    		return carts;
+    	}
+    	
+    	return null;
+    }
     
 }
