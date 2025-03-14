@@ -41,6 +41,7 @@ import petTopia.model.shop.Shipping;
 import petTopia.model.shop.ShippingAddress;
 import petTopia.model.shop.ShippingCategory;
 import petTopia.model.user.Member;
+import petTopia.repository.shop.CartRepository;
 import petTopia.repository.shop.CouponRepository;
 import petTopia.repository.shop.OrderDetailRepository;
 import petTopia.repository.shop.OrderRepository;
@@ -58,6 +59,9 @@ public class OrderService {
 	
 	@Autowired
 	private CartService cartService;
+	
+	@Autowired
+	private CartRepository cartRepo;
     
 	@Autowired
     private ShippingCategoryRepository shippingCategoryRepo;
@@ -97,12 +101,10 @@ public class OrderService {
 //	================================================
 
 	
-	public OrderSummaryAmoutDto calculateOrderSummary(Integer memberId, Integer couponId, Integer shippingCategoryId) {
-	    // 找到購物車內容
-	    List<Cart> cartItems = cartService.getCartItems(memberId);
+	public OrderSummaryAmoutDto calculateOrderSummary(Integer memberId, Integer couponId, Integer shippingCategoryId,List<Integer> productIds) {
 
 	    // 計算商品總金額
-	    BigDecimal subtotal = cartService.calculateTotalPrice(cartItems);
+	    BigDecimal subtotal = cartService.calculateTotalPrice(memberId,productIds);
 
 	    // 計算折扣
 	    BigDecimal discountAmount = BigDecimal.ZERO;
@@ -139,13 +141,10 @@ public class OrderService {
 	public Map<String, Object> createOrder(Member member, Integer memberId, 
 	        Integer couponId, Integer shippingCategoryId, 
 	        Integer paymentCategoryId, BigDecimal paymentAmount,
-	        String street, String city, String receiverName, String receiverPhone) throws Exception {
-
-	    // 找到該 member 的購物車資訊
-	    List<Cart> cartItems = cartService.getCartItems(memberId);
+	        String street, String city, String receiverName, String receiverPhone,List<Integer> productIds) throws Exception {
 
 	    // 計算購物車 subtotal 金額
-	    BigDecimal subtotal = cartService.calculateTotalPrice(cartItems);
+	    BigDecimal subtotal = cartService.calculateTotalPrice(memberId,productIds);
 
 	    Coupon coupon = null;
 	    BigDecimal discountAmount = BigDecimal.ZERO;
@@ -188,6 +187,9 @@ public class OrderService {
 	    orderRepo.save(order); // 存入資料庫
 
 	    // 訂單詳情
+        // 查詢會員購物車中這些商品
+        List<Cart> cartItems = cartRepo.findByMemberIdAndProductIdIn(memberId, productIds);
+
 	    orderDetailService.createOrderDetails(order, cartItems);
 
 	    // 更新優惠券使用次數
@@ -233,7 +235,7 @@ public class OrderService {
 	    orderRepo.save(order); // 更新訂單狀態
 
 	    // 清空購物車
-	    cartService.clearCart(memberId);
+	    cartService.clearCart(memberId, productIds);
 
 	    // **回傳訂單資訊 & ECPay 付款網址**
 	    Map<String, Object> response = new HashMap<>();

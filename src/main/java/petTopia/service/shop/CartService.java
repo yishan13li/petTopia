@@ -2,6 +2,8 @@ package petTopia.service.shop;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,7 @@ import petTopia.model.shop.Product;
 import petTopia.dto.shop.CartItemForCheckoutDto;
 import petTopia.model.user.Member;
 import petTopia.repository.shop.CartRepository;
+import petTopia.repository.shop.ProductRepository;
 
 @Service
 public class CartService {
@@ -19,15 +22,27 @@ public class CartService {
     @Autowired
     private CartRepository cartRepo;  // 你的 CartRepository
 
+    @Autowired
+    private ProductRepository productRepo;
+    
     // 根據用戶 ID 獲取購物車商品  //單次查詢
     public List<Cart> getCartItems(Integer memberId) {
-        return cartRepo.findByMemberId(memberId);  // 根據 userId 查詢購物車
+        return cartRepo.findByMemberId(memberId);
+    }
+    
+    // 根據用戶 ID 獲取購物車商品  //單次查詢
+    public List<Cart> getProductCartItems(Integer memberId,List<Integer> productIds) {
+        return cartRepo.findByMemberIdAndProductIdIn(memberId, productIds);
     }
 
  // 計算購物車的總金額
-    public BigDecimal calculateTotalPrice(List<Cart> cartItems) {
+    public BigDecimal calculateTotalPrice(Integer memberId,List<Integer> productIds) {
         BigDecimal total = BigDecimal.ZERO; // 初始化為 0
 
+        // 查詢會員購物車中這些商品
+        List<Cart> cartItems = cartRepo.findByMemberIdAndProductIdIn(memberId, productIds);
+
+        // 計算總金額
         for (Cart item : cartItems) {
             // 取得商品的價格（折扣價或原價）
             BigDecimal price;
@@ -39,45 +54,44 @@ public class CartService {
                 price = item.getProduct().getUnitPrice();
             }
 
-            // 取得數量並轉換為 BigDecimal
-            BigDecimal quantity = new BigDecimal(item.getQuantity());
+            // 根據購買數量計算總價
+            BigDecimal totalPriceForItem = price.multiply(new BigDecimal(item.getQuantity()));
 
-            // 計算總金額並加到 total
-            total = total.add(price.multiply(quantity)); // 使用 add() 方法進行加法
+            // 累加到總金額
+            total = total.add(totalPriceForItem);
         }
-
+        
         return total; // 返回計算後的總金額
     }
     
-    // 計算購物車的總金額
-    public BigDecimal calculateTotalPriceForCheckout(List<CartItemForCheckoutDto> cartItems) {
-        BigDecimal total = BigDecimal.ZERO; // 初始化為 0
-
-        for (CartItemForCheckoutDto item : cartItems) {
-            // 取得商品的價格（折扣價或原價）
-            BigDecimal price;
-
-            // 檢查折扣價是否為 null，若為 null 則使用單價
-            if (item.getDiscountPrice() != null) {
-                price = item.getDiscountPrice();
-            } else {
-                price = item.getUnitPrice();
-            }
-
-            // 取得數量並轉換為 BigDecimal
-            BigDecimal quantity = new BigDecimal(item.getQuantity());
-
-            // 計算總金額並加到 total
-            total = total.add(price.multiply(quantity)); // 使用 add() 方法進行加法
-        }
-
-        return total; // 返回計算後的總金額
-    }
-
+//    // 計算購物車的總金額
+//    public BigDecimal calculateTotalPriceForCheckout(List<CartItemForCheckoutDto> cartItems) {
+//        BigDecimal total = BigDecimal.ZERO; // 初始化為 0
+//
+//        for (CartItemForCheckoutDto item : cartItems) {
+//            // 取得商品的價格（折扣價或原價）
+//            BigDecimal price;
+//
+//            // 檢查折扣價是否為 null，若為 null 則使用單價
+//            if (item.getDiscountPrice() != null) {
+//                price = item.getDiscountPrice();
+//            } else {
+//                price = item.getUnitPrice();
+//            }
+//
+//            // 取得數量並轉換為 BigDecimal
+//            BigDecimal quantity = new BigDecimal(item.getQuantity());
+//
+//            // 計算總金額並加到 total
+//            total = total.add(price.multiply(quantity)); // 使用 add() 方法進行加法
+//        }
+//
+//        return total; // 返回計算後的總金額
+//    }
 
     // 清空用戶的購物車
-    public void clearCart(Integer memberId) {
-        cartRepo.deleteByMemberId(memberId);  // 根據 memberId 刪除購物車內容
+    public void clearCart(Integer memberId,List<Integer> productIds) {
+        cartRepo.deleteByMemberIdAndProductIds(memberId,productIds);  // 根據 memberId 刪除購物車內容
     }
     
 	// 商品加入購物車

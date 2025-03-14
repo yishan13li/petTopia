@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -37,6 +39,7 @@ import petTopia.service.shop.CouponService;
 import petTopia.service.shop.OrderService;
 import petTopia.service.shop.PaymentService;
 import petTopia.util.EcpayUtils;
+import petTopia.repository.shop.CartRepository;
 import petTopia.repository.shop.OrderRepository;
 import petTopia.repository.shop.PaymentCategoryRepository;
 import petTopia.repository.shop.PaymentRepository;
@@ -83,6 +86,9 @@ public class CheckOutController {
     
     @Autowired
     private OrderRepository orderRepo;
+    
+    @Autowired
+    private CartRepository cartRepo;
 
     @GetMapping("/checkout")
     public ResponseEntity<Object> getCheckoutInfo(@RequestParam List<Integer> productIds, HttpSession session) {
@@ -93,7 +99,7 @@ public class CheckOutController {
         
         Integer memberId = member.getId();
         List<Cart> cartItems = cartService.getCartByMemberIdAndProductIds(memberId, productIds);
-        BigDecimal subtotal = cartService.calculateTotalPrice(cartItems);
+        BigDecimal subtotal = cartService.calculateTotalPrice(memberId,productIds);
         List<ShippingCategory> shippingCategories = shippingCategoryRepo.findAll();
         List<PaymentCategory> paymentCategories = paymentCategoryRepo.findAll();
         
@@ -131,12 +137,16 @@ public class CheckOutController {
         return ResponseEntity.ok(lastShippingAddress);
     }
     
+    
     @GetMapping("/coupons")
-    public ResponseEntity<Object> getCoupons(@RequestParam Optional<Integer> selectedCouponId, HttpSession session) {
+    public ResponseEntity<Object> getCoupons(@RequestParam Optional<Integer> selectedCouponId, HttpSession session, 
+    											@RequestParam List<Integer> productIds) {
         Member member = (Member) session.getAttribute("member");
         Integer memberId = member.getId();
-        List<Cart> cartItems = cartService.getCartItems(memberId);
-        BigDecimal subtotal = cartService.calculateTotalPrice(cartItems);
+        
+//        List<Cart> AllCarts= cartRepo.findByMemberIdAndProductIdIn(memberId, cartItems);
+
+        BigDecimal subtotal = cartService.calculateTotalPrice(memberId,productIds);
 
         Map<String, Object> response = new HashMap<>();
         
@@ -179,6 +189,13 @@ public class CheckOutController {
         Integer shippingCategoryId = (Integer) checkoutData.get("shippingCategoryId");
         Integer paymentCategoryId = (Integer) checkoutData.get("paymentCategoryId");
 
+        // 取得前端傳來的購物車 ID 清單
+//        List<Integer> productIdList = (List<Integer>) checkoutData.get("cartItems");
+        List<Integer> productIdList = ((List<Map<String, Object>>) checkoutData.get("cartItems"))
+                .stream()
+                .map(item -> (Integer) item.get("productId")) // 假設每個 item 中有 productId 欄位
+                .collect(Collectors.toList());
+        
         // 取得收件人資料
         String receiverName = (String) checkoutData.get("receiverName");
         String receiverPhone = (String) checkoutData.get("receiverPhone");
@@ -189,7 +206,7 @@ public class CheckOutController {
         BigDecimal paymentAmount = (amount != null) ? new BigDecimal(amount) : null;
 
         // 建立訂單，將收件資訊傳入
-        Map<String, Object> orderResponse = orderService.createOrder(member, memberId, couponId, shippingCategoryId, paymentCategoryId, paymentAmount, street, city, receiverName, receiverPhone);
+        Map<String, Object> orderResponse = orderService.createOrder(member, memberId, couponId, shippingCategoryId, paymentCategoryId, paymentAmount, street, city, receiverName, receiverPhone,productIdList);
         Order order = (Order) orderResponse.get("order");
 
         // 如果選擇信用卡付款 (paymentCategoryId == 1)
