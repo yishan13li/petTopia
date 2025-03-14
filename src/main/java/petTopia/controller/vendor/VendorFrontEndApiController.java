@@ -138,14 +138,14 @@ public class VendorFrontEndApiController {
 		return response;
 	}
 
-	@PostMapping("/api/vendor/review/{reviewId}/modify")
-	public Map<String, Object> modifyReview(@PathVariable Integer reviewId, @RequestParam String content) {
-		vendorReviewService.rewriteReviewById(reviewId, content);
-
-		Map<String, Object> response = new HashMap<>();
-		response.put("success", true);
-		return response;
-	}
+//	@PostMapping("/api/vendor/review/{reviewId}/modify")
+//	public Map<String, Object> modifyReview(@PathVariable Integer reviewId, @RequestParam String content) {
+//		vendorReviewService.rewriteReviewById(reviewId, content);
+//
+//		Map<String, Object> response = new HashMap<>();
+//		response.put("success", true);
+//		return response;
+//	}
 
 	@GetMapping("/api/vendor/review/{reviewId}")
 	public Map<String, Object> getVendorReviewById(@PathVariable Integer reviewId) {
