@@ -156,7 +156,10 @@ public class ShopProductDetailController {
 		
 		// 會員購物車內該商品的數量
 		Integer productQuantityInCart = 0;
-		Cart cart = cartService.getCartByMemberAndProduct(memberId, product);
+		Cart cart = null;
+		
+		if (product != null)
+			cart = cartService.getCartByMemberIdAndProductId(memberId, product.getId());
 		
 		if (cart != null) {
 			productQuantityInCart = cart.getQuantity();
@@ -284,8 +287,6 @@ public class ShopProductDetailController {
 			@RequestParam Optional<Integer> productColorId, 
 			@RequestParam Integer quantity) {
 
-		//TODO: 前端顯示庫存的地方要用庫存扣除該會員購物車內已經選擇的數量
-		
 		// 獲取會員
 		Member member = null;
 		Optional<Member> memberOpt = memberService.findById(memberId);

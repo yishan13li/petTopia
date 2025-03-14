@@ -114,11 +114,40 @@ public class CartService {
     	
     }
 
-    // 根據商品獲取會員購物車
-    public Cart getCartByMemberAndProduct(Integer memberId, Product product) {
-    	Cart cart = cartRepo.findByMemberIdAndProductId(memberId, product.getId());
+    // 更新會員購物車內該商品的數量
+    public Cart updateCartProductQuantity(Member member, Product product, Integer quantity) {
+    	
+    	Cart cart = cartRepo.findByMemberIdAndProductId(member.getId(), product.getId());
+    	if (cart != null) {
+    		if (quantity <= product.getStockQuantity()) {
+    			cart.setQuantity(quantity);
+        		cartRepo.save(cart);
+        		
+        		return cart;
+    		}
+    		
+    	}
+    	
+    	return null;
+    	
+    	
+    }
+
+    // 根據商品Id獲取會員購物車
+    public Cart getCartByMemberIdAndProductId(Integer memberId, Integer productId) {
+    	Cart cart = cartRepo.findByMemberIdAndProductId(memberId, productId);
     	if (cart != null) {
     		return cart;
+    	}
+    	
+    	return null;
+    }
+    
+    // 獲取會員購物車
+    public List<Cart> getCartByMemberId(Integer memberId){
+    	List<Cart> cartList = cartRepo.findByMemberId(memberId);
+    	if (cartList != null && cartList.size() != 0) {
+    		return cartList;
     	}
     	
     	return null;
