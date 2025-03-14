@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
@@ -84,14 +85,14 @@ public class CheckOutController {
     private OrderRepository orderRepo;
 
     @GetMapping("/checkout")
-    public ResponseEntity<Object> getCheckoutInfo(HttpSession session) {
+    public ResponseEntity<Object> getCheckoutInfo(@RequestParam List<Integer> productIds, HttpSession session) {
         Member member = (Member) session.getAttribute("member");
         if (member == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "請先登入"));
         }
         
         Integer memberId = member.getId();
-        List<Cart> cartItems = cartService.getCartItems(memberId);
+        List<Cart> cartItems = cartService.getCartByMemberIdAndProductIds(memberId, productIds);
         BigDecimal subtotal = cartService.calculateTotalPrice(cartItems);
         List<ShippingCategory> shippingCategories = shippingCategoryRepo.findAll();
         List<PaymentCategory> paymentCategories = paymentCategoryRepo.findAll();
@@ -131,23 +132,35 @@ public class CheckOutController {
     }
     
     @GetMapping("/coupons")
-    public ResponseEntity<Object> getCoupons(HttpSession session) {
+    public ResponseEntity<Object> getCoupons(@RequestParam Optional<Integer> selectedCouponId, HttpSession session) {
         Member member = (Member) session.getAttribute("member");
         Integer memberId = member.getId();
         List<Cart> cartItems = cartService.getCartItems(memberId);
         BigDecimal subtotal = cartService.calculateTotalPrice(cartItems);
 
+        Map<String, Object> response = new HashMap<>();
+        
         // 更新優惠券使用次數
         couponService.updateCouponUsageCount(memberId);
         Map<String, List<Coupon>> couponsMap = couponService.getCouponsByAmount(memberId, subtotal);
 
         List<Coupon> availableCoupons = couponsMap.get("available");
         List<Coupon> notMeetCoupons = couponsMap.get("notMeet");
+        
+        // 獲取選取的優惠券
+        Coupon selectedCoupon = null;
+        if (selectedCouponId.orElse(null) != null) {
+        	selectedCoupon = couponService.getCouponById(selectedCouponId.get());
+        }
+        
+        if (availableCoupons != null)
+        	response.put("availableCoupons", availableCoupons);
+        if (notMeetCoupons != null)
+        	response.put("notMeetCoupons", notMeetCoupons);
+        if (selectedCoupon != null)
+        	response.put("selectedCoupon", selectedCoupon);
 
-        return ResponseEntity.ok(Map.of(
-            "availableCoupons", availableCoupons,
-            "notMeetCoupons", notMeetCoupons
-        ));
+        return ResponseEntity.ok(response);
     }
     
     @PostMapping("/checkout")
