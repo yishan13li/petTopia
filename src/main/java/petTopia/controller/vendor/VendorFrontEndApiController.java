@@ -119,16 +119,28 @@ public class VendorFrontEndApiController {
 		return response;
 	}
 
-	@PostMapping(value = "/api/vendor/{vendorId}/review/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE) // 確保 Spring 能解析 multipart/form-data
+	@PostMapping(value = "/api/vendor/{vendorId}/review/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE) // 確保
+																												// Spring
+																												// 能解析
+																												// multipart/form-data
 	public Map<String, Object> giveReview(@PathVariable Integer vendorId, @RequestParam Integer memberId,
 			@RequestParam String content, @RequestPart(required = false) List<MultipartFile> reviewPhotos)
 			throws IOException {
-		if(reviewPhotos!=null) {			
+		if (reviewPhotos != null) {
 			vendorReviewService.addReview(memberId, vendorId, content, reviewPhotos);
-		}else {
+		} else {
 			List<MultipartFile> nullList = new ArrayList<MultipartFile>();
 			vendorReviewService.addReview(memberId, vendorId, content, nullList);
 		}
+
+		Map<String, Object> response = new HashMap<>();
+		response.put("success", true);
+		return response;
+	}
+
+	@PostMapping("/api/vendor/review/{reviewId}/modify")
+	public Map<String, Object> modifyReview(@PathVariable Integer reviewId, @RequestParam String content) {
+		vendorReviewService.rewriteReviewById(reviewId, content);
 
 		Map<String, Object> response = new HashMap<>();
 		response.put("success", true);

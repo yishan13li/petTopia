@@ -117,6 +117,13 @@ public class VendorReviewService {
 		dto.setRatingEnvironment(review.getRatingEnvironment());
 		dto.setRatingPrice(review.getRatingPrice());
 		dto.setRatingService(review.getRatingService());
+		// 判斷 ReviewPhoto 是否為空，以控制按鈕
+		List<ReviewPhoto> reviewPhotos = review.getReviewPhotos();
+		if (reviewPhotos != null && !reviewPhotos.isEmpty()) {
+			dto.setHasPhotos(true);
+		} else {
+			dto.setHasPhotos(false);
+		}
 
 		/* 設定會員資訊 */
 		dto.setMemberId(member.getId());
@@ -128,7 +135,7 @@ public class VendorReviewService {
 	}
 
 	/* 查詢某個vendorId所有評價之DTO */
-	public List<VendorReviewDto> getReviewListByVendorId(Integer vendorId) {
+	public List<VendorReviewDto> findReviewListByVendorId(Integer vendorId) {
 		List<VendorReview> reviewList = vendorReviewRepository.findByVendorId(vendorId);
 
 		List<VendorReviewDto> dtoList = reviewList.stream().map(review -> {
@@ -182,15 +189,16 @@ public class VendorReviewService {
 	}
 
 	/* 新增文字及圖片評論 */
-	public void addReview(Integer memberId, Integer vendorId, String content, List<MultipartFile> reviewPhotos) throws IOException {
+	public void addReview(Integer memberId, Integer vendorId, String content, List<MultipartFile> reviewPhotos)
+			throws IOException {
 		VendorReview review = new VendorReview();
 		review.setMemberId(memberId);
 		review.setVendorId(vendorId);
 		review.setReviewContent(content);
 		review.setReviewTime(new Date());
 		vendorReviewRepository.save(review);
-		
+
 		Integer reviewId = review.getId();
-		addReviewPhotos(reviewId,reviewPhotos);
+		addReviewPhotos(reviewId, reviewPhotos);
 	}
 }

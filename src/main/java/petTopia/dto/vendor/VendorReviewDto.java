@@ -6,10 +6,12 @@ import java.io.IOException;
 import java.net.URLConnection;
 import java.util.Base64;
 import java.util.Date;
+import java.util.List;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import petTopia.model.vendor.ReviewPhoto;
 
 @Getter
 @Setter
@@ -24,6 +26,7 @@ public class VendorReviewDto {
     private Integer ratingEnvironment;
     private Integer ratingPrice;
     private Integer ratingService;
+    private Boolean hasPhotos;
 	
     /* 會員資訊 */
     private Integer memberId;

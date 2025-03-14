@@ -48,7 +48,7 @@ public class VendorFrontEndRouteController {
 		model.addAttribute("vendorList", vendorList);
 
 		/* 該店家評論之賦值 */
-		List<VendorReviewDto> reviewList = vendorReviewService.getReviewListByVendorId(vendorId);
+		List<VendorReviewDto> reviewList = vendorReviewService.findReviewListByVendorId(vendorId);
 		model.addAttribute("reviewList", reviewList); // (reviewList != null) ? reviewList : new ArrayList<>())
 
 		/* 該店家所有圖片賦值 */
