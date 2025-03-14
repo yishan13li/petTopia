@@ -24,19 +24,16 @@ public class EcpayUtils {
         StringBuilder sb = new StringBuilder();
 
         for (Map.Entry<String, String> entry : sortedParams.entrySet()) {
-            // 排除 PaymentStatus 和 CheckMacValue
             if ("CheckMacValue".equals(entry.getKey())) {
                 continue;
             }
             
-            // **如果是 TradeDesc 或 ItemName，則先進行 URL encoding**
             String value = entry.getValue();
-            if ("TradeDesc".equals(entry.getKey()) || "ItemName".equals(entry.getKey())) {
-                value = encodeString(value);
-            }
             
+            // 如果需要進行其他處理（如去除空格等），可以在這裡處理
             sb.append(entry.getKey()).append("=").append(value).append("&");
         }
+
 
         sb.deleteCharAt(sb.length() - 1);
         sb.insert(0, "HashKey=" + hashKey + "&");
@@ -57,14 +54,39 @@ public class EcpayUtils {
     private static String encodeString(String value) throws UnsupportedEncodingException {
         String encoded = URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
 
-        encoded = encoded.replaceAll("\\+", "%20")  // 修正 `+` 為 `%20`
-                .replaceAll("%21", "!")
-                .replaceAll("%2A", "*")
-                .replaceAll("%28", "(")
-                .replaceAll("%29", ")")
-                .replaceAll("%2D", "-")
-                .replaceAll("%5F", "_")
-                .replaceAll("%2E", ".");
+        // 修正常見的 URL 編碼錯誤，讓它符合 ECPay 的規範
+        encoded = encoded.replaceAll("%21", "!")   // `!`
+                         .replaceAll("%2a", "*")   // `*`
+                         .replaceAll("%28", "(")   // `(`
+                         .replaceAll("%29", ")")   // `)`
+                         .replaceAll("%2d", "-")   // `-`
+                         .replaceAll("%5f", "_")   // `_`
+                         .replaceAll("%2e", ".")   // `.`
+                         .replaceAll("%7e", "~")   // `~`
+                         .replaceAll("%40", "@")   // `@`
+                         .replaceAll("%23", "#")   // `#`
+                         .replaceAll("%24", "$")   // `$`
+                         .replaceAll("%25", "%")   // `%`
+                         .replaceAll("%5e", "^")   // `^`
+                         .replaceAll("%26", "&")   // `&`
+                         .replaceAll("%3d", "=")   // `=`
+                         .replaceAll("%2b", "+")   // `+`
+                         .replaceAll("%3b", ";")   // `;`
+                         .replaceAll("%3f", "?")   // `?`
+                         .replaceAll("%2f", "/")   // `/`
+                         .replaceAll("%5c", "\\")  // `\`
+                         .replaceAll("%3e", ">")   // `>`
+                         .replaceAll("%3c", "<")   // `<`
+                         .replaceAll("%60", "`")   // `` ` ``
+                         .replaceAll("%5b", "[")   // `[`
+                         .replaceAll("%5d", "]")   // `]`
+                         .replaceAll("%7b", "{")   // `{`
+                         .replaceAll("%7d", "}")   // `}`
+                         .replaceAll("%3a", ":")   // `:`
+                         .replaceAll("%27", "'")   // `'`
+                         .replaceAll("%22", "\"")  // `"`
+                         .replaceAll("%2c", ",")   // `,`
+                         .replaceAll("%7c", "|");  // `|`
 
         return encoded;
     }

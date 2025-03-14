@@ -155,7 +155,7 @@ public class CheckOutController {
                                               HttpSession session,
                                               @RequestHeader(value = "Accept", defaultValue = "application/json") String acceptHeader) throws Exception {
 
-        System.out.println("📥 收到前端請求：" + checkoutData);
+        System.out.println("收到前端請求：" + checkoutData);
 
         // 從 Session 中獲取會員資訊
         Member member = (Member) session.getAttribute("member");
