@@ -90,6 +90,25 @@ public class PaymentService {
         return paymentInfoDto;
     }
     
+    // 新建信用卡支付
+    public boolean createCreditCardPayment(Order order, PaymentCategory paymentCategory) {
+        Payment payment = new Payment();
+        payment.setOrder(order);
+        payment.setPaymentCategory(paymentCategory);
+        payment.setPaymentDate(null);
+        payment.setUpdatedDate(new Date());
+
+        // 設置為 "待付款"（ID = 1）
+        setPaymentStatus(payment, 1); 
+
+        try {
+            paymentRepo.save(payment);
+            return true;  // 如果成功保存，回傳 true
+        } catch (Exception e) {
+            return false; // 如果發生錯誤，回傳 false
+        }
+    }
+	
     //訂單建立後為待處理(1)，先從訂單資訊取得ECpay需要的參數
     @Transactional
     public PaymentResponseDto processCreditCardPayment(Order order, Integer paymentCategoryId) throws Exception {
@@ -122,7 +141,7 @@ public class PaymentService {
         paymentResponse.setTotalAmount(paymentAmount);
         paymentResponse.setTradeDesc("petTopia商品付款");
         paymentResponse.setItemName(itemName);
-        paymentResponse.setReturnURL("http://localhost:8080/shop/payment/ecpay/callback");
+        paymentResponse.setReturnURL("http://localhost:80/shop/payment/ecpay/callback");
         paymentResponse.setOrderResultURL("http://localhost:5173/shop/orders/" + order.getId());
         paymentResponse.setChoosePayment("ALL");
         paymentResponse.setEncryptType("1");
@@ -159,8 +178,7 @@ public class PaymentService {
             .orElseThrow(() -> new IllegalArgumentException("找不到訂單"));
 
         // 5. 設定付款資訊
-        Payment payment = new Payment();
-        payment.setOrder(order);
+        Payment payment = order.getPayment(); 
         payment.setTradeNo(tradeNo);
 
         // 6. 解析付款日期
@@ -180,7 +198,7 @@ public class PaymentService {
             setPaymentStatus(payment, 3); // 設定為付款失敗
             payment.setPaymentAmount(null);
         }
-
+  
         // 8. 設定 PaymentCategory
         paymentCategoryRepo.findById(1).ifPresentOrElse(
             payment::setPaymentCategory,

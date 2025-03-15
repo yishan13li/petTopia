@@ -29,6 +29,7 @@ import petTopia.dto.shop.OrderItemDto;
 import petTopia.dto.shop.OrderSummaryAmoutDto;
 import petTopia.model.shop.Cart;
 import petTopia.model.shop.Coupon;
+import petTopia.model.shop.MemberCoupon;
 import petTopia.model.shop.Order;
 import petTopia.model.shop.OrderDetail;
 import petTopia.model.shop.OrderStatus;
@@ -43,6 +44,7 @@ import petTopia.model.shop.ShippingCategory;
 import petTopia.model.user.Member;
 import petTopia.repository.shop.CartRepository;
 import petTopia.repository.shop.CouponRepository;
+import petTopia.repository.shop.MemberCouponRepository;
 import petTopia.repository.shop.OrderDetailRepository;
 import petTopia.repository.shop.OrderRepository;
 import petTopia.repository.shop.OrderStatusRepository;
@@ -95,6 +97,9 @@ public class OrderService {
 	
 	@Autowired
 	private PaymentRepository paymentRepo;
+	
+	@Autowired
+	private MemberCouponRepository memberCouponRepo;
 	
 	@PersistenceContext
 	private EntityManager entityManager;
@@ -229,6 +234,11 @@ public class OrderService {
 	            // 直接將訂單狀態設為 "待處理"    //等付款後再變成待出貨
 	            order.setOrderStatus(orderStatusRepo.findById(1)
 	                .orElseThrow(() -> new IllegalArgumentException("找不到待處理狀態")));
+		        boolean paymentSuccess = paymentService.createCreditCardPayment(order, paymentCategory);
+		        
+		        if (!paymentSuccess) {
+		            throw new RuntimeException("貨到付款處理失敗，請重新操作");
+		        }
 	        }
 	    }
 
@@ -244,8 +254,7 @@ public class OrderService {
 	    return response;
 	}
 
-    
-  //把order轉成orderHistoryDto
+	  //把order轉成orderHistoryDto
     private OrderHistoryDto convertToOrderHistoryDto(Order order) {
         OrderHistoryDto orderHistory = new OrderHistoryDto();
         orderHistory.setOrderId(order.getId());
@@ -271,6 +280,7 @@ public class OrderService {
 
                 // 確保 ProductSize 和 ProductColor 可以為 null
                 if (orderItemDto != null) {
+                	orderItemDto.setProductId(orderDetail.getProduct().getId());
                     ProductSize productSize = orderDetail.getProduct().getProductSize();
                     ProductColor productColor = orderDetail.getProduct().getProductColor();
 
@@ -289,7 +299,6 @@ public class OrderService {
 
         return orderHistory;
     }
-
 
     public Page<OrderHistoryDto> getOrderHistoryFilter(
     	    Integer memberId, String orderStatus, Date startDate, Date endDate, String keyword, 
@@ -371,20 +380,19 @@ public class OrderService {
     	}
 
 
-
 //    @Transactional
 //    public void cancelOrder(Integer orderId) {
 //        Order order = orderRepo.findById(orderId)
 //            .orElseThrow(() -> new RuntimeException("訂單不存在"));
 //
 //        // **恢復優惠券使用次數**
-//        if (order.getCouponId() != null) {
+//        if (order.getCoupon() != null) {
 //            MemberCoupon memberCoupon = memberCouponRepo.findById(
-//                new MemberCouponId(order.getMemberId(), order.getCouponId()))
+//                new MemberCouponId(order.getMemberId(), order.getCoupon()))
 //                .orElse(null);
 //
 //            if (memberCoupon != null) {
-//                memberCoupon.setUsageCount(memberCoupon.getUsageCount() - 1);
+//                memberCoupon.setUsageCount(memberCoupon.get);
 //                memberCoupon.setStatus(true);
 //                memberCouponRepo.save(memberCoupon);
 //            }
