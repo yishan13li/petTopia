@@ -82,7 +82,7 @@ public class PaymentService {
     @Autowired
     private EcpayUtils ecpayUtils; // 引入 EcpayUtils
 
-    public PaymentInfoDto getPaymentInfoDto(Order order) {
+	public PaymentInfoDto getPaymentInfoDto(Order order) {
         PaymentInfoDto paymentInfoDto = new PaymentInfoDto();
         paymentInfoDto.setPaymentAmount(order.getPayment().getPaymentAmount());
         paymentInfoDto.setPaymentCategory(order.getPayment().getPaymentCategory().getName());
@@ -93,8 +93,6 @@ public class PaymentService {
     //訂單建立後為待處理(1)，先從訂單資訊取得ECpay需要的參數
     @Transactional
     public PaymentResponseDto processCreditCardPayment(Order order, Integer paymentCategoryId) throws Exception {
-        log.info("開始處理信用卡付款, 訂單編號: {}", order.getId());
-
         // 檢查是否為 paymentCategoryId == 1
         if (paymentCategoryId != 1) {
             throw new IllegalArgumentException("只有信用卡付款才可執行該方法");
@@ -125,8 +123,8 @@ public class PaymentService {
         paymentResponse.setTradeDesc("petTopia商品付款");
         paymentResponse.setItemName(itemName);
         paymentResponse.setReturnURL("http://localhost:8080/shop/payment/ecpay/callback");
-//        paymentResponse.setOrderResultURL("http://localhost:5173/shop/orders/" + order.getId());
-        paymentResponse.setChoosePayment("Credit");
+        paymentResponse.setOrderResultURL("http://localhost:5173/shop/orders/" + order.getId());
+        paymentResponse.setChoosePayment("ALL");
         paymentResponse.setEncryptType("1");
 
         // 計算 CheckValue
@@ -157,11 +155,8 @@ public class PaymentService {
         BigDecimal paymentAmount = new BigDecimal(tradeAmt);
 
         // 4. 查找訂單
-        Optional<Order> orderOptional = orderRepo.findById(orderId);
-        if (!orderOptional.isPresent()) {
-            return "0|Error: Order not found"; // 符合 ECPay 的格式
-        }
-        Order order = orderOptional.get();
+        Order order = orderRepo.findById(orderId)
+            .orElseThrow(() -> new IllegalArgumentException("找不到訂單"));
 
         // 5. 設定付款資訊
         Payment payment = new Payment();

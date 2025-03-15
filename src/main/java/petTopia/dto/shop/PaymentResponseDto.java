@@ -26,7 +26,7 @@ public class PaymentResponseDto {
     private String choosePayment;          // ChoosePayment
     private String checkMacValue;          // CheckMacValue
     private String encryptType;            // EncryptType
-//    private String orderResultURL;         // OrderResultURL
+    private String orderResultURL;         // OrderResultURL
     
     // 轉換 DTO 為 Map
     public Map<String, String> toMap() {
@@ -39,7 +39,7 @@ public class PaymentResponseDto {
         params.put("TradeDesc", tradeDesc);
         params.put("ItemName", itemName);
         params.put("ReturnURL", returnURL);
-//        params.put("OrderResultURL", orderResultURL);
+        params.put("OrderResultURL", orderResultURL);
         params.put("ChoosePayment", choosePayment);
         params.put("EncryptType", encryptType);
         return params;

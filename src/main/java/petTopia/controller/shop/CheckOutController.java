@@ -178,8 +178,6 @@ public class CheckOutController {
                                               HttpSession session,
                                               @RequestHeader(value = "Accept", defaultValue = "application/json") String acceptHeader) throws Exception {
 
-        System.out.println("收到前端請求：" + checkoutData);
-
         // 從 Session 中獲取會員資訊
         Member member = (Member) session.getAttribute("member");
         Integer memberId = member.getId();
@@ -233,10 +231,10 @@ public class CheckOutController {
     }
 
 
-
     @PostMapping("/payment/ecpay/callback")
-    public ResponseEntity<String> handleEcpayCallback(@RequestBody Map<String, String> ecpayResponse) {
-        try {
+    public ResponseEntity<String> handleEcpayCallback(@RequestParam Map<String, String> ecpayResponse) {
+    	 System.out.println("ECPay callback received: " + ecpayResponse);
+    	try {
             // 呼叫 Service 層處理回調邏輯
             String response = paymentService.handleEcpayCallback(ecpayResponse);
             return ResponseEntity.ok(response); // 確保回應是 "1|OK" 或 "0|Error: XXX"
