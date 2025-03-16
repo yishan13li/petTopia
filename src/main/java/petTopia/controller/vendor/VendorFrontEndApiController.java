@@ -104,6 +104,15 @@ public class VendorFrontEndApiController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}
 
+	@PostMapping("/api/vendor/review/{reviewId}/modify")
+	public Map<String, Object> modifyReview(@PathVariable Integer reviewId, @RequestParam String content) {
+		vendorReviewService.rewriteReviewById(reviewId, content);
+
+		Map<String, Object> response = new HashMap<>();
+		response.put("success", true);
+		return response;
+	}
+
 	/* API FOR VUE BELOW */
 	/* API FOR VUE BELOW */
 	/* API FOR VUE BELOW */
@@ -126,26 +135,19 @@ public class VendorFrontEndApiController {
 	public Map<String, Object> giveReview(@PathVariable Integer vendorId, @RequestParam Integer memberId,
 			@RequestParam String content, @RequestPart(required = false) List<MultipartFile> reviewPhotos)
 			throws IOException {
+		VendorReview review = new VendorReview();
 		if (reviewPhotos != null) {
-			vendorReviewService.addReview(memberId, vendorId, content, reviewPhotos);
+			review = vendorReviewService.addReview(memberId, vendorId, content, reviewPhotos);
 		} else {
 			List<MultipartFile> nullList = new ArrayList<MultipartFile>();
-			vendorReviewService.addReview(memberId, vendorId, content, nullList);
+			review = vendorReviewService.addReview(memberId, vendorId, content, nullList);
 		}
 
 		Map<String, Object> response = new HashMap<>();
 		response.put("success", true);
+		response.put("review", review);
 		return response;
 	}
-
-//	@PostMapping("/api/vendor/review/{reviewId}/modify")
-//	public Map<String, Object> modifyReview(@PathVariable Integer reviewId, @RequestParam String content) {
-//		vendorReviewService.rewriteReviewById(reviewId, content);
-//
-//		Map<String, Object> response = new HashMap<>();
-//		response.put("success", true);
-//		return response;
-//	}
 
 	@GetMapping("/api/vendor/review/{reviewId}")
 	public Map<String, Object> getVendorReviewById(@PathVariable Integer reviewId) {
@@ -157,11 +159,8 @@ public class VendorFrontEndApiController {
 		return response;
 	}
 
-	@PostMapping("/api/vendor/review/{reviewId}/rewrite")
-	public Map<String, Object> rewriteTextReview(@PathVariable Integer reviewId,
-			@RequestBody Map<String, Object> data) {
-		String content = (String) data.get("content");
-
+	@PostMapping(value = "/api/vendor/review/{reviewId}/rewrite", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public Map<String, Object> rewriteTextReview(@PathVariable Integer reviewId, @RequestParam String content) {
 		VendorReview review = vendorReviewService.rewriteReviewById(reviewId, content);
 
 		Map<String, Object> response = new HashMap<>();

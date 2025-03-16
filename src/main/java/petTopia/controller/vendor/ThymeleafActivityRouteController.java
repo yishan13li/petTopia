@@ -10,7 +10,7 @@ import petTopia.model.vendor.VendorActivity;
 import petTopia.service.vendor.VendorActivityService;
 
 @Controller
-public class ActivityFrontEndRouteController {
+public class ThymeleafActivityRouteController {
 	
 	
 	@Autowired

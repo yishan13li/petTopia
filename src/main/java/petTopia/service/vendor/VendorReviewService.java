@@ -189,7 +189,7 @@ public class VendorReviewService {
 	}
 
 	/* 新增文字及圖片評論 */
-	public void addReview(Integer memberId, Integer vendorId, String content, List<MultipartFile> reviewPhotos)
+	public VendorReview addReview(Integer memberId, Integer vendorId, String content, List<MultipartFile> reviewPhotos)
 			throws IOException {
 		VendorReview review = new VendorReview();
 		review.setMemberId(memberId);
@@ -200,5 +200,7 @@ public class VendorReviewService {
 
 		Integer reviewId = review.getId();
 		addReviewPhotos(reviewId, reviewPhotos);
+		
+		return review;
 	}
 }

@@ -16,7 +16,7 @@ import petTopia.service.vendor.VendorReviewService;
 import petTopia.service.vendor.VendorService;
 
 @Controller
-public class VendorFrontEndRouteController {
+public class ThymeleafVendorController {
 
 	@Autowired
 	private VendorService vendorService;
