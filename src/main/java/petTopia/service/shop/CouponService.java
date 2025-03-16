@@ -68,7 +68,7 @@ public class CouponService {
 	        }
 	    }
 	 	    
-	 // 用來獲取可用優惠券、過期優惠券與未滿額優惠券
+	    // 用來獲取可用優惠券、過期優惠券與未滿額優惠券
 	    public Map<String, List<Coupon>> getCouponsByAmount(Integer memberId, BigDecimal productTotal) {
 	        // 獲取會員的所有優惠券
 	        List<MemberCoupon> memberCoupons = memberCouponRepo.findByMemberId(memberId);
@@ -156,4 +156,35 @@ public class CouponService {
 	    	return coupon;
 	    		
 	    }
+	    
+	    // 購物車獲取優惠券、過期優惠券
+	    public Map<String, List<Coupon>> getCoupons(Integer memberId) {
+	        // 獲取會員的所有優惠券
+	        List<MemberCoupon> memberCoupons = memberCouponRepo.findByMemberId(memberId);
+
+	        // 可用的優惠券列表
+	        List<Coupon> availableCoupons = new ArrayList<>();
+	        // 過期或狀態為0的優惠券列表
+	        List<Coupon> expiredCoupons = new ArrayList<>();
+
+	     // 根據訂單金額和優惠券狀態過濾
+	        for (MemberCoupon memberCoupon : memberCoupons) {
+	            Coupon coupon = memberCoupon.getCoupon();
+	            
+	            // 檢查優惠券狀態是否有效且未過期
+	            if (coupon.getStatus() != false && memberCoupon.getStatus()!=false) {  // 狀態有效
+	            	availableCoupons.add(coupon); // 符合條件的優惠券
+	            } else {
+	            	expiredCoupons.add(coupon); // coupon狀態為 0 或membercoupon狀態為0的優惠券
+	            }
+	        }
+
+	        // 返回包含三個列表的 Map
+	        Map<String, List<Coupon>> result = new HashMap<>();
+	        result.put("available", availableCoupons);
+	        result.put("expired", expiredCoupons);
+
+	        return result;
+	    }
+	    
 }
