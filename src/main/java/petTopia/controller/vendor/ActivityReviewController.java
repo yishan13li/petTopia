@@ -9,7 +9,7 @@ import petTopia.service.vendor.ActivityLikeService;
 import petTopia.service.vendor.VendorActivityReviewService;
 
 @Controller
-public class ActivityFrontEndApiController {
+public class ActivityReviewController {
 
 	@Autowired
 	private ActivityLikeService activityLikeService;

@@ -1,11 +1,12 @@
 package petTopia.service.vendor;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import petTopia.dto.vendor.VendorLikeDto;
+import petTopia.model.user.MemberBean;
 import petTopia.model.vendor.VendorLike;
 import petTopia.repository.vendor.VendorLikeRepository;
 
@@ -32,13 +33,21 @@ public class VendorLikeService {
 		}
 
 	}
-	
+	/* 藉VendorId找出有收藏此店家的會員 */
 	public List<VendorLike> findMemberListByVendorId(Integer vendorId) {
 		List<VendorLike> list = vendorLikeRepository.findByVendorId(vendorId);
-//		List<String> memberIdList = new ArrayList<>();
-		for(VendorLike like:list) {
-			System.out.println(like.getId());
-		}
 		return list;
+	}
+	
+	/* 將Member和VendorLike轉換成DTO */
+	public VendorLikeDto ConvertVendorLikeToDto(MemberBean member, VendorLike like) {
+		VendorLikeDto dto = new VendorLikeDto();
+		dto.setId(like.getId());
+		dto.setVendorId(like.getVendorId());
+		dto.setMemberId(member.getId());
+		dto.setName(member.getName());
+		dto.setGender(member.getGender());
+		dto.setProfilePhoto(member.getProfilePhoto());
+		return dto;
 	}
 }

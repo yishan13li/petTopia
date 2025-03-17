@@ -1,4 +1,4 @@
-package petTopia.controller.vendor;
+package petTopia.controller.vendor.thymeleaf;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;

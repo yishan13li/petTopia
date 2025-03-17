@@ -87,7 +87,7 @@ public class VendorReviewService {
 
 		VendorReviewDto dto = new VendorReviewDto();
 
-		/* 設定評價資訊 */
+		// 設定評價資訊
 		dto.setReviewId(review.getId());
 		dto.setVendorId(review.getVendorId());
 		dto.setReviewTime(review.getReviewTime());
@@ -95,9 +95,11 @@ public class VendorReviewService {
 		dto.setRatingEnvironment(review.getRatingEnvironment());
 		dto.setRatingPrice(review.getRatingPrice());
 		dto.setRatingService(review.getRatingService());
+		
 		// 設定Base64後再寫入
 		List<ReviewPhoto> reviewPhotoList = reviewPhotoService.findPhotoListByReviewId(review.getId());
 		dto.setReviewPhotos(reviewPhotoList);
+		
 		// 判斷 ReviewPhoto 是否為空，以控制按鈕
 		List<ReviewPhoto> reviewPhotos = review.getReviewPhotos();
 		if (reviewPhotos != null && !reviewPhotos.isEmpty()) {
@@ -106,7 +108,7 @@ public class VendorReviewService {
 			dto.setHasPhotos(false);
 		}
 
-		/* 設定會員資訊 */
+		// 設定會員資訊
 		dto.setMemberId(member.getId());
 		dto.setName(member.getName());
 		dto.setGender(member.getGender());
@@ -141,12 +143,6 @@ public class VendorReviewService {
 	/* 刪除某成員對某店家之評論及評分 */
 	public void deleteReviewByMemberIdAndVendorId(Integer memberId, Integer vendorId) {
 		VendorReview vendorReview = vendorReviewRepository.findFirstByMemberIdAndVendorId(memberId, vendorId);
-
-		/* 將評論內容及時間設為空，避免刪掉星星評分 */
-//		vendorReview.setReviewContent(null);
-//		vendorReview.setReviewTime(null);
-//		vendorReviewRepository.save(vendorReview);
-
 		Integer reviewId = vendorReview.getId();
 		vendorReviewRepository.deleteById(reviewId);
 	}

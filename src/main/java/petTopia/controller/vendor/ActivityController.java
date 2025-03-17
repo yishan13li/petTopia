@@ -16,7 +16,7 @@ import petTopia.service.vendor.VendorActivityService;
 
 @CrossOrigin
 @RestController
-public class ActivityVueController {
+public class ActivityController {
 	
 	@Autowired
 	private VendorActivityService vendorActivityService;
