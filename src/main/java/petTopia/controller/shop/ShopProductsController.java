@@ -1,7 +1,10 @@
 package petTopia.controller.shop;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -39,59 +42,64 @@ public class ShopProductsController {
 	private ProductDetailService productDetailService;
 	
 
-	// 商品瀏覽頁面
-	/*
-	@GetMapping
-	public String showShopProducts(Model model) {
-		
-		// 獲取商品資訊(ProductDetail)
-		List<ProductDetail> productDetailList = productDetailService.findAll();
-		
-		// 獲取ProductDetail一樣的所有Poduct，選出最低價
-		List<ProductDetailDto> productDetailDtoList = new ArrayList<ProductDetailDto>();
-		for (ProductDetail productDetail : productDetailList) {
-			
-			ProductDetailDto productDetailDto = new ProductDetailDto();
-			Product minPriceProduct = productService.getMinPriceProduct(productDetail.getId());
-			
-			productDetailDto.setProductDetail(productDetail);
-			productDetailDto.setUnitPrice(minPriceProduct.getUnitPrice());
-			productDetailDtoList.add(productDetailDto);
-		}
-		
-		model.addAttribute("productDetailDtoList", productDetailDtoList);
-		
-		return "shop/shop_products";
-	}
-	*/
-	
 	// 商品瀏覽頁面 vue
 	@ResponseBody
 	@GetMapping
-	public ResponseEntity<?> showShopProducts() {
+	public ResponseEntity<?> showShopProducts(@RequestParam Optional<String> keyword) {
 		
 		ObjectNode responseBody = objectMapper.createObjectNode();
 		
+		// 搜尋字串
+		String searchKeyword = "";
+		if (keyword.isPresent()) 
+			searchKeyword = keyword.get();
+		
+		List<ProductDetail> productDetailList = new ArrayList<>();
 		// 獲取商品資訊(ProductDetail)
-		List<ProductDetail> productDetailList = productDetailService.findAll();
+		if (!"".equals(searchKeyword)) {
+			productDetailList = productDetailService.searchProductByKeywords(searchKeyword);			
+		}
+		else 
+			productDetailList = productDetailService.findAll();	
+		
 		
 		// 獲取ProductDetail一樣的所有Poduct，選出最低價
 		List<ProductDetailDto> productDetailDtoList = new ArrayList<ProductDetailDto>();
-		for (ProductDetail productDetail : productDetailList) {
+		if (productDetailList != null) {
+			for (ProductDetail productDetail : productDetailList) {
+				
+				ProductDetailDto productDetailDto = new ProductDetailDto();
+				
+				List<Product> productList = productService.findByProductDetailId(productDetail.getId());
+				if (productList != null) {
+					
+					// 獲取productList內最低價商品
+					Product minPriceProduct = productList.stream()
+						    .min(Comparator.comparing(p -> 
+						        p.getDiscountPrice() != null 
+						        ? p.getUnitPrice().min(p.getDiscountPrice()) 
+						        : p.getUnitPrice(), 
+						        Comparator.naturalOrder()
+						    )).orElse(null);
+					
+					productDetailDto.setMinPriceProduct(minPriceProduct);
+				}
+				
+				productDetailDto.setProductDetail(productDetail);
+				
+				productDetailDtoList.add(productDetailDto);
+			}
 			
-			ProductDetailDto productDetailDto = new ProductDetailDto();
-			Product minPriceProduct = productService.getMinPriceProduct(productDetail.getId());
+			JsonNode productDetailDtoListJson  = objectMapper.convertValue(productDetailDtoList, JsonNode.class);
 			
-			productDetailDto.setProductDetail(productDetail);
-			productDetailDto.setUnitPrice(minPriceProduct.getUnitPrice());
-			productDetailDtoList.add(productDetailDto);
+			responseBody.set("productDetailListDto", productDetailDtoListJson);
+			
+			return new ResponseEntity<List<ProductDetailDto>>(productDetailDtoList, HttpStatus.OK);
 		}
 		
-		JsonNode productDetailDtoListJson  = objectMapper.convertValue(productDetailDtoList, JsonNode.class);
+		productDetailDtoList = null;
 		
-		responseBody.set("productDetailListDto", productDetailDtoListJson);
-		
-		return new ResponseEntity<ObjectNode>(responseBody, HttpStatus.OK);
+		return new ResponseEntity<List<ProductDetailDto>>(productDetailDtoList, HttpStatus.OK);
 		
 	}
 	

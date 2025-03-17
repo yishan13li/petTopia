@@ -93,9 +93,22 @@ public class ShopProductDetailController {
 			Collections.sort(colorList, (ps1, ps2) -> Integer.compare(ps1.getId(), ps2.getId()));
 			
 			// 獲取productList內最低和最高價商品
-			Product minPriceProduct = productList.stream().min(Comparator.comparing(Product::getUnitPrice)).orElse(null);
-			Product maxPriceProduct = productList.stream().max(Comparator.comparing(Product::getUnitPrice)).orElse(null);
-
+			Product minPriceProduct = productList.stream()
+				    .min(Comparator.comparing(p -> 
+				        p.getDiscountPrice() != null 
+				        ? p.getUnitPrice().min(p.getDiscountPrice()) 
+				        : p.getUnitPrice(), 
+				        Comparator.naturalOrder()
+				    )).orElse(null);
+			
+			Product maxPriceProduct = productList.stream()
+				    .max(Comparator.comparing(p -> 
+				        p.getDiscountPrice() != null 
+				        ? p.getUnitPrice().min(p.getDiscountPrice()) 
+				        : p.getUnitPrice(), 
+				        Comparator.naturalOrder()
+				    )).orElse(null);
+			
 			JsonNode productListJson = objectMapper.convertValue(productList, JsonNode.class);
 			JsonNode sizeListJson = objectMapper.convertValue(sizeList, JsonNode.class);
 			JsonNode colorListJson = objectMapper.convertValue(colorList, JsonNode.class);
@@ -219,11 +232,22 @@ public class ShopProductDetailController {
 			}
 						
 			// 獲取productList內最低和最高價商品
-			Product minPriceProduct = productList.stream().min(Comparator.comparing(Product::getUnitPrice))
-					.orElse(null);
-			Product maxPriceProduct = productList.stream().max(Comparator.comparing(Product::getUnitPrice))
-					.orElse(null);
-
+			Product minPriceProduct = productList.stream()
+				    .min(Comparator.comparing(p -> 
+				        p.getDiscountPrice() != null 
+				        ? p.getUnitPrice().min(p.getDiscountPrice()) 
+				        : p.getUnitPrice(), 
+				        Comparator.naturalOrder()
+				    )).orElse(null);
+			
+			Product maxPriceProduct = productList.stream()
+				    .max(Comparator.comparing(p -> 
+				        p.getDiscountPrice() != null 
+				        ? p.getUnitPrice().min(p.getDiscountPrice()) 
+				        : p.getUnitPrice(), 
+				        Comparator.naturalOrder()
+				    )).orElse(null);
+			
 			responseData.put("productList", productList);
 			responseData.put("minPriceProduct", minPriceProduct);
 			responseData.put("maxPriceProduct", maxPriceProduct);
@@ -259,10 +283,21 @@ public class ShopProductDetailController {
 			}
 
 			// 獲取productList內最低和最高價商品
-			Product minPriceProduct = productList.stream().min(Comparator.comparing(Product::getUnitPrice))
-					.orElse(null);
-			Product maxPriceProduct = productList.stream().max(Comparator.comparing(Product::getUnitPrice))
-					.orElse(null);
+			Product minPriceProduct = productList.stream()
+				    .min(Comparator.comparing(p -> 
+				        p.getDiscountPrice() != null 
+				        ? p.getUnitPrice().min(p.getDiscountPrice()) 
+				        : p.getUnitPrice(), 
+				        Comparator.naturalOrder()
+				    )).orElse(null);
+			
+			Product maxPriceProduct = productList.stream()
+				    .max(Comparator.comparing(p -> 
+				        p.getDiscountPrice() != null 
+				        ? p.getUnitPrice().min(p.getDiscountPrice()) 
+				        : p.getUnitPrice(), 
+				        Comparator.naturalOrder()
+				    )).orElse(null);
 
 			responseData.put("productList", productList);
 			responseData.put("minPriceProduct", minPriceProduct);

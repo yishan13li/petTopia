@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import petTopia.model.shop.Product;
 import petTopia.model.shop.ProductDetail;
 import petTopia.repository.shop.ProductDetailRepository;
 
@@ -38,4 +39,14 @@ public class ProductDetailService {
 		return null;
 	}
 	
+	// 搜尋商品
+	public List<ProductDetail> searchProductByKeywords(String keywordString){
+		List<ProductDetail> productDetailList = productDetailRepository.searchProducts(keywordString);
+		if (productDetailList != null && productDetailList.size() != 0) {
+			return productDetailList;
+		}
+		
+		return null;
+	}
+		
 }
