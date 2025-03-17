@@ -13,8 +13,11 @@ import petTopia.dto.vendor.VendorReviewDto;
 import petTopia.model.vendor.ReviewPhoto;
 import petTopia.model.vendor.Vendor;
 import petTopia.model.vendor.VendorImages;
+import petTopia.model.vendor.VendorLike;
+import petTopia.model.vendor.VendorReview;
 import petTopia.service.vendor.ReviewPhotoService;
 import petTopia.service.vendor.VendorImagesService;
+import petTopia.service.vendor.VendorLikeService;
 import petTopia.service.vendor.VendorReviewService;
 import petTopia.service.vendor.VendorService;
 
@@ -33,6 +36,9 @@ public class VendorVueController {
 
 	@Autowired
 	private ReviewPhotoService reviewPhotoService;
+	
+	@Autowired
+	private VendorLikeService vendorLikeService;
 
 	@GetMapping("/vendor/all")
 	public ResponseEntity<List<Vendor>> getAllVendors() {
@@ -46,22 +52,28 @@ public class VendorVueController {
 		return ResponseEntity.ok(vendor);
 	}
 
-    @GetMapping("/vendor/{vendorId}/review")
-    public ResponseEntity<List<VendorReviewDto>> getVendorReview(@PathVariable Integer vendorId) {
-        List<VendorReviewDto> reviewList = vendorReviewService.findReviewListByVendorId(vendorId);
-        return ResponseEntity.ok(reviewList);
-    }
+	@GetMapping("/vendor/{vendorId}/review")
+	public ResponseEntity<List<VendorReviewDto>> getVendorReview(@PathVariable Integer vendorId) {
+		List<VendorReviewDto> reviewList = vendorReviewService.findReviewListByVendorId(vendorId);
+		return ResponseEntity.ok(reviewList);
+	}
 
 	@GetMapping("/vendor/{vendorId}/image")
 	public ResponseEntity<List<VendorImages>> getVendorImage(@PathVariable("vendorId") Integer vendorId) {
 		List<VendorImages> imageList = vendorImagesService.findImagesByVendorId(vendorId);
 		return ResponseEntity.ok(imageList);
 	}
-	
-    @GetMapping("/vendor/review/{reviewId}/photo")
+
+	@GetMapping("/vendor/review/{reviewId}/photo")
 	public ResponseEntity<List<ReviewPhoto>> getReviewPhoto(@PathVariable Integer reviewId) {
 		List<ReviewPhoto> photoList = reviewPhotoService.findPhotoListByReviewId(reviewId);
 		return ResponseEntity.ok(photoList);
+	}
+	
+	@GetMapping("api/vendor/{vendorId}/like") // 這裡有誤要改
+	public ResponseEntity<List<VendorLike>> getVendorLike(Integer vendorId){
+		List<VendorLike> likeList = vendorLikeService.findMemberListByVendorId(vendorId);
+		return ResponseEntity.ok(likeList);
 	}
 
 }

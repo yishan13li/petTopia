@@ -1,5 +1,8 @@
 package petTopia.service.vendor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,5 +31,14 @@ public class VendorLikeService {
 			return false;
 		}
 
+	}
+	
+	public List<VendorLike> findMemberListByVendorId(Integer vendorId) {
+		List<VendorLike> list = vendorLikeRepository.findByVendorId(vendorId);
+//		List<String> memberIdList = new ArrayList<>();
+		for(VendorLike like:list) {
+			System.out.println(like.getId());
+		}
+		return list;
 	}
 }

@@ -60,7 +60,7 @@ public class VendorFrontEndApiController {
 		Integer ratingEnv = data.get("ratingEnv");
 		Integer ratingPrice = data.get("ratingPrice");
 		Integer ratingService = data.get("ratingService");
-		vendorReviewService.addOrModifyVendorStarReview(memberId, vendorId, ratingEnv, ratingPrice, ratingService);
+		vendorReviewService.addStarReview(memberId, vendorId, ratingEnv, ratingPrice, ratingService);
 
 		Map<String, Object> response = new HashMap<>();
 		response.put("sucess", true);
@@ -128,10 +128,7 @@ public class VendorFrontEndApiController {
 		return response;
 	}
 
-	@PostMapping(value = "/api/vendor/{vendorId}/review/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE) // 確保
-																												// Spring
-																												// 能解析
-																												// multipart/form-data
+	@PostMapping(value = "/api/vendor/{vendorId}/review/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public Map<String, Object> giveReview(@PathVariable Integer vendorId, @RequestParam Integer memberId,
 			@RequestParam String content, @RequestPart(required = false) List<MultipartFile> reviewPhotos)
 			throws IOException {
@@ -146,6 +143,17 @@ public class VendorFrontEndApiController {
 		Map<String, Object> response = new HashMap<>();
 		response.put("success", true);
 		response.put("review", review);
+		return response;
+	}
+
+	@PostMapping(value = "/api/vendor/{vendorId}/review/star/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public Map<String, Object> giveReviewStar(@PathVariable Integer vendorId, @RequestParam Integer memberId,
+			@RequestParam Integer ratingEnv, @RequestParam Integer ratingPrice, @RequestParam Integer ratingService)
+			throws IOException {
+		VendorReview starReview = vendorReviewService.addStarReview(memberId, vendorId, ratingEnv, ratingPrice,
+				ratingService);
+		Map<String, Object> response = new HashMap<>();
+		response.put("review", starReview);
 		return response;
 	}
 

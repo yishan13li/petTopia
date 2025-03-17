@@ -17,8 +17,8 @@ public class ReviewPhotoService {
 	private ReviewPhotoRepository reviewPhotoRepository;
 
 	/* 設定Base64 */
-	public List<ReviewPhoto> findPhotoListByReviewId(Integer reviewIdList){
-		List<ReviewPhoto> list = reviewPhotoRepository.findByVendorReviewId(reviewIdList);
+	public List<ReviewPhoto> findPhotoListByReviewId(Integer reviewId){
+		List<ReviewPhoto> list = reviewPhotoRepository.findByVendorReviewId(reviewId);
 		
 		for (ReviewPhoto photo : list) {
 			byte[] photobyte = photo.getPhoto();

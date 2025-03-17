@@ -30,7 +30,10 @@ public class VendorReviewService {
 
 	@Autowired
 	private ReviewPhotoRepository reviewPhotoRepository;
-
+	
+	@Autowired
+	private ReviewPhotoService reviewPhotoService;
+	
 	/* 尋找單一店家其所有的評分及留言 */
 	public List<VendorReview> findVendorReviewByVendorId(Integer vendorId) {
 		List<VendorReview> vendorReviewList = vendorReviewRepository.findByVendorId(vendorId);
@@ -59,7 +62,7 @@ public class VendorReviewService {
 
 	/* 新增或修改文字評論 */
 	public void addOrModifyVendorTextReview(Integer memberId, Integer vendorId, String content) {
-		VendorReview vendorReview = vendorReviewRepository.findByMemberIdAndVendorId(memberId, vendorId);
+		VendorReview vendorReview = vendorReviewRepository.findFirstByMemberIdAndVendorId(memberId, vendorId);
 
 		if (vendorReview == null) {
 
@@ -79,31 +82,6 @@ public class VendorReviewService {
 		}
 	}
 
-	/* 新增或修改星星評分 */
-	public void addOrModifyVendorStarReview(Integer memberId, Integer vendorId, Integer ratingEnv, Integer ratingPrice,
-			Integer ratingService) {
-		VendorReview vendorReview = vendorReviewRepository.findByMemberIdAndVendorId(memberId, vendorId);
-
-		if (vendorReview == null) {
-
-			VendorReview newVendorReview = new VendorReview();
-			newVendorReview.setMemberId(memberId);
-			newVendorReview.setVendorId(vendorId);
-			newVendorReview.setRatingEnvironment(ratingEnv);
-			newVendorReview.setRatingPrice(ratingPrice);
-			newVendorReview.setRatingService(ratingService);
-			vendorReviewRepository.save(newVendorReview);
-
-		} else {
-
-			vendorReview.setRatingEnvironment(ratingEnv);
-			vendorReview.setRatingPrice(ratingPrice);
-			vendorReview.setRatingService(ratingService);
-			vendorReviewRepository.save(vendorReview);
-
-		}
-	}
-
 	/* 將Member和VendorReview轉換成DTO */
 	public VendorReviewDto ConvertVendorReviewToDto(MemberBean member, VendorReview review) {
 
@@ -117,6 +95,9 @@ public class VendorReviewService {
 		dto.setRatingEnvironment(review.getRatingEnvironment());
 		dto.setRatingPrice(review.getRatingPrice());
 		dto.setRatingService(review.getRatingService());
+		// 設定Base64後再寫入
+		List<ReviewPhoto> reviewPhotoList = reviewPhotoService.findPhotoListByReviewId(review.getId());
+		dto.setReviewPhotos(reviewPhotoList);
 		// 判斷 ReviewPhoto 是否為空，以控制按鈕
 		List<ReviewPhoto> reviewPhotos = review.getReviewPhotos();
 		if (reviewPhotos != null && !reviewPhotos.isEmpty()) {
@@ -149,10 +130,17 @@ public class VendorReviewService {
 
 		return dtoList;
 	}
+	
+	/* 查詢某個vendorId所有評價之Entity */
+	public List<VendorReview> findReviewsByVendorId(Integer vendorId) {
+		List<VendorReview> reviewList = vendorReviewRepository.findByVendorId(vendorId);
+
+		return reviewList;
+	}
 
 	/* 刪除某成員對某店家之評論及評分 */
 	public void deleteReviewByMemberIdAndVendorId(Integer memberId, Integer vendorId) {
-		VendorReview vendorReview = vendorReviewRepository.findByMemberIdAndVendorId(memberId, vendorId);
+		VendorReview vendorReview = vendorReviewRepository.findFirstByMemberIdAndVendorId(memberId, vendorId);
 
 		/* 將評論內容及時間設為空，避免刪掉星星評分 */
 //		vendorReview.setReviewContent(null);
@@ -167,8 +155,7 @@ public class VendorReviewService {
 	public VendorReview findReviewById(Integer reviewId) {
 		Optional<VendorReview> optional = vendorReviewRepository.findById(reviewId);
 		if (optional != null) {
-			VendorReview review = optional.get();
-			return review;
+			return optional.get();
 		}
 		return null;
 	}
@@ -202,5 +189,34 @@ public class VendorReviewService {
 		addReviewPhotos(reviewId, reviewPhotos);
 		
 		return review;
+	}
+	
+	/* 新增星星評分 */
+	public VendorReview addStarReview(Integer memberId, Integer vendorId, Integer ratingEnv, Integer ratingPrice,
+			Integer ratingService) {
+		VendorReview vendorReview = vendorReviewRepository.findFirstByMemberIdAndVendorId(memberId, vendorId);
+
+		if (vendorReview == null) {
+
+			VendorReview newVendorReview = new VendorReview();
+			newVendorReview.setMemberId(memberId);
+			newVendorReview.setVendorId(vendorId);
+			newVendorReview.setRatingEnvironment(ratingEnv);
+			newVendorReview.setRatingPrice(ratingPrice);
+			newVendorReview.setRatingService(ratingService);
+			newVendorReview.setReviewTime(new Date());
+			vendorReviewRepository.save(newVendorReview);
+			
+			return newVendorReview;
+		} else {
+
+			vendorReview.setRatingEnvironment(ratingEnv);
+			vendorReview.setRatingPrice(ratingPrice);
+			vendorReview.setRatingService(ratingService);
+			vendorReview.setReviewTime(new Date());
+			vendorReviewRepository.save(vendorReview);
+
+			return vendorReview;
+		}
 	}
 }

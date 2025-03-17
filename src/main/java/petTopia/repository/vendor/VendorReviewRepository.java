@@ -12,6 +12,6 @@ public interface VendorReviewRepository extends JpaRepository<VendorReview, Inte
 	public List<VendorReview> findByVendorId(Integer vendorId);
 	
 	/* 尋找單一會員對單一店家的評分及留言 */
-	public VendorReview findByMemberIdAndVendorId(Integer memberId,Integer vendorId);
+	public VendorReview findFirstByMemberIdAndVendorId(Integer memberId,Integer vendorId); // 有多筆時僅回傳第一筆
 	
 }
