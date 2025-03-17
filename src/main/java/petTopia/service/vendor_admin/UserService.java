@@ -20,7 +20,7 @@ public class UserService {
 //	private VendorService vendorService;
 //
 //	@Override
-	public Optional<UsersBean> getUserByEmailAndPassword(String email, String password) {
+	public Optional<User> getUserByEmailAndPassword(String email, String password) {
 		return userRepository.findByEmailAndPassword(email, password);
 	}
 //

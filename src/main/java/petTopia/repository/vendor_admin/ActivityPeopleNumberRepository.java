@@ -9,4 +9,6 @@ import petTopia.model.vendor.ActivityPeopleNumber;
 public interface ActivityPeopleNumberRepository extends JpaRepository<ActivityPeopleNumber, Integer> {
 
 	 Optional<ActivityPeopleNumber> findByVendorActivity_Id(Integer activityId);
+
+	
 }

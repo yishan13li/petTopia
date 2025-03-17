@@ -161,6 +161,13 @@ public class VendorActivityController {
 	}
 
 	@ResponseBody
+	@GetMapping("/api/vendor_admin/activity/allTypes")
+    public ResponseEntity<List<ActivityType>> getAllActivityTypes() {
+        List<ActivityType> types = activityTypeService.getAllActivityTypes();
+        return ResponseEntity.ok(types);
+    }
+	
+	@ResponseBody
 	@PostMapping("/api/vendor_activity/add") // 不只可以送json 也可以送@RequestParam
 	public ResponseEntity<?> addActivity(@RequestParam("vendor_id") Integer vendorId,
 			@RequestParam String activity_name, @RequestParam ActivityType activity_type_id,
