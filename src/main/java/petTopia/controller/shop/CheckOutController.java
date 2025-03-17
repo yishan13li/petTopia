@@ -232,11 +232,12 @@ public class CheckOutController {
 
 
     @PostMapping("/payment/ecpay/callback")
-    public ResponseEntity<String> handleEcpayCallback(@RequestParam Map<String, String> ecpayResponse) {
-    	 System.out.println("ECPay callback received: " + ecpayResponse);
+    public ResponseEntity<String> handleEcpayCallback(@RequestParam Map<String, String> callbackParams) {
+        
     	try {
             // 呼叫 Service 層處理回調邏輯
-            String response = paymentService.handleEcpayCallback(ecpayResponse);
+            String response = paymentService.handleEcpayCallback(callbackParams);
+            
             return ResponseEntity.ok(response); // 確保回應是 "1|OK" 或 "0|Error: XXX"
         } catch (Exception e) {
             return ResponseEntity.ok("0|Error: " + e.getMessage()); // 發生錯誤時，仍符合 ECPay 格式

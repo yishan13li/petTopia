@@ -1,5 +1,6 @@
 package petTopia.controller.shop;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,10 +17,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import jakarta.servlet.http.HttpSession;
 import petTopia.model.shop.Cart;
+import petTopia.model.shop.Coupon;
 import petTopia.model.shop.Product;
 import petTopia.model.user.Member;
 import petTopia.service.shop.CartService;
+import petTopia.service.shop.CouponService;
 import petTopia.service.shop.ProductService;
 import petTopia.service.user.MemberService;
 
@@ -33,7 +37,9 @@ public class ShopCartController {
 	private ProductService productService;
 	@Autowired
 	private CartService cartService;
-
+	@Autowired
+	private CouponService couponService;
+	
 	// 會員購物車頁面
 	@PostMapping
 	public ResponseEntity<?> showMemberCart(@RequestParam Integer memberId) {
@@ -110,7 +116,36 @@ public class ShopCartController {
 
 	}
 
-	
+	// 會員購物車頁面 => 獲取會員優惠券
+	@GetMapping("/coupons")
+    public ResponseEntity<Object> getCoupons(@RequestParam Optional<Integer> selectedCouponId, HttpSession session) {
+        Member member = (Member) session.getAttribute("member");
+        Integer memberId = member.getId();
+
+        Map<String, Object> response = new HashMap<>();
+        
+        // 更新優惠券使用次數
+        couponService.updateCouponUsageCount(memberId);
+        Map<String, List<Coupon>> couponsMap = couponService.getCoupons(memberId);
+
+        List<Coupon> availableCoupons = couponsMap.get("available");
+        List<Coupon> expiredCoupons = couponsMap.get("expiredCoupons");
+        
+        // 獲取選取的優惠券
+        Coupon selectedCoupon = null;
+        if (selectedCouponId.orElse(null) != null) {
+        	selectedCoupon = couponService.getCouponById(selectedCouponId.get());
+        }
+        
+        if (availableCoupons != null)
+        	response.put("availableCoupons", availableCoupons);
+        if (expiredCoupons != null)
+        	response.put("expiredCoupons", expiredCoupons);
+        if (selectedCoupon != null)
+        	response.put("selectedCoupon", selectedCoupon);
+
+        return ResponseEntity.ok(response);
+    }
 	
 	
 }

@@ -35,28 +35,36 @@ public class ShippingService {
     }
     
     public ShippingAddress createShippingAddress(Member member, String city, String street) {
-        
+
         // 1. 檢查會員是否已經有相同的地址
         Optional<ShippingAddress> existingAddressOpt = shippingAddressRepo.findByMemberAndCityAndStreet(member, city, street);
 
-        // 2. 先把所有舊地址 isCurrent 設為 false，確保只有一個 isCurrent = true
-        shippingAddressRepo.updateAllIsCurrentFalse(member.getId());  
-
         if (existingAddressOpt.isPresent()) {
-            // 3. 若地址已存在，則設為 isCurrent = true
+            // 2. 若地址已存在，且 isCurrent 已經是 true，直接返回
             ShippingAddress existingAddress = existingAddressOpt.get();
-            existingAddress.setIsCurrent(true);
-            return shippingAddressRepo.save(existingAddress);
-        } 
-        
+            if (!existingAddress.getIsCurrent()) {
+                // 只有當地址的 isCurrent 是 false 時才需要更新
+                existingAddress.setIsCurrent(true);
+                return shippingAddressRepo.save(existingAddress);
+            } else {
+                // 如果該地址已經是當前地址，則直接返回
+                return existingAddress;
+            }
+        }
+
+        // 3. 先把所有舊地址 isCurrent 設為 false，確保只有一個 isCurrent = true
+        shippingAddressRepo.updateAllIsCurrentFalse(member.getId());
+
         // 4. 若地址不存在，則新增新地址並設為 isCurrent = true
         ShippingAddress shippingAddress = new ShippingAddress();
         shippingAddress.setMember(member);
         shippingAddress.setCity(city);
         shippingAddress.setStreet(street);
         shippingAddress.setIsCurrent(true);
+
         return shippingAddressRepo.save(shippingAddress);
     }
+
 
     
     public Shipping createShipping(petTopia.model.shop.Order order, ShippingAddress shippingAddress, ShippingCategory shippingCategory, String receiverName, String receiverPhone) {

@@ -74,5 +74,9 @@ public class Order {
     
     @OneToMany(mappedBy =  "order")
     private List<OrderDetail> orderDetails;
+
+	public void setOrderStatus(Order order, int i) {
+		
+	}
     
 }

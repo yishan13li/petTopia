@@ -59,9 +59,6 @@ public class PaymentService {
     private String merchantId;
 
     @Autowired
-    private CartService cartService;
-    
-    @Autowired
     private PaymentRepository paymentRepo;
     
     @Autowired
@@ -141,8 +138,10 @@ public class PaymentService {
         paymentResponse.setTotalAmount(paymentAmount);
         paymentResponse.setTradeDesc("petTopia商品付款");
         paymentResponse.setItemName(itemName);
-        paymentResponse.setReturnURL("http://localhost:80/shop/payment/ecpay/callback");
-        paymentResponse.setOrderResultURL("http://localhost:5173/shop/orders/" + order.getId());
+        paymentResponse.setReturnURL("https://f3e5-59-125-142-166.ngrok-free.app/shop/payment/ecpay/callback");
+        paymentResponse.setOrderResultURL("");
+        paymentResponse.setClientBackURL("https://2619-59-125-142-166.ngrok-free.app/shop/ecpay/success");
+//        paymentResponse.setClientBackURL("https://localhost:5173/shop/orders/" + order.getId());
         paymentResponse.setChoosePayment("ALL");
         paymentResponse.setEncryptType("1");
 

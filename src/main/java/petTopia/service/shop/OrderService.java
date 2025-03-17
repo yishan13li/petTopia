@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,11 +31,13 @@ import petTopia.dto.shop.OrderSummaryAmoutDto;
 import petTopia.model.shop.Cart;
 import petTopia.model.shop.Coupon;
 import petTopia.model.shop.MemberCoupon;
+import petTopia.model.shop.MemberCouponId;
 import petTopia.model.shop.Order;
 import petTopia.model.shop.OrderDetail;
 import petTopia.model.shop.OrderStatus;
 import petTopia.model.shop.Payment;
 import petTopia.model.shop.PaymentCategory;
+import petTopia.model.shop.PaymentStatus;
 import petTopia.model.shop.Product;
 import petTopia.model.shop.ProductColor;
 import petTopia.model.shop.ProductSize;
@@ -237,7 +240,7 @@ public class OrderService {
 		        boolean paymentSuccess = paymentService.createCreditCardPayment(order, paymentCategory);
 		        
 		        if (!paymentSuccess) {
-		            throw new RuntimeException("貨到付款處理失敗，請重新操作");
+		            throw new RuntimeException("信用卡付款處理失敗，請重新操作");
 		        }
 	        }
 	    }
@@ -380,28 +383,29 @@ public class OrderService {
     	}
 
 
-//    @Transactional
-//    public void cancelOrder(Integer orderId) {
-//        Order order = orderRepo.findById(orderId)
-//            .orElseThrow(() -> new RuntimeException("訂單不存在"));
-//
-//        // **恢復優惠券使用次數**
-//        if (order.getCoupon() != null) {
-//            MemberCoupon memberCoupon = memberCouponRepo.findById(
-//                new MemberCouponId(order.getMemberId(), order.getCoupon()))
-//                .orElse(null);
-//
-//            if (memberCoupon != null) {
-//                memberCoupon.setUsageCount(memberCoupon.get);
-//                memberCoupon.setStatus(true);
-//                memberCouponRepo.save(memberCoupon);
-//            }
-//        }
-//
-//        // **標記訂單為取消**
-//        order.setStatus("CANCELED");
-//        orderRepo.save(order);
-//    }
+    @Transactional
+    public void cancelOrder(Order order,Integer memberId) {
+        order = orderRepo.findById(order.getId())
+            .orElseThrow(() -> new RuntimeException("訂單不存在"));
+
+        order.getOrderStatus();
+        
+        // **標記訂單為取消**
+        setOrderStatus(order,6);
+        orderRepo.save(order);
+        
+        // **恢復優惠券使用次數**
+        if (order.getCoupon() != null) {
+            couponService.updateCouponUsageCount(memberId);
+        }
+
+    }
+    
+    // 將設置支付狀態的邏輯提取成一個方法
+    private void setOrderStatus(Order order, Integer statusId) {
+        Optional<OrderStatus> orderStatus = orderStatusRepo.findById(statusId);
+        orderStatus.ifPresent(order::setOrderStatus); // 只有當 orderStatus 存在時才設置
+    }
     
 
 
