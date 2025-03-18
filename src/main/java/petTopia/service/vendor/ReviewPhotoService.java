@@ -21,10 +21,10 @@ public class ReviewPhotoService {
 		List<ReviewPhoto> list = reviewPhotoRepository.findByVendorReviewId(reviewId);
 		
 		for (ReviewPhoto photo : list) {
-			byte[] photobyte = photo.getPhoto();
-			if (photobyte != null) {
-				String mimeType = ImageConverter.getMimeType(photobyte);
-				String base64 = "data:%s;base64,".formatted(mimeType) + Base64.getEncoder().encodeToString(photobyte);
+			byte[] photoByte = photo.getPhoto();
+			if (photoByte != null) {
+				String mimeType = ImageConverter.getMimeType(photoByte);
+				String base64 = "data:%s;base64,".formatted(mimeType) + Base64.getEncoder().encodeToString(photoByte);
 				photo.setPhotoBase64(base64);
 			}
 		}	
@@ -42,4 +42,5 @@ public class ReviewPhotoService {
 //
 //		return photoMap;
 //	}
+	
 }

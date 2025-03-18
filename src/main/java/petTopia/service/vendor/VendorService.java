@@ -80,6 +80,16 @@ public class VendorService {
 	        	finalList.add(v);
 	        }
 	    }
+	    
+	    /* logoImgBase64設值 */
+		for (Vendor vendor : finalList) {
+			byte[] imageByte = vendor.getLogoImg();
+			if (imageByte != null) {
+				String mimeType = ImageConverter.getMimeType(imageByte);
+				String base64 = "data:%s;base64,".formatted(mimeType) + Base64.getEncoder().encodeToString(imageByte);
+				vendor.setLogoImgBase64(base64);
+			}
+		}	
 		
 		return finalList;
 	}
