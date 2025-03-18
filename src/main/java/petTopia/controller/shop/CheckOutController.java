@@ -139,16 +139,13 @@ public class CheckOutController {
     
     
     @GetMapping("/coupons")
-    public ResponseEntity<Object> getCoupons(@RequestParam Optional<Integer> selectedCouponId, HttpSession session, 
+    public ResponseEntity<Object> getCoupons(HttpSession session, 
     											@RequestParam List<Integer> productIds) {
         Member member = (Member) session.getAttribute("member");
         Integer memberId = member.getId();
         
-//        List<Cart> AllCarts= cartRepo.findByMemberIdAndProductIdIn(memberId, cartItems);
-
         BigDecimal subtotal = cartService.calculateTotalPrice(memberId,productIds);
 
-        Map<String, Object> response = new HashMap<>();
         
         // 更新優惠券使用次數
         couponService.updateCouponUsageCount(memberId);
@@ -158,17 +155,9 @@ public class CheckOutController {
         List<Coupon> notMeetCoupons = couponsMap.get("notMeet");
         
         // 獲取選取的優惠券
-        Coupon selectedCoupon = null;
-        if (selectedCouponId.orElse(null) != null) {
-        	selectedCoupon = couponService.getCouponById(selectedCouponId.get());
-        }
-        
-        if (availableCoupons != null)
-        	response.put("availableCoupons", availableCoupons);
-        if (notMeetCoupons != null)
-        	response.put("notMeetCoupons", notMeetCoupons);
-        if (selectedCoupon != null)
-        	response.put("selectedCoupon", selectedCoupon);
+        Map<String, Object> response = new HashMap<>();
+        response.put("availableCoupons", availableCoupons);
+        response.put("notMeetCoupons", notMeetCoupons);
 
         return ResponseEntity.ok(response);
     }
