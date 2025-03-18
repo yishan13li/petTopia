@@ -1,12 +1,13 @@
 package petTopia.service.shop;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import petTopia.model.shop.Product;
 import petTopia.model.shop.ProductDetail;
 import petTopia.repository.shop.ProductDetailRepository;
 
@@ -36,6 +37,30 @@ public class ProductDetailService {
 			return productDetail;
 		}
 		
+		return null;
+	}
+	
+	// 根據條件搜尋商品的總數
+	public Long getProductsCount(Map<String, Object> filterData){
+		try {
+			JSONObject jsonObj = new JSONObject(filterData);
+			System.out.println(jsonObj);
+			return productDetailRepository.count(jsonObj);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+		
+	// 根據條件搜尋商品
+	public List<ProductDetail> getProducts(Map<String, Object> filterData){
+		try {
+			JSONObject jsonObj = new JSONObject(filterData);
+			System.out.println(jsonObj);
+			return productDetailRepository.find(jsonObj);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		return null;
 	}
 	
