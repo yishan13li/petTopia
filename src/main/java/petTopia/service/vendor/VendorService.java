@@ -21,8 +21,10 @@ public class VendorService {
 	@Autowired
 	private VendorRepository vendorRepository;
 
+	/* 所有店家清單 */
 	public List<Vendor> findAllVendor() {
 		List<Vendor> vendorList = vendorRepository.findAll();
+		
 		for (Vendor v : vendorList) {
 			byte[] logoImg = v.getLogoImg();
 			if (logoImg != null) {
@@ -31,9 +33,11 @@ public class VendorService {
 				v.setLogoImgBase64(base64);
 			}
 		}
+		
 		return vendorList;
 	}
 
+	/* 單一店家 */
 	public Vendor findVendorById(Integer vendorId) {
 		Optional<Vendor> optional = vendorRepository.findById(vendorId);
 
@@ -55,12 +59,35 @@ public class VendorService {
 
 		return null;
 	}
+	
+	/* 排除特定店家之清單 */
+	public List<Vendor> findAllVendorExceptOne(Integer vendorId) {
+	    List<Vendor> vendorList = vendorRepository.findAll();
+	    Vendor vendorToRemove = vendorRepository.findById(vendorId).orElse(null);
 
+	    if (vendorToRemove != null) {
+	        vendorList.removeIf(v -> v.getId().equals(vendorToRemove.getId())); // 移除此vendor
+	    }
+	    
+		for (Vendor v : vendorList) {
+			byte[] logoImg = v.getLogoImg();
+			if (logoImg != null) {
+				String mimeType = ImageConverter.getMimeType(logoImg);
+				String base64 = "data:%s;base64,".formatted(mimeType) + Base64.getEncoder().encodeToString(logoImg);
+				v.setLogoImgBase64(base64);
+			}
+		}
+
+	    return vendorList;
+	}
+	
+	/* 藉類別來找店家 */
 	public List<Vendor> findVendorByCategoryId(Integer categoryId) {
 		List<Vendor> vendorList = vendorRepository.findByVendorCategoryId(categoryId);
 		return vendorList;
 	}
 	
+	/* 模糊搜尋店家 */
 	public List<Vendor> findVendorByNameOrDescription(String keyword){
 		List<Vendor> list1 = vendorRepository.findByNameContaining(keyword);
 		List<Vendor> list2 = vendorRepository.findByDescriptionContaining(keyword);
@@ -81,7 +108,6 @@ public class VendorService {
 	        }
 	    }
 	    
-	    /* logoImgBase64設值 */
 		for (Vendor vendor : finalList) {
 			byte[] imageByte = vendor.getLogoImg();
 			if (imageByte != null) {

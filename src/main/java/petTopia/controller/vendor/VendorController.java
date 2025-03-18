@@ -27,26 +27,38 @@ public class VendorController {
 	@Autowired
 	private VendorImagesService vendorImagesService;
 
-	@GetMapping("api/vendor/all")
+	@GetMapping("/api/vendor/{vendorId}")
+	public ResponseEntity<Vendor> getVendorDetail(@PathVariable Integer vendorId) {
+		Vendor vendor = vendorService.findVendorById(vendorId);
+		return ResponseEntity.ok(vendor);
+	}
+	
+	@GetMapping("/api/vendor/all")
 	public ResponseEntity<List<Vendor>> getAllVendors() {
 		List<Vendor> vendorList = vendorService.findAllVendor();
 		return ResponseEntity.ok(vendorList);
 	}
 
-	@GetMapping("api/vendor/{vendorId}")
-	public ResponseEntity<Vendor> getVendorDetail(@PathVariable Integer vendorId) {
-		Vendor vendor = vendorService.findVendorById(vendorId);
-		return ResponseEntity.ok(vendor);
+	@GetMapping("/api/vendor/all/except/{vendorId}")
+	public ResponseEntity<List<Vendor>> getAllVendorsExceptOne(@PathVariable Integer vendorId) {
+		List<Vendor> vendorList = vendorService.findAllVendorExceptOne(vendorId);
+		return ResponseEntity.ok(vendorList);
 	}
 
-	@GetMapping("api/vendor/{vendorId}/image")
-	public ResponseEntity<List<VendorImages>> getVendorImage(@PathVariable Integer vendorId) {
+	@GetMapping("/api/vendor/{vendorId}/image")
+	public ResponseEntity<List<VendorImages>> getVendorImages(@PathVariable Integer vendorId) {
 		List<VendorImages> imageList = vendorImagesService.findImageListByVendorId(vendorId);
 		return ResponseEntity.ok(imageList);
 	}
 
-	@PostMapping(value = "api/vendor/find", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<List<Vendor>> getVendorByNameOrDescription(@RequestParam String keyword) {
+	@GetMapping("/api/vendor/category/{categoryId}")
+	public ResponseEntity<List<Vendor>> getVendorsByCategory(@PathVariable Integer categoryId) {
+		List<Vendor> vendorList = vendorService.findVendorByCategoryId(categoryId);
+		return ResponseEntity.ok(vendorList);
+	}
+	
+	@PostMapping(value = "/api/vendor/find", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<List<Vendor>> getVendosrByNameOrDescription(@RequestParam String keyword) {
 		List<Vendor> vendorList = vendorService.findVendorByNameOrDescription(keyword);
 		return ResponseEntity.ok(vendorList);
 	}
