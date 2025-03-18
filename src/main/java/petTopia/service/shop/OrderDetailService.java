@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import petTopia.dto.shop.ManageOrderItemDto;
 import petTopia.dto.shop.OrderDetailDto;
 import petTopia.dto.shop.OrderItemDto;
 import petTopia.dto.shop.PaymentInfoDto;
@@ -94,6 +95,13 @@ public class OrderDetailService {
         return orderItemDto;
     }
 
+    //將訂單的商品細節轉成manageOrderItem  //後台用
+    public ManageOrderItemDto getManagedOrderItemDto(OrderDetail orderDetail) {
+    	ManageOrderItemDto manageOrderItemDto = new ManageOrderItemDto();
+    	manageOrderItemDto.setProductId(orderDetail.getProduct().getId());
+    	manageOrderItemDto.setProductName(orderDetail.getProduct().getProductDetail().getName());
+        return manageOrderItemDto;
+    }
     
     // 查詢訂單的詳情
     public OrderDetailDto getOrderDetailById(Integer orderId) {
