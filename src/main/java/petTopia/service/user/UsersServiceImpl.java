@@ -14,6 +14,12 @@ public class UsersServiceImpl implements UsersService {
 
     @Override
     @Transactional
+    public Users findById(Integer id) {
+        return usersRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    @Transactional
     public void bindOAuth2Account(Integer userId, Users.Provider provider) {
         Users user = usersRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("用戶不存在"));

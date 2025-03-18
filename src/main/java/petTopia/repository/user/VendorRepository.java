@@ -29,6 +29,13 @@ public interface VendorRepository extends JpaRepository<Vendor, Integer> {
     // 根據名稱模糊查詢
     List<Vendor> findByNameContaining(String name);
 
+    // 根據店家類別ID查找商家
+    List<Vendor> findByVendorCategoryId(Integer vendorCategoryId);
+
+    // 根據描述模糊查詢
+    List<Vendor> findByDescriptionContaining(String description);
+
+    
     // 根據email查找商家，使用LEFT JOIN確保即使某些欄位為null也能查到
     @Query("SELECT v FROM Vendor v LEFT JOIN v.user u WHERE u.email = :email")
     Vendor findByEmail(@Param("email") String email);

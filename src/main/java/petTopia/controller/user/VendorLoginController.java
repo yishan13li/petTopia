@@ -2,152 +2,219 @@ package petTopia.controller.user;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.net.URLEncoder;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
-import jakarta.servlet.http.HttpSession;
 import petTopia.model.user.Users;
 import petTopia.service.user.VendorLoginService;
+import petTopia.util.JwtUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Controller
-@RequestMapping("/vendor")
+@RestController
+@RequestMapping("/api/vendor/auth")
 public class VendorLoginController {
     private static final Logger logger = LoggerFactory.getLogger(VendorLoginController.class);
 
     @Autowired
     private VendorLoginService vendorService;
 
-    @GetMapping("/vendor_login")
-    public String showLoginPage(Model model) {
-        // 初始化 errors map
-        model.addAttribute("errors", new HashMap<String, String>());
-        return "vendor/vendor_login";
-    }
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
-    @GetMapping("/vendor_admin_profile")
-    public String showVendorAdminProfile(HttpSession session, Model model) {
-        // 檢查是否已登入
-        Users loggedInUser = (Users) session.getAttribute("loggedInUser");
-        if (loggedInUser == null || loggedInUser.getUserRole() != Users.UserRole.VENDOR) {
-            return "redirect:/vendor/vendor_login";
-        }
-        
-        // 將商家信息添加到模型中
-        model.addAttribute("vendorName", session.getAttribute("vendorName"));
-        model.addAttribute("vendorEmail", session.getAttribute("vendorEmail"));
-        model.addAttribute("userId", session.getAttribute("userId"));
-        
-        return "vendor/vendor_admin_profile";
-    }
+    @Autowired
+    private JwtUtil jwtUtil;
 
-    @PostMapping("/vendor_login")
-    public String processLogin(@RequestParam(required = false) String email, 
-                             @RequestParam(required = false) String password,
-                             Model model,
-                             HttpSession session) {
-        Map<String, String> errors = new HashMap<>();
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
+        String email = credentials.get("email");
+        String password = credentials.get("password");
         
         logger.info("開始處理商家登入請求 - 電子郵件: {}", email);
 
-        // **1. 基本驗證**
+        // 基本驗證
         if (email == null || email.trim().isEmpty()) {
-            errors.put("email", "請輸入電子郵件");
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "請輸入電子郵件"));
         }
         if (password == null || password.trim().isEmpty()) {
-            errors.put("password", "請輸入密碼");
-        }
-
-        // **2. 如果有錯誤，立即返回**
-        if (!errors.isEmpty()) {
-            model.addAttribute("errors", errors);
-            return "vendor/vendor_login";
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "請輸入密碼"));
         }
 
         try {
             logger.debug("開始驗證商家資訊");
-            // **3. 驗證商家**
             Map<String, Object> loginResult = vendorService.vendorLogin(email, password);
 
             if (!(Boolean) loginResult.get("success")) {
                 logger.warn("商家登入失敗 - {} - 電子郵件: {}", loginResult.get("message"), email);
-                errors.put("loginFailed", (String) loginResult.get("message"));
-                model.addAttribute("errors", errors);
-                return "vendor/vendor_login";
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", loginResult.get("message")));
             }
 
-            // 登入成功，設置session
-            session.setAttribute("loggedInUser", loginResult.get("user"));
-            session.setAttribute("userId", loginResult.get("userId"));
-            session.setAttribute("vendorName", loginResult.get("vendorName"));
-            session.setAttribute("userRole", loginResult.get("userRole"));
-            session.setAttribute("vendorEmail", email);
+            Users user = (Users) loginResult.get("user");
+            
+            // 創建認證令牌
+            Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(email, password)
+            );
+            
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            
+            // 生成 JWT
+            String token = jwtUtil.generateToken(user.getEmail(), user.getId(), user.getUserRole().toString());
 
-            logger.info("商家登入成功 - 使用者ID: {}", loginResult.get("userId"));
+            logger.info("商家登入成功 - 使用者ID: {}", user.getId());
 
-            // 重定向至商家管理頁面
-            return "redirect:/vendor/vendor_admin_profile";
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "token", token,
+                "userId", user.getId(),
+                "vendorName", loginResult.get("vendorName"),
+                "email", email,
+                "role", user.getUserRole().toString(),
+                "message", "登入成功"
+            ));
 
         } catch (Exception e) {
             logger.error("登入過程發生異常 - 電子郵件: {} - 錯誤訊息: {}", email, e.getMessage(), e);
-            errors.put("systemError", "系統發生錯誤，請稍後再試");
-            model.addAttribute("errors", errors);
-            return "vendor/vendor_login";
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "系統發生錯誤，請稍後再試"));
         }
     }
 
-    @GetMapping("/logout")
-    public String logout(HttpSession session) throws Exception {
-        session.invalidate();
-        return "redirect:/login?logout=true&message=" + URLEncoder.encode("商家登出成功", "UTF-8");
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout() {
+        try {
+            SecurityContextHolder.clearContext();
+            return ResponseEntity.ok(Map.of("message", "商家登出成功"));
+        } catch (Exception e) {
+            logger.error("登出過程發生異常", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "登出失敗：" + e.getMessage()));
+        }
     }
 
-    @GetMapping("/oauth2/success")
-    public String handleOAuth2Success(@AuthenticationPrincipal OAuth2User oauth2User,
-                                    HttpSession session,
-                                    Model model) {
+    @GetMapping("/profile")
+    public ResponseEntity<?> getVendorProfile(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", "請先登入"));
+        }
+
+        String token = authHeader.substring(7);
         try {
-            logger.info("處理OAuth2登入成功 - 提供者: {}", String.valueOf(oauth2User.getAttribute("provider")));
+            String email = jwtUtil.extractUsername(token);
+            if (!jwtUtil.validateToken(token, email)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "無效的令牌"));
+            }
+
+            String role = jwtUtil.extractUserRole(token);
+            if (!"VENDOR".equals(role)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "無權限訪問此資源"));
+            }
+
+            Integer userId = jwtUtil.extractUserId(token);
+            Map<String, Object> vendorInfo = vendorService.getVendorInfo(userId);
+            
+            return ResponseEntity.ok(vendorInfo);
+        } catch (Exception e) {
+            logger.error("獲取商家資料失敗", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "獲取商家資料失敗：" + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/oauth2/login")
+    public ResponseEntity<?> handleOAuth2Login(@AuthenticationPrincipal OAuth2User oauth2User) {
+        try {
+            logger.info("處理OAuth2登入 - 提供者: {}", String.valueOf(oauth2User.getAttribute("provider")));
             
             String email = oauth2User.getAttribute("email");
             Map<String, Object> loginResult = vendorService.vendorOAuth2Login(email);
 
             if (!(Boolean) loginResult.get("success")) {
                 logger.warn("OAuth2商家登入失敗 - {} - 電子郵件: {}", loginResult.get("message"), email);
-                model.addAttribute("errors", Map.of("loginFailed", loginResult.get("message")));
-                return "vendor/vendor_login";
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", loginResult.get("message")));
             }
 
-            // 登入成功，設置完整的 session 資訊
-            Users loggedInUser = (Users) loginResult.get("user");
-            session.setAttribute("loggedInUser", loggedInUser);
-            session.setAttribute("userId", loginResult.get("userId"));
-            session.setAttribute("vendorName", loginResult.get("vendorName"));
-            session.setAttribute("userRole", loginResult.get("userRole"));
-            session.setAttribute("vendorEmail", email);
-            session.setAttribute("userEmail", email);  // 添加 userEmail 屬性
-            session.setAttribute("provider", oauth2User.getAttribute("provider")); // 添加 provider 屬性
+            Users user = (Users) loginResult.get("user");
+            
+            // 創建認證令牌
+            Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(email, oauth2User.getAttribute("provider") + "_" + email)
+            );
+            
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            
+            // 生成 JWT
+            String token = jwtUtil.generateToken(user.getEmail(), user.getId(), user.getUserRole().toString());
 
-            logger.info("OAuth2商家登入成功 - 使用者ID: {}", loginResult.get("userId"));
+            logger.info("OAuth2商家登入成功 - 使用者ID: {}", user.getId());
 
-            return "redirect:/vendor/vendor_admin_profile";
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "token", token,
+                "userId", user.getId(),
+                "vendorName", loginResult.get("vendorName"),
+                "email", email,
+                "role", user.getUserRole().toString(),
+                "provider", oauth2User.getAttribute("provider"),
+                "message", "OAuth2 登入成功"
+            ));
 
         } catch (Exception e) {
             logger.error("OAuth2登入過程發生異常 - 錯誤訊息: {}", e.getMessage(), e);
-            model.addAttribute("errors", Map.of("systemError", "系統發生錯誤，請稍後再試"));
-            return "vendor/vendor_login";
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "系統發生錯誤，請稍後再試"));
+        }
+    }
+
+    @GetMapping("/status")
+    public ResponseEntity<?> getLoginStatus(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.ok(Map.of("isLoggedIn", false));
+        }
+
+        String token = authHeader.substring(7);
+        try {
+            String email = jwtUtil.extractUsername(token);
+            if (!jwtUtil.validateToken(token, email)) {
+                return ResponseEntity.ok(Map.of("isLoggedIn", false));
+            }
+
+            String role = jwtUtil.extractUserRole(token);
+            if (!"VENDOR".equals(role)) {
+                return ResponseEntity.ok(Map.of("isLoggedIn", false));
+            }
+
+            Integer userId = jwtUtil.extractUserId(token);
+            Map<String, Object> vendorInfo = vendorService.getVendorInfo(userId);
+            
+            return ResponseEntity.ok(Map.of(
+                "isLoggedIn", true,
+                "userId", userId,
+                "vendorName", vendorInfo.get("vendorName"),
+                "email", email,
+                "role", role
+            ));
+        } catch (Exception e) {
+            logger.error("獲取登入狀態失敗", e);
+            return ResponseEntity.ok(Map.of("isLoggedIn", false));
         }
     }
 }

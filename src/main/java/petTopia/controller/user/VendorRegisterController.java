@@ -1,81 +1,119 @@
 package petTopia.controller.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 
 import petTopia.model.user.Users;
 import petTopia.service.user.VendorRegistrationService;
 
-import java.io.UnsupportedEncodingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
-import java.net.URLEncoder;
 
-@Controller
-@RequestMapping("/vendor")
+@RestController
+@RequestMapping("/api/vendor/auth")
 public class VendorRegisterController {
+    
+    private static final Logger logger = LoggerFactory.getLogger(VendorRegisterController.class);
 
     @Autowired
     private VendorRegistrationService vendorRegistrationService;
 
-    @GetMapping("/vendor_register")
-    public String showRegisterPage(Model model) {
-        model.addAttribute("errors", new HashMap<String, String>());
-        return "vendor/vendor_register";
-    }
-
-    @PostMapping("/vendor_register")
-    public String register(@RequestParam String email,
-                         @RequestParam String password,
-                         @RequestParam String confirmPassword,
-                         Model model) throws UnsupportedEncodingException {
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String password = request.get("password");
+        String confirmPassword = request.get("confirmPassword");
         
-        Map<String, String> errors = new HashMap<>();
-        model.addAttribute("errors", errors);
+        logger.info("處理商家註冊請求 - 電子郵件: {}", email);
+        
+        // 基本驗證
+        if (email == null || email.trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "電子郵件不能為空"));
+        }
+        
+        if (password == null || password.trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "密碼不能為空"));
+        }
+        
+        if (!password.equals(confirmPassword)) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "密碼與確認密碼不符"));
+        }
 
         try {
-            // 基本驗證
-            if (!password.equals(confirmPassword)) {
-                errors.put("registerFailed", "密碼與確認密碼不符");
-                return "vendor/vendor_register";
-            }
-
             // 檢查是否已存在相同email的商家帳號
             Users existingVendor = vendorRegistrationService.findByEmail(email);
             if (existingVendor != null) {
-                errors.put("registerFailed", "此 email 已註冊為商家");
-                return "vendor/vendor_register";
+                logger.warn("註冊失敗 - 電子郵件已存在: {}", email);
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", "此 email 已註冊為商家"));
             }
 
             // 創建用戶基本信息
             Users newUser = new Users();
             newUser.setEmail(email);
             newUser.setPassword(password);
+            newUser.setUserRole(Users.UserRole.VENDOR);
+            newUser.setProvider(Users.Provider.LOCAL);
 
             // 使用註冊服務處理註冊
             vendorRegistrationService.register(newUser);
             
-            return "redirect:/vendor/vendor_login?registered=true&message=" + 
-                   URLEncoder.encode("註冊成功，請查收驗證郵件後登入", "UTF-8");
+            logger.info("商家註冊成功 - 電子郵件: {}", email);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Map.of(
+                    "message", "註冊成功，請查收驗證郵件後登入",
+                    "email", email
+                ));
             
         } catch (Exception e) {
-            errors.put("registerFailed", "註冊失敗：" + e.getMessage());
-            return "vendor/vendor_register";
+            logger.error("註冊過程發生異常 - 電子郵件: {}", email, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "註冊失敗：" + e.getMessage()));
         }
     }
 
-    @GetMapping("/verify")
-    public String verifyEmail(@RequestParam String token, Model model) throws UnsupportedEncodingException {
-        boolean verified = vendorRegistrationService.verifyEmail(token);
+    @GetMapping("/verify-email")
+    public ResponseEntity<?> verifyEmail(@RequestParam String token) {
+        logger.info("處理商家電子郵件驗證請求 - 令牌: {}", token);
         
-        if (verified) {
-            return "redirect:/vendor/vendor_login?verified=true&message=" + 
-                   URLEncoder.encode("驗證成功，請登入", "UTF-8");
-        } else {
-            return "redirect:/vendor/vendor_register?error=true&message=" + 
-                   URLEncoder.encode("驗證失敗，請重新註冊", "UTF-8");
+        if (token == null || token.trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "驗證令牌不能為空"));
+        }
+        
+        try {
+            boolean verified = vendorRegistrationService.verifyEmail(token);
+            
+            if (verified) {
+                logger.info("商家電子郵件驗證成功 - 令牌: {}", token);
+                return ResponseEntity.ok(Map.of(
+                    "message", "驗證成功，請登入",
+                    "verified", true
+                ));
+            } else {
+                logger.warn("商家電子郵件驗證失敗 - 令牌: {}", token);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of(
+                        "error", "驗證失敗，請重新註冊",
+                        "verified", false
+                    ));
+            }
+        } catch (Exception e) {
+            logger.error("商家電子郵件驗證過程發生異常 - 令牌: {}", token, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "驗證過程發生錯誤：" + e.getMessage()));
         }
     }
 } 

@@ -2,34 +2,40 @@ package petTopia.controller.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ClassPathResource;
 
 import petTopia.model.user.Member;
 import petTopia.model.user.Users;
-import petTopia.service.user.MemberLoginService;
 import petTopia.service.user.MemberService;
-import petTopia.util.SessionManager;
+import petTopia.service.user.MemberLoginService;
+import petTopia.util.JwtUtil;
 
-import jakarta.servlet.http.HttpSession;
-import java.time.LocalDateTime;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.Base64;
-import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
+
 import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Controller
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@RestController
+@RequestMapping("/api/member")
 public class MemberController {
+
+    private static final Logger logger = LoggerFactory.getLogger(MemberController.class);
 
     @Autowired
     private MemberService memberService;
@@ -38,309 +44,297 @@ public class MemberController {
     private MemberLoginService memberLoginService;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
-    
-    @Autowired
-    private SessionManager sessionManager;
+    private JwtUtil jwtUtil;
 
-    // 新增圖片處理相關的常量
-    private static final int MAX_IMAGE_SIZE = 1024 * 1024; // 1MB
-    private static final int TARGET_WIDTH = 300;
-    private static final String IMAGE_FORMAT = "JPEG";
-
-    // 新增圖片處理方法
-    private byte[] processImage(MultipartFile photo) throws Exception {
-        if (photo == null || photo.isEmpty()) {
-            return null;
-        }
-
-        byte[] photoData = photo.getBytes();
+    /**
+     * 檢查名稱是否為郵箱格式
+     */
+    private boolean isEmailFormat(String name, String email) {
+        if (name == null || email == null) return false;
         
-        // 如果圖片小於1MB且是JPEG格式，直接返回
-        if (photoData.length <= MAX_IMAGE_SIZE && 
-            photo.getContentType() != null && 
-            photo.getContentType().equals(MediaType.IMAGE_JPEG_VALUE)) {
-            return photoData;
+        // 最基本的判斷：名稱與郵箱完全相同
+        if (name.equalsIgnoreCase(email)) return true;
+        
+        // 更進階的判斷：名稱是否符合郵箱格式 (包含 @ 和 .)
+        return name.matches("^[^@]+@[^@]+\\.[^@]+$");
+    }
+    
+    /**
+     * 獲取更友好的顯示名稱
+     */
+    private String getFriendlyDisplayName(String name, String email) {
+        if (isEmailFormat(name, email)) {
+            // 如果名稱是郵箱格式，使用郵箱的用戶名部分
+            String emailUsername = email.split("@")[0];
+            logger.info("名稱是郵箱格式，轉換為更友好的格式: {} -> {}", name, emailUsername);
+            return emailUsername;
         }
+        return name;
+    }
 
-        // 讀取原始圖片
-        BufferedImage originalImage = ImageIO.read(new ByteArrayInputStream(photoData));
-        if (originalImage == null) {
-            throw new IllegalArgumentException("無效的圖片格式");
-        }
-
-        // 計算新的尺寸，保持比例
-        int originalWidth = originalImage.getWidth();
-        int originalHeight = originalImage.getHeight();
-        int targetHeight = (int) (originalHeight * (TARGET_WIDTH / (double) originalWidth));
-
-        // 創建縮圖
-        BufferedImage resizedImage = new BufferedImage(TARGET_WIDTH, targetHeight, BufferedImage.TYPE_INT_RGB);
-        Graphics2D g = resizedImage.createGraphics();
-        g.drawImage(originalImage, 0, 0, TARGET_WIDTH, targetHeight, null);
-        g.dispose();
-
-        // 轉換為 byte array
+    private byte[] processImage(MultipartFile file) throws IOException {
+        // 讀取圖片
+        BufferedImage originalImage = ImageIO.read(file.getInputStream());
+        
+        // 計算新的尺寸，保持寬高比
+        int targetWidth = 800;
+        int targetHeight = (int) (((double) originalImage.getHeight() / originalImage.getWidth()) * targetWidth);
+        
+        // 創建新的縮放後的圖片
+        BufferedImage resizedImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
+        resizedImage.createGraphics().drawImage(originalImage, 0, 0, targetWidth, targetHeight, null);
+        
+        // 將圖片轉換為 byte array
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ImageIO.write(resizedImage, IMAGE_FORMAT, baos);
+        ImageIO.write(resizedImage, "jpg", baos);
+        
         return baos.toByteArray();
     }
 
-    // 新增圖片獲取端點
-    @GetMapping("/api/member/profile-photo")
-    public ResponseEntity<byte[]> getProfilePhoto(HttpSession session) {
-        try {
-            Integer userId = (Integer) session.getAttribute("userId");
-            if (userId == null) {
-                return ResponseEntity.badRequest().build();
-            }
-
-            Member member = memberService.getMemberById(userId);
-            if (member != null && member.getProfilePhoto() != null) {
-                return ResponseEntity.ok()
-                    .header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
-                    .header("Pragma", "no-cache")
-                    .header("Expires", "0")
-                    .contentType(MediaType.IMAGE_JPEG)
-                    .body(member.getProfilePhoto());
-            }
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
-    }
-
-    // 顯示個人資料頁面
     @GetMapping("/profile")
-    public String showProfile(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
-        Integer userId = (Integer) session.getAttribute("userId");
-        if (userId == null) {
-            redirectAttributes.addFlashAttribute("error", "請先登入");
-            return "redirect:/login";
+    public ResponseEntity<?> getProfile(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", "未登入"));
         }
 
+        String token = authHeader.substring(7);
         try {
-            Member member = memberService.getMemberById(userId);
-            Users user = memberLoginService.findById(userId);
+            String email = jwtUtil.extractUsername(token);
+            if (!jwtUtil.validateToken(token, email)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "無效的令牌"));
+            }
 
+            Integer userId = jwtUtil.extractUserId(token);
+            Member member = memberService.getMemberById(userId);
             if (member == null) {
-                member = new Member();
-                member.setId(userId);
-                member.setStatus(false);
-                member.setUser(user);
-                member.setName(user.getEmail().split("@")[0]);
-                member = memberService.createOrUpdateMember(member, session);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "會員不存在"));
             }
-
-            model.addAttribute("member", member);
-            model.addAttribute("userEmail", user.getEmail());
-            return "profile";
+            
+            // 獲取用戶資料，以檢查提供者
+            Users user = memberLoginService.findByEmail(email);
+            
+            // 檢查名稱是否為郵箱格式，如果是則嘗試使用更友好的格式
+            if (user != null && user.getProvider() != Users.Provider.LOCAL) {
+                // 對於第三方登入用戶，特別檢查名稱格式
+                String currentName = member.getName();
+                
+                if (isEmailFormat(currentName, email)) {
+                    // 如果目前名稱是郵箱格式，嘗試使用更友好的名稱
+                    String friendlyName = getFriendlyDisplayName(currentName, email);
+                    
+                    if (!friendlyName.equals(currentName)) {
+                        logger.info("更新會員資料中的名稱為更友好的格式: {} -> {}", currentName, friendlyName);
+                        member.setName(friendlyName);
+                        member.setUpdatedDate(LocalDateTime.now());
+                        memberService.createOrUpdateMember(member);
+                    }
+                }
+            }
+            
+            // 創建一個包含會員資料的 Map，以便添加額外資訊
+            Map<String, Object> memberData = new HashMap<>();
+            memberData.put("id", member.getId());
+            memberData.put("name", member.getName());
+            memberData.put("phone", member.getPhone());
+            memberData.put("gender", member.getGender());
+            memberData.put("address", member.getAddress());
+            memberData.put("birthdate", member.getBirthdate());
+            memberData.put("status", member.getStatus());
+            memberData.put("updatedDate", member.getUpdatedDate());
+            
+            // 如果有用戶資料，添加用戶資訊
+            if (user != null) {
+                memberData.put("email", user.getEmail());
+                memberData.put("provider", user.getProvider().toString());
+                memberData.put("userRole", user.getUserRole().toString());
+            }
+            
+            return ResponseEntity.ok(memberData);
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "載入資料失敗: " + e.getMessage());
-            return "redirect:/";
+            logger.error("獲取會員資料失敗", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "獲取會員資料失敗：" + e.getMessage()));
         }
     }
 
-    // 修改更新會員資料的方法
-    @PostMapping("/update")
-    public String updateProfile(
-            @ModelAttribute Member member,
-            @RequestParam(value = "birthdate", required = false) String birthdateStr,
-            @RequestParam(value = "photo", required = false) MultipartFile photo,
-            HttpSession session,
-            RedirectAttributes redirectAttributes) {
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateProfile(
+            @RequestBody Member member,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", "未登入"));
+        }
+
+        String token = authHeader.substring(7);
         try {
-            Integer userId = (Integer) session.getAttribute("userId");
-            if (userId == null) {
-                redirectAttributes.addFlashAttribute("error", "請先登入");
-                return "redirect:/profile";
+            String email = jwtUtil.extractUsername(token);
+            if (!jwtUtil.validateToken(token, email)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "無效的令牌"));
             }
 
-            member.setId(userId);
-            Users currentUser = memberLoginService.findById(userId);
-            if (currentUser == null) {
-                redirectAttributes.addFlashAttribute("error", "用戶資料不存在");
-                return "redirect:/profile";
-            }
-            member.setUser(currentUser);
-
-            // 處理生日日期
-            if (birthdateStr != null && !birthdateStr.trim().isEmpty()) {
-                try {
-                    // 直接解析為 LocalDate
-                    LocalDate birthdate = LocalDate.parse(birthdateStr);
-                    member.setBirthdate(birthdate);
-                } catch (Exception e) {
-                    redirectAttributes.addFlashAttribute("error", "生日日期格式錯誤");
-                    return "redirect:/profile";
-                }
-            } else {
-                member.setBirthdate(null);
-            }
-
+            Integer userId = jwtUtil.extractUserId(token);
+            
+            // 獲取現有會員資料
             Member existingMember = memberService.getMemberById(userId);
-            if (existingMember != null) {
-                member.setStatus(existingMember.getStatus());
-                if (photo == null || photo.isEmpty()) {
-                    member.setProfilePhoto(existingMember.getProfilePhoto());
-                }
-            } else {
-                member.setStatus(false);
+            if (existingMember == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "會員不存在"));
             }
-            member.setUpdatedDate(LocalDateTime.now());
+            
+            // 更新資料（但不更新頭像，這會在單獨的端點中處理）
+            existingMember.setName(member.getName());
+            existingMember.setPhone(member.getPhone());
+            existingMember.setGender(member.getGender());
+            existingMember.setAddress(member.getAddress());
+            
+            // 如果有生日資料，則更新
+            if (member.getBirthdate() != null) {
+                existingMember.setBirthdate(member.getBirthdate());
+            }
+            
+            existingMember.setUpdatedDate(LocalDateTime.now());
+            
+            Member updatedMember = memberService.createOrUpdateMember(existingMember);
+            return ResponseEntity.ok(Map.of("message", "會員資料更新成功"));
+        } catch (Exception e) {
+            logger.error("更新會員資料失敗", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "更新失敗：" + e.getMessage()));
+        }
+    }
+    
+    @PostMapping("/upload-photo")
+    public ResponseEntity<?> uploadProfilePhoto(
+            @RequestParam("photo") MultipartFile photo,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", "未登入"));
+        }
 
-            // 處理圖片
+        String token = authHeader.substring(7);
+        try {
+            String email = jwtUtil.extractUsername(token);
+            if (!jwtUtil.validateToken(token, email)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "無效的令牌"));
+            }
+
+            Integer userId = jwtUtil.extractUserId(token);
+            
+            // 獲取現有會員資料
+            Member member = memberService.getMemberById(userId);
+            if (member == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "會員不存在"));
+            }
+            
+            // 處理並更新頭像
             if (photo != null && !photo.isEmpty()) {
-                try {
-                    byte[] processedImage = processImage(photo);
-                    member.setProfilePhoto(processedImage);
-                } catch (Exception e) {
-                    redirectAttributes.addFlashAttribute("error", "圖片處理失敗: " + e.getMessage());
-                    return "redirect:/profile";
-                }
+                byte[] processedImage = processImage(photo);
+                member.setProfilePhoto(processedImage);
+                member.setUpdatedDate(LocalDateTime.now());
+                
+                memberService.createOrUpdateMember(member);
+                return ResponseEntity.ok(Map.of("message", "頭像更新成功"));
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "未提供頭像文件"));
             }
-
-            memberService.createOrUpdateMember(member, session);
-            
-            // 更新session中的會員名稱
-            String displayName = member.getName();
-            session.setAttribute("memberName", displayName);
-
-            redirectAttributes.addFlashAttribute("success", "資料更新成功");
-            return "redirect:/profile";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "更新失敗: " + e.getMessage());
-            return "redirect:/profile";
+            logger.error("上傳頭像失敗", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "上傳頭像失敗：" + e.getMessage()));
         }
     }
 
-    // 顯示地址管理頁面
     @GetMapping("/address")
-    public String showAddress(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
-        Integer userId = (Integer) session.getAttribute("userId");
-        if (userId == null) {
-            redirectAttributes.addFlashAttribute("error", "請先登入");
-            return "redirect:/login";
+    public ResponseEntity<?> getAddress(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", "未登入"));
         }
 
+        String token = authHeader.substring(7);
         try {
+            String email = jwtUtil.extractUsername(token);
+            if (!jwtUtil.validateToken(token, email)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "無效的令牌"));
+            }
+
+            Integer userId = jwtUtil.extractUserId(token);
             Member member = memberService.getMemberById(userId);
-            if (member != null && member.getProfilePhoto() != null) {
-                String photoBase64 = Base64.getEncoder().encodeToString(member.getProfilePhoto());
-                model.addAttribute("memberProfilePhotoBase64", photoBase64);
-                session.setAttribute("memberProfilePhotoBase64", photoBase64);
+            if (member == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "會員不存在"));
             }
-            model.addAttribute("member", member);
-            return "address";
+
+            return ResponseEntity.ok(Map.of("address", member.getAddress()));
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "載入地址資料失敗");
-            return "redirect:/profile";
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "獲取地址失敗：" + e.getMessage()));
         }
     }
 
-    // 顯示優惠券列表頁面
-    @GetMapping("/coupons")
-    public String showCoupons(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
-        Integer userId = (Integer) session.getAttribute("userId");
-        if (userId == null) {
-            redirectAttributes.addFlashAttribute("error", "請先登入");
-            return "redirect:/login";
+    @GetMapping("/profile-photo")
+    public ResponseEntity<byte[]> getProfilePhoto(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            logger.warn("未提供有效的认证头");
+            return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_JPEG)
+                .body(getDefaultAvatar());
         }
 
+        String token = authHeader.substring(7);
         try {
+            String email = jwtUtil.extractUsername(token);
+            if (!jwtUtil.validateToken(token, email)) {
+                logger.warn("无效的令牌: {}", email);
+                return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_JPEG)
+                    .body(getDefaultAvatar());
+            }
+
+            Integer userId = jwtUtil.extractUserId(token);
             Member member = memberService.getMemberById(userId);
-            if (member != null && member.getProfilePhoto() != null) {
-                String photoBase64 = Base64.getEncoder().encodeToString(member.getProfilePhoto());
-                model.addAttribute("memberProfilePhotoBase64", photoBase64);
-                session.setAttribute("memberProfilePhotoBase64", photoBase64);
-            }
-            model.addAttribute("member", member);
-            // TODO: 添加優惠券列表
-            return "coupon_list";
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "載入優惠券資料失敗");
-            return "redirect:/profile";
-        }
-    }
-
-    // 顯示密碼修改頁面
-    @GetMapping("/password")
-    public String showPasswordForm(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
-        Integer userId = (Integer) session.getAttribute("userId");
-        if (userId == null) {
-            redirectAttributes.addFlashAttribute("error", "請先登入");
-            return "redirect:/login";
-        }
-        return "password";
-    }
-
-    // 更新密碼
-    @PostMapping("/update-password")
-    @ResponseBody
-    public ResponseEntity<?> updatePassword(
-            @RequestParam String currentPassword,
-            @RequestParam String newPassword,
-            @RequestParam String confirmPassword,
-            HttpSession session) {
-        
-        Map<String, Object> response = new HashMap<>();
-        
-        try {
-            Integer userId = (Integer) session.getAttribute("userId");
-            if (userId == null) {
-                response.put("success", false);
-                response.put("message", "請先登入");
-                return ResponseEntity.badRequest().body(response);
-            }
-
-            Users user = memberLoginService.findById(userId);
-            if (user == null) {
-                response.put("success", false);
-                response.put("message", "用戶不存在");
-                return ResponseEntity.badRequest().body(response);
-            }
-
-            // 驗證當前密碼
-            if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-                response.put("success", false);
-                response.put("message", "當前密碼錯誤");
-                return ResponseEntity.badRequest().body(response);
-            }
-
-            // 驗證新密碼
-            if (!newPassword.equals(confirmPassword)) {
-                response.put("success", false);
-                response.put("message", "新密碼與確認密碼不符");
-                return ResponseEntity.badRequest().body(response);
-            }
-
-            // 更新密碼
-            user.setPassword(passwordEncoder.encode(newPassword));
-            memberLoginService.updateUser(user);
-
-            response.put("success", true);
-            response.put("message", "密碼更新成功");
-            return ResponseEntity.ok(response);
             
+            // 如果会员不存在或没有头像，返回默认头像
+            if (member == null || member.getProfilePhoto() == null) {
+                logger.info("会员不存在或没有头像: userId={}", userId);
+                return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_JPEG)
+                    .body(getDefaultAvatar());
+            }
+
+            // 返回会员头像
+            return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_JPEG)
+                .body(member.getProfilePhoto());
         } catch (Exception e) {
-            response.put("success", false);
-            response.put("message", "密碼更新失敗：" + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            logger.error("获取头像失败", e);
+            return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_JPEG)
+                .body(getDefaultAvatar());
         }
     }
 
-    // 刪除會員
-    @PostMapping("/delete")
-    public String deleteMember(HttpSession session, RedirectAttributes redirectAttributes) {
-        Integer userId = (Integer) session.getAttribute("userId");
-        if (userId != null) {
-            try {
-                memberService.deleteMember(userId, session);
-                redirectAttributes.addFlashAttribute("success", "帳號已成功刪除");
-            } catch (Exception e) {
-                redirectAttributes.addFlashAttribute("error", "刪除帳號失敗：" + e.getMessage());
-            }
+    // 获取默认头像
+    private byte[] getDefaultAvatar() {
+        try {
+            // 从资源文件加载默认头像
+            Resource resource = new ClassPathResource("static/user_static/images/default-avatar.png");
+            return resource.getInputStream().readAllBytes();
+        } catch (IOException e) {
+            // 如果加载失败，返回一个空的字节数组
+            return new byte[0];
         }
-        return "redirect:/";
     }
 }

@@ -1,9 +1,11 @@
 package petTopia.model.user;
 
 import jakarta.persistence.*;
+import petTopia.model.vendor.VendorImages;
 
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 import lombok.Data;
 
 @Entity
@@ -26,6 +28,9 @@ public class Vendor {
     @Lob
     @Column(name = "logo_img")
     private byte[] logoImg;
+
+    @Transient
+    private String logoImgBase64;
 
     private String address;
     private String phone;
@@ -64,6 +69,9 @@ public class Vendor {
 
     @Column(name = "vendor_level")
     private String vendorLevel;
+
+    @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL)
+    private List<VendorImages> images;
 
     public void setRegistrationDate(LocalDateTime registrationDate) {
         this.registrationDate = registrationDate;

@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -42,44 +43,22 @@ public class RegistrationService {
     @Transactional
     public Map<String, Object> register(Users user) {
         Map<String, Object> result = new HashMap<>();
+        String email = user.getEmail().toLowerCase().trim();
         
         try {
-            String email = user.getEmail().toLowerCase().trim();  // 統一轉換為小寫並去除空格
-            logger.info("開始檢查 email 是否已存在：{}", email);
-            
-            // 檢查是否已存在相同email的帳號
-            Users existingUser = usersRepository.findByEmailAndUserRole(email, Users.UserRole.MEMBER);
-            
-            if (existingUser != null) {
-                String message;
-                if (existingUser.getProvider() == Users.Provider.GOOGLE) {
-                    message = "此 email 已使用 Google 帳號登入過，請點擊「使用 Google 登入」按鈕";
-                    logger.warn("註冊失敗：使用已存在的 Google 帳號 email 嘗試本地註冊，email: {}, provider: {}", 
-                        email, existingUser.getProvider());
-                } else if (existingUser.getUserRole() == Users.UserRole.VENDOR) {
-                    message = "此 email 已註冊為商家帳號，請使用其他 email 註冊會員";
-                    logger.warn("註冊失敗：使用已存在的商家帳號 email 嘗試會員註冊，email: {}, role: {}", 
-                        email, existingUser.getUserRole());
-                } else {
-                    message = "此 email 已註冊為會員帳號，請直接登入";
-                    logger.warn("註冊失敗：使用已存在的會員帳號 email 嘗試重複註冊，email: {}, role: {}", 
-                        email, existingUser.getUserRole());
-                }
+            // 檢查郵箱是否已存在
+            if (findByEmail(email) != null) {
                 result.put("success", false);
-                result.put("message", message);
+                result.put("message", "此 email 已註冊為會員");
                 return result;
             }
-
-            // 只有在 email 不存在時才繼續註冊流程
-            logger.info("Email 檢查通過，開始新會員註冊流程，email: {}", email);
             
-            // 設置 email 為小寫
             user.setEmail(email);
             
-            // 生成驗證令牌
-            String token = UUID.randomUUID().toString();
-            user.setVerificationToken(token);
-            user.setTokenExpiry(LocalDateTime.now().plusHours(24));
+            // 生成6位數驗證碼
+            String code = String.format("%06d", new Random().nextInt(1000000));
+            user.setVerificationToken(code);
+            user.setTokenExpiry(LocalDateTime.now().plusMinutes(5));
             user.setUserRole(Users.UserRole.MEMBER);
             user.setProvider(Users.Provider.LOCAL);
             
@@ -107,7 +86,7 @@ public class RegistrationService {
             logger.info("會員詳細資訊儲存成功，memberId: {}", member.getId());
 
             // 發送驗證郵件
-            emailService.sendVerificationEmail(user.getEmail(), token);
+            emailService.sendVerificationEmail(user.getEmail(), code);
             logger.info("驗證郵件發送成功，email: {}", user.getEmail());
 
             result.put("success", true);
@@ -126,8 +105,8 @@ public class RegistrationService {
     }
     
     @Transactional
-    public boolean verifyEmail(String token) {
-        Users user = usersRepository.findByVerificationToken(token);
+    public boolean verifyEmail(String code) {
+        Users user = usersRepository.findByVerificationToken(code);
         
         if (user != null && !user.isEmailVerified() && 
             LocalDateTime.now().isBefore(user.getTokenExpiry())) {
@@ -153,5 +132,12 @@ public class RegistrationService {
     public Users findByEmail(String email) {
         // 查找任何類型的帳號（會員、商家、本地、Google）
         return usersRepository.findByEmailAndUserRole(email.toLowerCase().trim(), Users.UserRole.MEMBER);
+    }
+    
+    @Transactional
+    public Users updateUser(Users user) {
+        // 保存用戶信息
+        logger.info("更新用戶信息，userId: {}", user.getId());
+        return usersRepository.save(user);
     }
 }

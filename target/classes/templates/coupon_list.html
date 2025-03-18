@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>優惠券列表 - Waggy</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" th:href="@{/user_static/css/vendor.css}">
+    <link rel="stylesheet" type="text/css" th:href="@{/user_static/style.css}">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body>
+    <div class="container mt-5">
+        <h2>可用優惠券列表</h2>
+        
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>折扣類型</th>
+                            <th>折扣值</th>
+                            <th>最低消費</th>
+                            <th>剩餘次數</th>
+                            <th>有效期限</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="coupon : ${coupons}">
+                            <td th:text="${coupon.discountType == T(tw.com.ispan.domain.CouponBean.DiscountType).fixed ? '固定金額' : '折扣比例'}"></td>
+                            <td th:text="${coupon.discountType == T(tw.com.ispan.domain.CouponBean.DiscountType).fixed ? 
+                                         coupon.discountValue + '元' : coupon.discountValue + '%'}"></td>
+                            <td th:text="${coupon.minOrderValue != null ? coupon.minOrderValue + '元' : '無限制'}"></td>
+                            <td th:text="${coupon.limitCount - coupon.usedCount}"></td>
+                            <td th:text="${#temporals.format(coupon.validEnd, 'yyyy-MM-dd HH:mm')}"></td>
+                            <td>
+                                <button class="btn btn-primary btn-sm check-coupon" 
+                                        th:data-coupon-id="${coupon.id}">
+                                    檢查可用性
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 檢查優惠券的 Modal -->
+    <div class="modal fade" id="checkCouponModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">檢查優惠券</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">訂單金額</label>
+                        <input type="number" class="form-control" id="orderAmount">
+                    </div>
+                    <div id="couponResult" class="alert" style="display: none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+                    <button type="button" class="btn btn-primary" id="checkCouponBtn">檢查</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加側邊欄 -->
+    <div class="sidebar-menu">
+        <div class="user-info">
+            <img th:if="${member != null and member.profilePhoto != null}"
+                th:src="@{'data:image/jpeg;base64,' + ${T(java.util.Base64).getEncoder().encodeToString(member.profilePhoto)}}"
+                alt="使用者頭像" class="sidebar-avatar">
+            <img th:unless="${member != null and member.profilePhoto != null}" src="/static/images/default-avatar.png"
+                alt="預設頭像" class="sidebar-avatar">
+            <p class="username" th:text="${member != null ? member.name : '訪客'}">使用者名稱</p>
+        </div>
+        
+        <ul class="sub-items show">
+            <li class="sub-item"><a href="/profile">個人檔案</a></li>
+            <li class="sub-item"><a href="/address">地址</a></li>
+            <li class="sub-item"><a href="/password">更改密碼</a></li>
+            <li class="sub-item"><a href="/coupons" class="active">優惠券</a></li>
+        </ul>
+    </div>
+
+    <!-- 添加錯誤和成功消息顯示 -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle"></i>
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            let currentCouponId;
+            
+            $('.check-coupon').click(function() {
+                currentCouponId = $(this).data('coupon-id');
+                $('#checkCouponModal').modal('show');
+            });
+            
+            $('#checkCouponBtn').click(function() {
+                let orderAmount = $('#orderAmount').val();
+                let couponId = currentCouponId;
+                
+                if (!orderAmount) {
+                    alert('請輸入訂單金額');
+                    return;
+                }
+                
+                $.ajax({
+                    url: '/check-coupon',
+                    method: 'POST',
+                    data: {
+                        orderAmount: orderAmount,
+                        couponId: couponId
+                    },
+                    success: function(response) {
+                        let resultDiv = $('#couponResult');
+                        resultDiv.removeClass('alert-success alert-danger')
+                            .addClass(response.valid ? 'alert-success' : 'alert-danger')
+                            .text(response.message)
+                            .show();
+                        
+                        setTimeout(() => {
+                            resultDiv.hide();
+                        }, 3000);
+                    },
+                    error: function() {
+                        $('#couponResult').removeClass('alert-success')
+                            .addClass('alert-danger')
+                            .text('系統錯誤，請稍後再試')
+                            .show();
+                        
+                        setTimeout(() => {
+                            $('#couponResult').hide();
+                        }, 3000);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

@@ -4,17 +4,22 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "member")
 @Data
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Member {
 
 	 @Id
 	    private Integer id;  // 與 user id 相同
 
-	    @OneToOne
-	    @JoinColumn(name = "id", referencedColumnName = "id")  
+	    @OneToOne(fetch = FetchType.LAZY)
+	    @MapsId
+	    @JoinColumn(name = "id")
+	    @JsonIgnore
 	    private Users user;  // 用這個屬性來建立與 Users 的關聯
 
     @Column(name = "name", nullable = true)

@@ -17,12 +17,11 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
     
-    public void sendVerificationEmail(String to, String token) {
+    public void sendVerificationEmail(String to, String code) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(to);
-        message.setSubject("請驗證您的電子郵件");
-        message.setText("請點擊以下連結驗證您的電子郵件：\n\n" +
-                "http://localhost:8080/verify-email?token=" + token);
+        message.setSubject("PetTopia 會員註冊驗證碼");
+        message.setText("您的驗證碼是: " + code + "\n\n此驗證碼將在5分鐘後過期。");
         
         mailSender.send(message);
     }

@@ -1,73 +1,102 @@
 package petTopia.controller.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.ui.Model;
-import jakarta.servlet.http.HttpSession;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 import petTopia.service.user.UsersService;
 import petTopia.model.user.Users;
-import org.springframework.http.ResponseEntity;
+import petTopia.util.JwtUtil;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.util.HashMap;
 
-@Controller
-@RequestMapping("/oauth2")
+@RestController
+@RequestMapping("/api/auth/oauth2")
 public class OAuth2BindController {
+
+    private static final Logger logger = LoggerFactory.getLogger(OAuth2BindController.class);
 
     @Autowired
     private UsersService usersService;
 
-    @GetMapping("/bind-confirm")
-    public String showBindConfirmPage(HttpSession session, Model model) {
-        // 檢查是否需要綁定
-        Boolean bindingRequired = (Boolean) session.getAttribute("bindingRequired");
-        if (bindingRequired == null || !bindingRequired) {
-            return "redirect:/";
-        }
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
-        // 獲取綁定資訊
-        String email = (String) session.getAttribute("oauthEmail");
-        String provider = (String) session.getAttribute("oauthProvider");
-        
-        model.addAttribute("email", email);
-        model.addAttribute("provider", provider);
-        
-        return "oauth2/bind_confirm";
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    // 獲取綁定資訊
+    @GetMapping("/bind-info")
+    public ResponseEntity<?> getBindInfo() {
+        // This method is no longer used in the new implementation
+        return ResponseEntity.badRequest()
+            .body(Map.of("error", "This method is no longer used in the new implementation"));
     }
 
+    // 執行 OAuth2 帳號綁定
     @PostMapping("/bind")
-    @ResponseBody
-    public ResponseEntity<?> bindAccount(HttpSession session) {
+    public ResponseEntity<?> bindAccount(@RequestBody Map<String, Object> bindData) {
         try {
-            // 獲取綁定資訊
-            Integer localUserId = (Integer) session.getAttribute("localUserId");
-            String provider = (String) session.getAttribute("oauthProvider");
+            Integer localUserId = (Integer) bindData.get("localUserId");
+            String provider = (String) bindData.get("provider");
+            String email = (String) bindData.get("email");
             
-            // 執行帳號綁定
-            usersService.bindOAuth2Account(localUserId, Users.Provider.valueOf(provider));
+            if (localUserId == null || provider == null || email == null) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "缺少綁定所需的資訊"));
+            }
+
+            logger.info("執行 OAuth2 帳號綁定 - 用戶ID: {}, 提供者: {}", localUserId, provider);
             
-            // 清除綁定相關的 session 屬性
-            session.removeAttribute("bindingRequired");
-            session.removeAttribute("localUserId");
-            session.removeAttribute("localUserRole");
-            session.removeAttribute("oauthEmail");
-            session.removeAttribute("oauthProvider");
+            // 檢查用戶是否存在
+            Users user = usersService.findById(localUserId);
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "用戶不存在"));
+            }
+
+            // 執行綁定
+            try {
+                usersService.bindOAuth2Account(localUserId, Users.Provider.valueOf(provider));
+            } catch (Exception e) {
+                logger.error("OAuth2 帳號綁定過程發生錯誤", e);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "帳號綁定失敗：" + e.getMessage()));
+            }
+
+            // 重新獲取更新後的用戶資訊
+            user = usersService.findById(localUserId);
             
-            // 設置登入資訊
-            session.setAttribute("userId", localUserId);
-            session.setAttribute("userRole", session.getAttribute("localUserRole"));
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "帳號綁定成功");
-            return ResponseEntity.ok(response);
+            // 生成新的 JWT
+            String token = jwtUtil.generateToken(
+                user.getEmail(), 
+                user.getId(), 
+                user.getUserRole().toString()
+            );
+
+            logger.info("OAuth2 帳號綁定成功 - 用戶ID: {}", localUserId);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "帳號綁定成功",
+                "token", token,
+                "userId", user.getId(),
+                "email", user.getEmail(),
+                "role", user.getUserRole().toString(),
+                "provider", user.getProvider().toString()
+            ));
             
         } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "帳號綁定失敗：" + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            logger.error("OAuth2 帳號綁定失敗", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "帳號綁定失敗：" + e.getMessage()));
         }
     }
-} 
+}

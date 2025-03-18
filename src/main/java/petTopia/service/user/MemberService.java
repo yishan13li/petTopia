@@ -3,7 +3,6 @@ package petTopia.service.user;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import jakarta.servlet.http.HttpSession;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -11,7 +10,6 @@ import petTopia.model.user.Member;
 import petTopia.model.user.Users;
 import petTopia.repository.user.MemberRepository;
 import petTopia.repository.user.UsersRepository;
-import petTopia.util.SessionManager;
 
 @Service
 @Transactional
@@ -21,12 +19,9 @@ public class MemberService {
 
     @Autowired
     private UsersRepository usersRepository;
-    
-    @Autowired
-    private SessionManager sessionManager;
 
     @Transactional
-    public Member createOrUpdateMember(Member member, HttpSession session) {
+    public Member createOrUpdateMember(Member member) {
         try {
             validateMemberInput(member);
     
@@ -44,7 +39,7 @@ public class MemberService {
                 Member existingMember = existingMemberOpt.get();
                 existingMember.setName(member.getName());
                 existingMember.setPhone(member.getPhone());
-                existingMember.setBirthdate(member.getBirthdate());  // 直接設置 LocalDate
+                existingMember.setBirthdate(member.getBirthdate());
                 existingMember.setGender(member.getGender());
                 existingMember.setAddress(member.getAddress());
                 existingMember.setUpdatedDate(LocalDateTime.now());
@@ -60,14 +55,6 @@ public class MemberService {
                 member.setStatus(false);
                 member.setUpdatedDate(LocalDateTime.now());
                 savedMember = memberRepository.save(member);
-            }
-            
-            // 更新session
-            if (session != null) {
-                sessionManager.updateMemberInfo(session, savedMember.getName(), user.getEmail());
-                if (member.getProfilePhoto() != null) {
-                    sessionManager.updateProfilePhoto(session, savedMember.getProfilePhoto());
-                }
             }
             
             return savedMember;
@@ -95,24 +82,17 @@ public class MemberService {
     }
 
     @Transactional
-    public void updateProfilePhoto(Integer memberId, byte[] photoData, HttpSession session) {
+    public void updateProfilePhoto(Integer memberId, byte[] photoData) {
         Member member = getMemberById(memberId);
         if (member != null) {
             member.setProfilePhoto(photoData);
             member.setUpdatedDate(LocalDateTime.now());
             memberRepository.save(member);
-            
-            if (session != null) {
-                sessionManager.updateProfilePhoto(session, photoData);
-            }
         }
     }
 
-    public void deleteMember(Integer id, HttpSession session) {
+    public void deleteMember(Integer id) {
         memberRepository.deleteById(id);
-        if (session != null) {
-            sessionManager.clearSession(session);
-        }
     }
 
     private void validateMemberInput(Member member) {
@@ -125,8 +105,6 @@ public class MemberService {
         if (!member.getId().equals(member.getUser().getId())) {
             throw new IllegalArgumentException("用戶ID不匹配");
         }
-        
-
     }
 
     public boolean verifyMember(Integer userId) {

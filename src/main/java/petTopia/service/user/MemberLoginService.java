@@ -27,6 +27,11 @@ public class MemberLoginService extends BaseUserService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+    
+    // 添加默認構造函數
+    public MemberLoginService() {
+        logger.info("創建 MemberLoginService 實例");
+    }
 
     public Map<String, Object> memberLogin(String email, String password) {
         Map<String, Object> result = new HashMap<>();

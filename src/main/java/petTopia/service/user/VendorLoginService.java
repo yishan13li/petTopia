@@ -238,4 +238,29 @@ public class VendorLoginService extends BaseUserService {
         
         return result;
     }
+
+    public Map<String, Object> getVendorInfo(Integer userId) {
+        Map<String, Object> result = new HashMap<>();
+        
+        Users user = usersRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("用戶不存在"));
+            
+        if (user.getUserRole() != Users.UserRole.VENDOR) {
+            throw new RuntimeException("此帳號不是商家帳號");
+        }
+        
+        Vendor vendor = vendorRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("商家資料不存在"));
+        
+        result.put("vendorId", vendor.getId());
+        result.put("vendorName", vendor.getName());
+        result.put("email", user.getEmail());
+        result.put("phone", vendor.getPhone());
+        result.put("address", vendor.getAddress());
+        result.put("description", vendor.getDescription());
+        result.put("category", vendor.getVendorCategoryId());
+        result.put("status", vendor.getStatus());
+        
+        return result;
+    }
 }

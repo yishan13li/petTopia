@@ -87,36 +87,60 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
             }
             
             // 查找是否有相同 email 的第三方登入會員帳號
-            Users existingUser = usersRepository.findByEmailAndUserRole(email, Users.UserRole.MEMBER);
+            List<Users> existingUsers = usersRepository.findByEmailAndProviderAndUserRole(
+                email, Users.Provider.valueOf(provider), Users.UserRole.MEMBER);
+            
+            Users existingUser = existingUsers.isEmpty() ? null : existingUsers.get(0);
             
             if (existingUser != null) {
-                // 更新會員資訊
+                // 獲取會員資訊
                 Member member = memberRepository.findByUserId(existingUser.getId()).orElse(null);
-                if (member != null) {
-                    member.setName(name != null ? name : member.getName());
-                    member.setUpdatedDate(LocalDateTime.now());
-                    memberRepository.save(member);
-                }
-                
-                // 如果提供者不同，更新提供者資訊
-                if (existingUser.getProvider() != Users.Provider.valueOf(provider)) {
-                    existingUser.setProvider(Users.Provider.valueOf(provider));
-                    usersRepository.save(existingUser);
-                }
+                logger.info("找到現有用戶 - ID: {}, Email: {}, Provider: {}", 
+                    existingUser.getId(), email, provider);
+                logger.info("對應的會員信息 - Member: {}", member);
                 
                 // 檢查是否有對應的商家帳號
                 Optional<Users> vendorAccount = usersRepository.findVendorByEmail(email);
                 
                 // 建立包含額外資訊的屬性Map
-                Map<String, Object> attributes = new HashMap<>(oauth2User.getAttributes());
+                Map<String, Object> attributes = new HashMap<>();
                 attributes.put("userId", existingUser.getId());
                 attributes.put("userRole", existingUser.getUserRole());
-                attributes.put("memberName", name);
+                attributes.put("email", email);
                 attributes.put("provider", existingUser.getProvider());
                 attributes.put("hasVendorAccount", vendorAccount.isPresent());
+                
+                // 设置用户名称
+                if (member != null && member.getName() != null && !member.getName().trim().isEmpty()) {
+                    logger.info("使用會員名稱: {}", member.getName());
+                    attributes.put("name", member.getName());
+                    attributes.put("memberName", member.getName());
+                } else if (name != null && !name.trim().isEmpty()) {
+                    logger.info("使用第三方提供的名稱: {}", name);
+                    attributes.put("name", name);
+                    attributes.put("memberName", name);
+                } else {
+                    String defaultName = email.split("@")[0];
+                    logger.info("使用郵箱前綴作為名稱: {}", defaultName);
+                    attributes.put("name", defaultName);
+                    attributes.put("memberName", defaultName);
+                }
+                
                 if (vendorAccount.isPresent()) {
                     attributes.put("vendorId", vendorAccount.get().getId());
                 }
+                
+                // 添加第三方头像URL
+                String pictureUrl = oauth2User.getAttribute("picture");
+                if (pictureUrl != null) {
+                    logger.info("添加第三方頭像URL: {}", pictureUrl);
+                    attributes.put("avatar", pictureUrl);
+                }
+                
+                // 添加所有原始属性
+                attributes.putAll(oauth2User.getAttributes());
+                
+                logger.info("最終的用戶屬性: {}", attributes);
                 
                 return new DefaultOAuth2User(
                     oauth2User.getAuthorities(),
@@ -131,29 +155,46 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
                 existingUser.setUserRole(Users.UserRole.MEMBER);
                 existingUser.setEmailVerified(true);
                 existingUser.setProvider(Users.Provider.valueOf(provider));
-                existingUser = usersRepository.save(existingUser);
-                entityManager.flush();
+                existingUser = usersRepository.saveAndFlush(existingUser);
                 
                 // 建立新的會員資料
                 Member member = new Member();
-                member.setId(existingUser.getId());
                 member.setUser(existingUser);
-                member.setName(name != null ? name : "");
+                
+                // 设置会员名称
+                String memberName;
+                if (name != null && !name.trim().isEmpty()) {
+                    memberName = name;
+                } else {
+                    memberName = email.split("@")[0];
+                }
+                member.setName(memberName);
                 member.setPhone("");
                 member.setStatus(true);
                 member.setGender(false);
                 member.setUpdatedDate(LocalDateTime.now());
                 
-                entityManager.persist(member);
-                entityManager.flush();
+                // 使用 memberRepository 保存会员资料
+                member = memberRepository.saveAndFlush(member);
                 
                 // 建立包含額外資訊的屬性Map
-                Map<String, Object> attributes = new HashMap<>(oauth2User.getAttributes());
+                Map<String, Object> attributes = new HashMap<>();
                 attributes.put("userId", existingUser.getId());
                 attributes.put("userRole", existingUser.getUserRole());
-                attributes.put("memberName", name);
+                attributes.put("email", email);
+                attributes.put("name", memberName);
+                attributes.put("memberName", memberName);
                 attributes.put("provider", existingUser.getProvider());
                 attributes.put("hasVendorAccount", false);
+                
+                // 添加第三方头像URL
+                String pictureUrl = oauth2User.getAttribute("picture");
+                if (pictureUrl != null) {
+                    attributes.put("avatar", pictureUrl);
+                }
+                
+                // 添加所有原始属性
+                attributes.putAll(oauth2User.getAttributes());
                 
                 return new DefaultOAuth2User(
                     oauth2User.getAuthorities(),
@@ -161,7 +202,6 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
                     "email"
                 );
             }
-            
         } catch (OAuth2AuthenticationException e) {
             throw e;
         } catch (Exception e) {
