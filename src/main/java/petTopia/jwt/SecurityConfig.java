@@ -1,4 +1,4 @@
-package petTopia.config;
+package petTopia.jwt;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -19,7 +19,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import petTopia.model.user.Users;
 import petTopia.service.user.MemberService;
-import petTopia.util.JwtUtil;
 import petTopia.service.user.MemberLoginService;
 
 import java.util.Arrays;

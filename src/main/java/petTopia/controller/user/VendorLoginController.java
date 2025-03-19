@@ -15,9 +15,9 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
+import petTopia.jwt.JwtUtil;
 import petTopia.model.user.Users;
 import petTopia.service.user.VendorLoginService;
-import petTopia.util.JwtUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,7 +72,7 @@ public class VendorLoginController {
             
             SecurityContextHolder.getContext().setAuthentication(authentication);
             
-            // 生成 JWT
+            // 生成 JWT，設置較長的過期時間（例如 7 天）
             String token = jwtUtil.generateToken(user.getEmail(), user.getId(), user.getUserRole().toString());
 
             logger.info("商家登入成功 - 使用者ID: {}", user.getId());
@@ -115,6 +115,12 @@ public class VendorLoginController {
 
         String token = authHeader.substring(7);
         try {
+            // 先驗證 token 是否過期
+            if (jwtUtil.isTokenExpired(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "登入已過期，請重新登入"));
+            }
+
             String email = jwtUtil.extractUsername(token);
             if (!jwtUtil.validateToken(token, email)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)

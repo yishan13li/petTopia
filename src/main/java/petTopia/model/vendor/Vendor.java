@@ -1,12 +1,12 @@
-package petTopia.model.user;
+package petTopia.model.vendor;
 
 import jakarta.persistence.*;
-import petTopia.model.vendor.VendorImages;
 
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import lombok.Data;
+import petTopia.model.user.Users;
 
 @Entity
 @Table(name = "vendor")
@@ -49,6 +49,10 @@ public class Vendor {
     @Column(name = "vendor_category_id")
     private Integer vendorCategoryId = 1;  // 預設分類
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vendor_category_id", insertable = false, updatable = false)
+    private VendorCategory vendorCategory;
+
     @Column(name = "registration_date")
     private LocalDateTime registrationDate;
 
@@ -87,5 +91,12 @@ public class Vendor {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public void setVendorCategory(VendorCategory vendorCategory) {
+        this.vendorCategory = vendorCategory;
+        if (vendorCategory != null) {
+            this.vendorCategoryId = vendorCategory.getId();
+        }
     }
 }

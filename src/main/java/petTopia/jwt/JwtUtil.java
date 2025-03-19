@@ -1,4 +1,4 @@
-package petTopia.util;
+package petTopia.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -68,7 +68,7 @@ public class JwtUtil {
     }
 
     // 檢查令牌是否已過期
-    private Boolean isTokenExpired(String token) {
+    public Boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 

@@ -10,11 +10,11 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ClassPathResource;
 
+import petTopia.jwt.JwtUtil;
 import petTopia.model.user.Member;
 import petTopia.model.user.Users;
 import petTopia.service.user.MemberService;
 import petTopia.service.user.MemberLoginService;
-import petTopia.util.JwtUtil;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

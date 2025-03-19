@@ -10,8 +10,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import petTopia.service.user.UsersService;
+import petTopia.jwt.JwtUtil;
 import petTopia.model.user.Users;
-import petTopia.util.JwtUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

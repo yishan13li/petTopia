@@ -8,12 +8,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import petTopia.model.user.Users;
-import petTopia.model.user.Vendor;
-import petTopia.model.user.VendorCategory;
+import petTopia.model.vendor.Vendor;
 import petTopia.model.vendor.VendorActivity;
-import petTopia.repository.user.VendorCategoryRepository;
-import petTopia.repository.user.VendorRepository;
+import petTopia.model.vendor.VendorCategory;
 import petTopia.repository.vendor.VendorActivityRepository;
+import petTopia.repository.vendor.VendorCategoryRepository;
+import petTopia.repository.vendor.VendorRepository;
 
 
 

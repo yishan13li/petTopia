@@ -11,11 +11,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import petTopia.model.user.Users;
+import petTopia.jwt.JwtUtil;
 import petTopia.model.user.Member;
 import petTopia.service.user.MemberLoginService;
 import petTopia.service.user.MemberService;
 import petTopia.service.user.RegistrationService;
-import petTopia.util.JwtUtil;
 import petTopia.repository.user.UsersRepository;
 import petTopia.repository.user.MemberRepository;
 

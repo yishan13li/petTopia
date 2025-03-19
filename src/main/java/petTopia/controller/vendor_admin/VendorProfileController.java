@@ -1,279 +1,267 @@
-package petTopia.controller.vendor_admin;
+// package petTopia.controller.vendor_admin;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+// import java.io.IOException;
+// import java.util.ArrayList;
+// import java.util.Collections;
+// import java.util.HashMap;
+// import java.util.List;
+// import java.util.Map;
+// import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.multipart.MultipartFile;
+// import org.springframework.beans.factory.annotation.Autowired;
+// import org.springframework.http.HttpHeaders;
+// import org.springframework.http.HttpStatus;
+// import org.springframework.http.MediaType;
+// import org.springframework.http.ResponseEntity;
+// import org.springframework.stereotype.Controller;
+// import org.springframework.ui.Model;
+// import org.springframework.web.bind.annotation.GetMapping;
+// import org.springframework.web.bind.annotation.PathVariable;
+// import org.springframework.web.bind.annotation.PostMapping;
+// import org.springframework.web.bind.annotation.RequestParam;
+// import org.springframework.web.bind.annotation.ResponseBody;
+// import org.springframework.web.multipart.MultipartFile;
 
-import petTopia.model.user.Vendor;
-import petTopia.model.user.VendorCategory;
-import petTopia.model.vendor.VendorImages;
-import petTopia.repository.user.VendorCategoryRepository;
-import petTopia.repository.user.VendorRepository;
-import petTopia.repository.vendor.VendorImagesRepository;
-import petTopia.service.vendor_admin.VendorServiceAdmin;
+// import petTopia.model.vendor.Vendor;
+// import petTopia.model.vendor.VendorCategory;
+// import petTopia.model.vendor.VendorImages;
+// import petTopia.repository.vendor.VendorCategoryRepository;
+// import petTopia.repository.vendor.VendorImagesRepository;
+// import petTopia.repository.vendor.VendorRepository;
+// import petTopia.service.vendor_admin.VendorServiceAdmin;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+// @Controller
 
-@RestController
-@RequestMapping("/api/vendor-admin")
-public class VendorProfileController {
+// public class VendorProfileController {
+// 	@Autowired
+// 	private VendorServiceAdmin vendorService;
+
+// 	@Autowired
+// 	private VendorRepository vendorRepository;
+
+// //	@Autowired
+// //	private UserService userService;
+
+// 	@Autowired
+// 	private VendorCategoryRepository categoryRepository;
+
+// 	@Autowired
+// 	private VendorImagesRepository vendorImagesRepository;
+
+// 	// 根據用戶的 email 和 password 獲取 Vendor Profile
+// 	@GetMapping("/vendor/profile")
+// 	public String getVendorProfile(@RequestParam String email, @RequestParam String password, Model model) {
+// //		Optional<User> user = userService.getUserByEmailAndPassword(email, password);
+
+// 		Optional<Vendor> vendorDetail = vendorService.getVendorProfile(email, password);
+
+// 		if (vendorDetail.isPresent()) {
+// 			Vendor vendor = vendorDetail.get();
+// 			String vendorLogoImgBase64 = vendorService.getVendorLogoBase64(vendor);
+// 			List<VendorCategory> allcategory = vendorService.getAllVendorCategories();
+
+// 			// 获取该店家的活动总数
+// 			int activityCount = vendorService.getActivityCountByVendor(vendor.getId());
+
+// 			model.addAttribute("allcategory", allcategory);
+// 			model.addAttribute("vendor", vendor);
+// 			model.addAttribute("vendorLogoImgBase64", vendorLogoImgBase64);
+// 			return "vendor_admin/vendor_admin_profile";
+// 		}
+		
+		
+
+// //		System.out.println(user.get().getUserId());
+// //		if (user.isPresent() && user.get().getUserRole() == UserRole.vendor) {
+// //			Optional<Vendor> vendorDetail = vendorServiceImpl.getVendorById(user.get().getUserId());
+// //			List<VendorCategory> allcategory = categoryRepository.findAll();
+// //			if (vendorDetail.isPresent()) {
+// //				System.out.println(vendorDetail.get().getId());
+// //				System.out.println(vendorDetail.get().getName());
+// //				Vendor vendor = vendorDetail.get();
+// //				String vendorLogoImgBase64 = (vendor.getLogoImg() != null)
+// //						? "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(vendor.getLogoImg())
+// //						: null;
+// //				model.addAttribute("allcategory", allcategory);
+// //				model.addAttribute("user", user.get());
+// //				model.addAttribute("vendor", vendorDetail.get());
+// //				model.addAttribute("vendorLogoImgBase64", vendorLogoImgBase64);
+// //				return "vendor_admin/vendor_admin_profile";
+// //			}
+// //		}
+// 		return "error"; // 返回錯誤頁面
+// 	}
 	
-	private static final Logger logger = LoggerFactory.getLogger(VendorProfileController.class);
+// 	@ResponseBody
+// 	@GetMapping("api/vendor_admin/profile/{id}")
+//     public ResponseEntity<?> getVendorById(@PathVariable Integer id) {
+//         Optional<Vendor> vendor = vendorRepository.findById(id);
+//         if (vendor != null) {
+//             return ResponseEntity.ok(Map.of("vendor", vendor));
+//         } else {
+//             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Vendor not found");
+//         }
+//     }
 	
-	@Autowired
-	private VendorServiceAdmin vendorService;
+// 	@ResponseBody
+// 	@GetMapping("api/vendor_admin/profile")
+// 	public ResponseEntity<Map<String, Object>> getVendorProfile(@RequestParam Integer id) {
+// //	    Optional<Vendor> vendorDetail = vendorService.getVendorProfile(email, password);
+// 	    Optional<Vendor> vendorDetail = vendorRepository.findById(id);
+// 	    Map<String, Object> response = new HashMap<>();
+	    
+// 	    if (vendorDetail.isPresent()) {
+// 	        Vendor vendor = vendorDetail.get();
+// 	        String vendorLogoImgBase64 = vendorService.getVendorLogoBase64(vendor);
+// 	        List<VendorCategory> allcategory = vendorService.getAllVendorCategories();
 
-	@Autowired
-	private VendorRepository vendorRepository;
+// 	        // 获取该店家的活动总数
+// 	        int activityCount = vendorService.getActivityCountByVendor(vendor.getId());
 
-	@Autowired
-	private VendorCategoryRepository categoryRepository;
+// 	        // 將資料組成 Map 回傳
+// 	        response.put("vendor", vendor);
+// 	        response.put("allcategory", allcategory);
+// 	        response.put("vendorLogoImgBase64", vendorLogoImgBase64);
 
-	@Autowired
-	private VendorImagesRepository vendorImagesRepository;
+// 	        return ResponseEntity.ok(response);
+// 	    } else {
+// 	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+// 	    }
+// 	}
 
-	/**
-	 * 根據ID獲取商家資料
-	 */
-	@GetMapping("/profile/{id}")
-    public ResponseEntity<?> getVendorById(@PathVariable Integer id) {
-		logger.info("獲取商家資料 - ID: {}", id);
-		
-        Optional<Vendor> vendorOpt = vendorRepository.findById(id);
-        if (vendorOpt.isPresent()) {
-			Vendor vendor = vendorOpt.get();
-			String vendorLogoImgBase64 = vendorService.getVendorLogoBase64(vendor);
-			List<VendorCategory> allcategory = vendorService.getAllVendorCategories();
-			int activityCount = vendorService.getActivityCountByVendor(vendor.getId());
-			
-			Map<String, Object> response = new HashMap<>();
-			response.put("vendor", vendor);
-			response.put("categories", allcategory);
-			response.put("logoBase64", vendorLogoImgBase64);
-			response.put("activityCount", activityCount);
-			
-            return ResponseEntity.ok(response);
-        } else {
-			logger.warn("商家資料不存在 - ID: {}", id);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-				.body(Map.of("error", "商家不存在"));
-        }
-    }
-	
-	/**
-	 * 更新商家資料
-	 */
-	@PutMapping("/profile/{vendorId}")
-	public ResponseEntity<?> updateVendor(
-			@PathVariable Integer vendorId,
-			@RequestParam(required = false) String vendorName, 
-			@RequestParam(required = false) String contactEmail,
-			@RequestParam(required = false) String vendorPhone, 
-			@RequestParam(required = false) String vendorAddress,
-			@RequestParam(required = false) String vendorDescription,
-			@RequestParam(required = false) String contactPerson,
-			@RequestParam(required = false) String vendorTaxidNumber, 
-			@RequestParam(required = false) Integer category,
-			@RequestParam(required = false) MultipartFile vendorLogoImg) {
-		
-		logger.info("更新商家資料 - ID: {}", vendorId);
-		
-		try {
-			// 查找原本的商家資料
-			Optional<Vendor> vendorOpt = vendorService.getVendorById(vendorId);
-			if (!vendorOpt.isPresent()) {
-				logger.warn("商家資料不存在 - ID: {}", vendorId);
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-					.body(Map.of("error", "商家不存在"));
-			}
-			
-			Vendor vendor = vendorOpt.get();
+// 	// 根據登入用戶的 ID 獲取對應的商家(登入後)
+// //	    Long loggedInUserId = getLoggedInUserId();  // 獲取目前登入用戶的 ID
+// //	    Vendor vendor = vendorService.getVendorByUserId(loggedInUserId)
+// //	            .orElseThrow(() -> new RuntimeException("Vendor not found"));
+// 	// 更新商家資料
 
-			// 只更新傳遞過來的欄位
-			if (vendorName != null) {
-				vendor.setName(vendorName);
-			}
-			if (contactEmail != null) {
-				vendor.setContactEmail(contactEmail);
-			}
-			if (vendorPhone != null) {
-				vendor.setPhone(vendorPhone);
-			}
-			if (contactPerson != null) {
-				vendor.setContactPerson(contactPerson);
-			}
-			if (vendorAddress != null) {
-				vendor.setAddress(vendorAddress);
-			}
-			if (vendorDescription != null) {
-				vendor.setDescription(vendorDescription);
-			}
-			if (vendorTaxidNumber != null) {
-				vendor.setTaxidNumber(vendorTaxidNumber);
-			}
+// 	@ResponseBody
+// 	@PostMapping("/api/vendor/update/{vendorId}")
+// 	public ResponseEntity<Map<String, Object>> updateVendor(@PathVariable Integer vendorId,
+// 			@RequestParam(required = false) String vendorName, @RequestParam(required = false) String contactEmail,
+// 			@RequestParam(required = false) String vendorPhone, @RequestParam(required = false) String vendorAddress,
+// 			@RequestParam(required = false) String vendorDescription,
+// 			@RequestParam(required = false) String contactPerson,
+// 			@RequestParam(required = false) String vendorTaxidNumber, @RequestParam(required = false) Integer category,
+// 			@RequestParam(required = false) MultipartFile vendorLogoImg, Model model) {
+// 		Map<String, Object> response = new HashMap<>();
+// 		// 查找原本的商家資料
+// 		Vendor vendor = vendorService.getVendorById(vendorId)
+// 				.orElseThrow(() -> new RuntimeException("Vendor not found"));
 
-			// 更新圖片（如果有）
-			if (vendorLogoImg != null && !vendorLogoImg.isEmpty()) {
-				try {
-					vendor.setLogoImg(vendorLogoImg.getBytes());
-				} catch (IOException e) {
-					logger.error("圖片上傳失敗", e);
-					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-						.body(Map.of("error", "圖片上傳失敗"));
-				}
-			}
+// 		// 只更新傳遞過來的欄位
+// 		if (vendorName != null) {
+// 			vendor.setName(vendorName);
+// 		}
+// 		if (contactEmail != null) {
+// 			vendor.setContactEmail(contactEmail);
+// 		}
+// 		if (vendorPhone != null) {
+// 			vendor.setPhone(vendorPhone);
+// 		}
+// 		if (contactPerson != null) {
+// 			vendor.setContactPerson(contactPerson);
+// 		}
+// 		if (vendorAddress != null) {
+// 			vendor.setAddress(vendorAddress);
+// 		}
+// 		if (vendorDescription != null) {
+// 			vendor.setDescription(vendorDescription);
+// 		}
+// 		if (vendorTaxidNumber != null) {
+// 			vendor.setTaxidNumber(vendorTaxidNumber);
+// 		}
 
-			// 只有在傳遞 category 時才更新它
-			if (category != null) {
-				Optional<VendorCategory> categoryOpt = categoryRepository.findById(category);
-				if (!categoryOpt.isPresent()) {
-					logger.warn("分類不存在 - ID: {}", category);
-					return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-						.body(Map.of("error", "分類不存在"));
-				}
-				vendor.setVendorCategoryId(category);
-			}
+// 		// 更新圖片（如果有）
+// 		if (vendorLogoImg != null && !vendorLogoImg.isEmpty()) {
+// 			try {
+// 				vendor.setLogoImg(vendorLogoImg.getBytes());
+// 			} catch (IOException e) {
+// 				e.printStackTrace();
+// 				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+// 						.body(Collections.singletonMap("error", "Image upload failed"));
+// 			}
+// 		}
 
-			// 保存更新過的資料
-			Vendor updatedVendor = vendorService.updateVendor(vendor);
-			logger.info("商家資料更新成功 - ID: {}", vendorId);
+// 		// 只有在傳遞 category 時才更新它
+// 		if (category != null) {
+// 			VendorCategory vendorCategory = categoryRepository.findById(category)
+// 					.orElseThrow(() -> new RuntimeException("Category not found"));
+// 			vendor.setVendorCategory(vendorCategory);
+// 		}
 
-			return ResponseEntity.ok(Map.of(
-				"message", "商家資料更新成功",
-				"vendor", updatedVendor
-			));
-		} catch (Exception e) {
-			logger.error("商家資料更新失敗", e);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-				.body(Map.of("error", "商家資料更新失敗：" + e.getMessage()));
-		}
-	}
+// 		// 保存更新過的資料
+// 		Vendor updatedVendor = vendorService.updateVendor(vendor);
 
-	/**
-	 * 獲取商家Logo圖片
-	 */
-	@GetMapping("/profile/{vendorId}/logo")
-	public ResponseEntity<byte[]> getProfileImage(@PathVariable Integer vendorId) {
-		logger.info("獲取商家Logo圖片 - ID: {}", vendorId);
-		
-		try {
-			Optional<Vendor> vendorOpt = vendorService.getVendorById(vendorId);
-			if (!vendorOpt.isPresent()) {
-				logger.warn("商家不存在 - ID: {}", vendorId);
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-			}
-			
-			Vendor vendor = vendorOpt.get();
-			byte[] imageBytes = vendor.getLogoImg();
-			if (imageBytes == null || imageBytes.length == 0) {
-				logger.warn("商家Logo圖片不存在 - ID: {}", vendorId);
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-			}
+// 		response.put("success", true);
+// 		response.put("vendor", updatedVendor);
 
-			HttpHeaders headers = new HttpHeaders();
-			headers.setContentType(MediaType.IMAGE_JPEG);
+// 		return ResponseEntity.ok(response);
+// 	}
 
-			return new ResponseEntity<>(imageBytes, headers, HttpStatus.OK);
-		} catch (Exception e) {
-			logger.error("獲取商家Logo圖片失敗", e);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-		}
-	}
+// 	// 取得店家圖片 (回傳圖片資料流)
+// 	@GetMapping("/profileImage/{vendorId}")
+// 	public ResponseEntity<byte[]> getProfileImage(@PathVariable Integer vendorId) {
+// 		Vendor vendor = vendorService.getVendorById(vendorId)
+// 				.orElseThrow(() -> new RuntimeException("Vendor not found"));
 
-	/**
-	 * 獲取商家圖片ID列表
-	 */
-	@GetMapping("/profile/{vendorId}/images")
-	public ResponseEntity<?> getVendorImages(@PathVariable Integer vendorId) {
-		logger.info("獲取商家圖片ID列表 - ID: {}", vendorId);
-		
-		try {
-			Optional<Vendor> vendorOpt = vendorRepository.findById(vendorId);
-			if (!vendorOpt.isPresent()) {
-				logger.warn("商家不存在 - ID: {}", vendorId);
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-					.body(Map.of("error", "商家不存在"));
-			}
+// 		byte[] imageBytes = vendor.getLogoImg();
+// 		if (imageBytes == null || imageBytes.length == 0) {
+// 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+// 		}
 
-			Vendor vendor = vendorOpt.get();
-			List<VendorImages> images = vendor.getImages();
-			List<Map<String, Object>> imagesList = new ArrayList<>();
+// 		HttpHeaders headers = new HttpHeaders();
+// 		headers.set("Content-Type", "image/jpeg");
 
-			for (VendorImages image : images) {
-				Map<String, Object> imageMap = new HashMap<>();
-				imageMap.put("id", image.getId());
-				imageMap.put("url", "/api/vendor-admin/images/" + image.getId());
-				imagesList.add(imageMap);
-			}
+// 		return new ResponseEntity<>(imageBytes, headers, HttpStatus.OK);
+// 	}
 
-			return ResponseEntity.ok(Map.of("images", imagesList));
-		} catch (Exception e) {
-			logger.error("獲取商家圖片ID列表失敗", e);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-				.body(Map.of("error", "獲取商家圖片失敗：" + e.getMessage()));
-		}
-	}
+// //	@PostMapping("/deleteUser.controller")
+// //	public String deleteUser(@RequestParam Integer userId, HttpSession session, Model model) {
+// //		try {
+// //			userService.deleteUserById(userId);
+// //			session.invalidate(); // 清除 Session，登出
+// //			return "redirect:/loginsystemmain.controller"; // 刪除後返回登入頁
+// //		} catch (Exception e) {
+// //			model.addAttribute("error", "刪除失敗，請稍後再試！");
+// //			return "vendor_admin/app-profile"; // 刪除失敗則回到原頁面
+// //		}
+// //	}
 
-	/**
-	 * 獲取特定圖片
-	 */
-	@GetMapping("/images/{imageId}")
-	public ResponseEntity<byte[]> getImage(@PathVariable Integer imageId) {
-		logger.info("獲取特定圖片 - ID: {}", imageId);
-		
-		try {
-			Optional<VendorImages> imageOpt = vendorImagesRepository.findById(imageId);
-			if (!imageOpt.isPresent()) {
-				logger.warn("圖片不存在 - ID: {}", imageId);
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-			}
+// 	@GetMapping("/profile_photos/download")
+// 	public ResponseEntity<?> downloadPhotoById(@RequestParam Integer photoId) {
+// 		Optional<VendorImages> imageOpt = vendorImagesRepository.findById(photoId);
 
-			VendorImages image = imageOpt.get();
-			byte[] imageFile = image.getImage();
+// 		if (imageOpt.isPresent()) {
+// 			VendorImages image = imageOpt.get();
+// 			byte[] imageFile = image.getImage(); // 假設每個 VendorActivityPhoto 實體有一個 photoFile 字段，存儲圖片二進制數據
 
-			HttpHeaders headers = new HttpHeaders();
-			headers.setContentType(MediaType.IMAGE_JPEG);
+// 			HttpHeaders headers = new HttpHeaders();
+// 			headers.setContentType(MediaType.IMAGE_JPEG); // 假設圖片是 JPEG 格式
 
-			return new ResponseEntity<>(imageFile, headers, HttpStatus.OK);
-		} catch (Exception e) {
-			logger.error("獲取圖片失敗", e);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-		}
-	}
-	
-	/**
-	 * 獲取所有商家分類
-	 */
-	@GetMapping("/categories")
-	public ResponseEntity<?> getAllCategories() {
-		logger.info("獲取所有商家分類");
-		
-		try {
-			List<VendorCategory> categories = vendorService.getAllVendorCategories();
-			return ResponseEntity.ok(Map.of("categories", categories));
-		} catch (Exception e) {
-			logger.error("獲取商家分類失敗", e);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-				.body(Map.of("error", "獲取商家分類失敗：" + e.getMessage()));
-		}
-	}
-}
+// 			return new ResponseEntity<>(imageFile, headers, HttpStatus.OK); // 返回圖片的二進制數據
+// 		}
+
+// 		return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 如果找不到圖片，返回 404
+// 	}
+
+// 	@GetMapping("/profile_photos/ids")
+// 	public ResponseEntity<?> findPhotoIdsByVendorId(@RequestParam Integer vendorId) {
+// 		Optional<Vendor> op = vendorRepository.findById(vendorId);
+
+// 		List<Integer> imageIdList = new ArrayList<>();
+
+// 		if (op.isPresent()) {
+// 			Vendor vendor = op.get();
+// 			List<VendorImages> images = vendor.getImages();
+
+// 			for (VendorImages image : images) {
+// 				imageIdList.add(image.getId()); // 假設每個 VendorActivityPhoto 實體有一個 id 字段
+// 			}
+
+// 			return new ResponseEntity<>(imageIdList, HttpStatus.OK); // 返回所有照片的 ID 列表
+// 		}
+
+// 		return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 如果沒有找到活動，返回 404
+// 	}
+// }

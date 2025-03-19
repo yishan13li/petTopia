@@ -13,10 +13,10 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
 import petTopia.model.user.Users;
-import petTopia.model.user.Vendor;
+import petTopia.model.vendor.Vendor;
 import petTopia.model.user.Member;
 import petTopia.repository.user.UsersRepository;
-import petTopia.repository.user.VendorRepository;
+import petTopia.repository.vendor.VendorRepository;
 import petTopia.repository.user.MemberRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

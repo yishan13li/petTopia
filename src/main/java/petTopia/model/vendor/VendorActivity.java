@@ -18,7 +18,6 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import petTopia.model.user.Vendor;
 import lombok.AllArgsConstructor;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Temporal;

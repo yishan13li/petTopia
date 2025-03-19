@@ -16,7 +16,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import petTopia.model.user.Vendor;
 
 @Entity
 @Table(name = "vendor_images")

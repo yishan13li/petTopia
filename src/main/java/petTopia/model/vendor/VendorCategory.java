@@ -1,4 +1,4 @@
-package petTopia.model.user;
+package petTopia.model.vendor;
 
 import jakarta.persistence.*;
 import lombok.Data;

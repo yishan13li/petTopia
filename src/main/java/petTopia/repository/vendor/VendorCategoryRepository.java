@@ -1,7 +1,8 @@
-package petTopia.repository.user;
+package petTopia.repository.vendor;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import petTopia.model.user.VendorCategory;
+
+import petTopia.model.vendor.VendorCategory;
 
 public interface VendorCategoryRepository extends JpaRepository<VendorCategory, Integer> {
     VendorCategory findByName(String name);

@@ -11,9 +11,9 @@ import org.springframework.web.bind.annotation.*;
 
 import petTopia.model.user.Users;
 import petTopia.service.user.MemberLoginService;
+import petTopia.jwt.JwtUtil;
 import petTopia.model.user.Member;
 import petTopia.service.user.MemberService;
-import petTopia.util.JwtUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

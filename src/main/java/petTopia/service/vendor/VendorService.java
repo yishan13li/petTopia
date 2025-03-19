@@ -10,8 +10,8 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import petTopia.model.user.Vendor;
-import petTopia.repository.user.VendorRepository;
+import petTopia.model.vendor.Vendor;
+import petTopia.repository.vendor.VendorRepository;
 import petTopia.util.ImageConverter;
 
 

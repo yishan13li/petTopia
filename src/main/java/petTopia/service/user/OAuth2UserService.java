@@ -10,8 +10,11 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import petTopia.model.user.Member;
 import petTopia.model.user.Users;
+import petTopia.model.vendor.Vendor;
 import petTopia.repository.user.MemberRepository;
 import petTopia.repository.user.UsersRepository;
+import petTopia.repository.vendor.VendorRepository;
+
 import java.time.LocalDateTime;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityManager;
@@ -20,8 +23,7 @@ import java.util.Map;
 import java.util.HashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import petTopia.model.user.Vendor;
-import petTopia.repository.user.VendorRepository;
+
 import java.util.List;
 import java.util.Optional;
 

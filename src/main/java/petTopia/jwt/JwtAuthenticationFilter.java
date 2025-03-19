@@ -1,4 +1,4 @@
-package petTopia.config;
+package petTopia.jwt;
 
 // 引入 Servlet 相關類別，用於處理請求與回應
 import jakarta.servlet.FilterChain;
@@ -16,9 +16,6 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-
-// 自訂工具類，用於 JWT 解析與驗證
-import petTopia.util.JwtUtil;
 
 import java.io.IOException;
 

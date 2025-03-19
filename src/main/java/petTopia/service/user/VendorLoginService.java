@@ -26,9 +26,10 @@ import java.util.Random;
 import java.util.Optional;
 
 import petTopia.model.user.Users;
+import petTopia.model.vendor.Vendor;
 import petTopia.repository.user.UsersRepository;
-import petTopia.model.user.Vendor;
-import petTopia.repository.user.VendorRepository;
+import petTopia.repository.vendor.VendorRepository;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

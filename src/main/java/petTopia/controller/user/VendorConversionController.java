@@ -9,9 +9,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import petTopia.jwt.JwtUtil;
 import petTopia.model.user.Users;
 import petTopia.service.user.VendorRegistrationService;
-import petTopia.util.JwtUtil;
 
 import java.util.Map;
 import java.util.HashMap;
