@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>店家資訊</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <style>
+        .btn-transparent {
+            border: 1px solid #ccc;
+            background-color: transparent;
+            color: #333;
+            padding: 5px 10px;
+            font-size: 14px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn-transparent:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+        .rounded-circle {
+            border-radius: 50% !important;
+            width: 90px;
+            height: 90px;
+            object-fit: cover;
+        }
+        .container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            position: relative;
+        }
+        .content-box {
+            width: 80%;
+            max-width: 900px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .back-button {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="content-box">
+            <button class="btn btn-transparent back-button" onclick="window.location.href='index.html'">返回首頁</button>
+            <div class="row">
+                <div class="col-md-4 border-right d-flex align-items-center justify-content-center">
+                    <div class="text-center p-3 py-5">
+                        <img class="rounded-circle mt-3" src="https://i.pinimg.com/236x/ca/e9/59/cae959cc679753ed62b8a4bd8357681d.jpg" width="90"><br>
+                        <span class="font-weight-bold">店家名稱</span><br>
+                        <span class="text-black-50">contact@example.com</span><br>
+                        <span>台北市信義區某某路 123 號</span>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="p-3 py-5">
+                        <div class="row mt-2">
+                            <div class="col-md-6"><label>店家名稱:</label><input type="text" class="form-control" value="店家名稱"></div>
+                            <div class="col-md-6"><label>店家類別:</label><input type="text" class="form-control" value="餐飲"></div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-6"><label>Email:</label><input type="text" class="form-control" value="contact@example.com"></div>
+                            <div class="col-md-6"><label>電話號碼:</label><input type="text" class="form-control" value="02-1234-5678"></div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-6"><label>地址:</label><input type="text" class="form-control" value="台北市信義區某某路 123 號"></div>
+                            <div class="col-md-6"><label>聯絡人:</label><input type="text" class="form-control" value="王小明"></div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-6"><label>統一編號:</label><input type="text" class="form-control" value="12345678"></div>
+                            <div class="col-md-6"><label>認證狀態:</label><input type="text" class="form-control" value="未認證"></div>
+                        </div>
+                        <div class="mt-5 text-right">
+                            <button class="btn btn-primary profile-button" type="button">更新資訊</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
