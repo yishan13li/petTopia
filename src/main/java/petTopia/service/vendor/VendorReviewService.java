@@ -14,22 +14,27 @@ import org.springframework.web.multipart.MultipartFile;
 import petTopia.dto.vendor.VendorReviewDto;
 import petTopia.model.user.MemberBean;
 import petTopia.model.vendor.ReviewPhoto;
+import petTopia.model.vendor.Vendor;
 import petTopia.model.vendor.VendorReview;
 import petTopia.repository.user.MemberRepository;
 import petTopia.repository.vendor.ReviewPhotoRepository;
+import petTopia.repository.vendor.VendorRepository;
 import petTopia.repository.vendor.VendorReviewRepository;
 
 @Service
 public class VendorReviewService {
 
 	@Autowired
+	private VendorRepository vendorRepository;
+
+	@Autowired
 	private VendorReviewRepository vendorReviewRepository;
 
 	@Autowired
-	private MemberRepository memberRepository;
+	private ReviewPhotoRepository reviewPhotoRepository;
 
 	@Autowired
-	private ReviewPhotoRepository reviewPhotoRepository;
+	private MemberRepository memberRepository;
 
 	@Autowired
 	private ReviewPhotoService reviewPhotoService;
@@ -217,9 +222,8 @@ public class VendorReviewService {
 	}
 
 	/* 找出單一店家有評分的留言 */
-	// 還沒篩出店家!!!
 	public List<VendorReview> findReviewsWithRating(Integer vendorId) {
-		List<VendorReview> list = vendorReviewRepository.findAll();
+		List<VendorReview> list = vendorReviewRepository.findByVendorId(vendorId);
 		List<VendorReview> filteredList = new ArrayList<>();
 		for (VendorReview review : list) {
 			if (review.getRatingEnvironment() != null && review.getRatingPrice() != null
@@ -231,24 +235,49 @@ public class VendorReviewService {
 	}
 
 	/* 計算單一店家評分之平均數 */
-	public void setAverageRating(Integer vendorId) {
-		List<VendorReview> reviewList = this.findReviewsWithRating(vendorId);
-		
-		Integer totalRatingEnvironment = 0;
-		Integer totalRatingPrice = 0;
-		Integer totalRatingService = 0;
-		
-		for(VendorReview review:reviewList) {
-			Integer ratingEnvironment = review.getRatingEnvironment();
-			totalRatingEnvironment=totalRatingEnvironment+ratingEnvironment;
-			
-			Integer ratingPrice = review.getRatingPrice();
-			totalRatingPrice=totalRatingPrice+ratingPrice;
-			
-			Integer ratingService = review.getRatingService();
-			totalRatingService=totalRatingService+ratingService;
+	public Vendor setAverageRating(Integer vendorId) {
+
+		List<VendorReview> unfilteredList = vendorReviewRepository.findByVendorId(vendorId);
+		List<VendorReview> reviewList = new ArrayList<>();
+		for (VendorReview review : unfilteredList) {
+			if (review.getRatingEnvironment() != null && review.getRatingPrice() != null
+					&& review.getRatingService() != null) {
+				reviewList.add(review);
+			}
 		}
-		
-		// 取數量、計算個別平均
+
+		Integer sumRatingEnvironment = 0;
+		Integer sumRatingPrice = 0;
+		Integer sumRatingService = 0;
+		Integer sumRatingAll = 0;
+
+		for (VendorReview review : reviewList) {
+			Integer ratingEnvironment = review.getRatingEnvironment();
+			sumRatingEnvironment = sumRatingEnvironment + ratingEnvironment;
+
+			Integer ratingPrice = review.getRatingPrice();
+			sumRatingPrice = sumRatingPrice + ratingPrice;
+
+			Integer ratingService = review.getRatingService();
+			sumRatingService = sumRatingService + ratingService;
+
+			Integer ratingAll = ratingEnvironment + ratingPrice + ratingService;
+			sumRatingAll = sumRatingAll + ratingAll;
+		}
+
+		Integer count = reviewList.size();
+		Float avgRatingEnvironment = Math.round((sumRatingEnvironment / (float) count) * 10) / 10.0f;
+		Float avgRatingPrice = Math.round((sumRatingPrice / (float) count) * 10) / 10.0f;
+		Float avgRatingService = Math.round((sumRatingService / (float) count) * 10) / 10.0f;
+		Float avgRatingAll = Math.round((sumRatingAll / 3.0f / (float) count) * 10) / 10.0f;
+
+		Vendor vendor = vendorRepository.findById(vendorId).orElse(null);
+		vendor.setAvgRatingEnvironment(avgRatingEnvironment);
+		vendor.setAvgRatingPrice(avgRatingPrice);
+		vendor.setAvgRatinService(avgRatingService);
+		vendor.setTotalRating(avgRatingAll);
+		vendorRepository.save(vendor);
+
+		return vendor;
 	}
 }

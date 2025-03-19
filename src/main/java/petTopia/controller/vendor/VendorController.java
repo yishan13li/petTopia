@@ -17,6 +17,7 @@ import petTopia.model.vendor.VendorCategory;
 import petTopia.model.vendor.VendorImages;
 import petTopia.service.vendor.VendorCategoryService;
 import petTopia.service.vendor.VendorImagesService;
+import petTopia.service.vendor.VendorReviewService;
 import petTopia.service.vendor.VendorService;
 
 @CrossOrigin
@@ -26,6 +27,9 @@ public class VendorController {
 	@Autowired
 	private VendorService vendorService;
 
+	@Autowired
+	private VendorReviewService vendorReviewService;
+	
 	@Autowired
 	private VendorImagesService vendorImagesService;
 	
@@ -80,5 +84,10 @@ public class VendorController {
 		List<VendorCategory> categoryList = vendorCategoryService.findAllVendorCategory();
 		return ResponseEntity.ok(categoryList);
 	}
-
+	
+	@GetMapping("/api/vendor/{vendorId}/update/rating")
+	public ResponseEntity<Vendor> updateVendorRating(@PathVariable Integer vendorId){
+		Vendor vendor = vendorReviewService.setAverageRating(vendorId);
+		return ResponseEntity.ok(vendor);
+	}
 }
