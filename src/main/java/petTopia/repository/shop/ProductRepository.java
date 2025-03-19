@@ -29,7 +29,9 @@ public interface ProductRepository extends JpaRepository<Product, Integer>{
 		    Integer productSizeId,
 		    Integer productColorId);
 	
-	 List<Product> findAllByIdIn(List<Integer> productIds);
+	public List<Product> findAllByIdIn(List<Integer> productIds);
 	
-	 
+	// 獲取有上架的商品
+	public List<Product> findByProductDetailIdAndStatus(Integer productDetailId, Boolean status);
+	
 }

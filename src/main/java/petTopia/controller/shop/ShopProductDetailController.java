@@ -62,7 +62,7 @@ public class ShopProductDetailController {
 		ObjectNode responseBody = objectMapper.createObjectNode();
 		
 		// 獲取ProductDetail一樣的所有Poduct
-		List<Product> productList = productService.findByProductDetailId(productDetailId);
+		List<Product> productList = productService.getAvailableProductByProductDetailId(productDetailId, true);
 		
 		// 獲取商品資訊(ProductDetail)
 		ProductDetail productDetail = productDetailService.findByProductDetailId(productDetailId);
@@ -271,7 +271,7 @@ public class ShopProductDetailController {
 		Map<String, Object> responseData = new HashMap<>();
 		
 		// 獲取ProductDetail一樣的所有Poduct
-		List<Product> productList = productService.findByProductDetailId(productDetailId);
+		List<Product> productList = productService.getAvailableProductByProductDetailId(productDetailId, true);
 
 		// 總庫存
 		Integer totalStockQuantity = 0;

@@ -44,7 +44,6 @@ public class ProductDetailService {
 	public Long getProductsCount(Map<String, Object> filterData){
 		try {
 			JSONObject jsonObj = new JSONObject(filterData);
-			System.out.println(jsonObj);
 			return productDetailRepository.count(jsonObj);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -56,7 +55,6 @@ public class ProductDetailService {
 	public List<ProductDetail> getProducts(Map<String, Object> filterData){
 		try {
 			JSONObject jsonObj = new JSONObject(filterData);
-			System.out.println(jsonObj);
 			return productDetailRepository.find(jsonObj);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -64,7 +62,7 @@ public class ProductDetailService {
 		return null;
 	}
 	
-	// 搜尋商品
+	// 關鍵字搜尋商品(舊版)
 	public List<ProductDetail> searchProductByKeywords(String keywordString){
 		List<ProductDetail> productDetailList = productDetailRepository.searchProducts(keywordString);
 		if (productDetailList != null && productDetailList.size() != 0) {

@@ -41,8 +41,9 @@ public class ProductService {
 		return null;
 	}
 	
-	public List<Product> findByProductDetailId(Integer productDetailId) {
-		List<Product> productList = productRepository.findByProductDetailId(productDetailId);
+	// 獲取有上架的商品
+	public List<Product> getAvailableProductByProductDetailId(Integer productDetailId, Boolean status) {
+		List<Product> productList = productRepository.findByProductDetailIdAndStatus(productDetailId, status);
 		if (productList != null && productList.size() != 0) {
 			return productList;
 		}

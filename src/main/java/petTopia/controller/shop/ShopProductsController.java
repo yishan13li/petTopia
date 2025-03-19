@@ -69,7 +69,7 @@ public class ShopProductsController {
 				
 				ProductDetailDto productDetailDto = new ProductDetailDto();
 				
-				List<Product> productList = productService.findByProductDetailId(productDetail.getId());
+				List<Product> productList = productService.getAvailableProductByProductDetailId(productDetail.getId(), true);
 				if (productList != null) {
 					
 					// 獲取productList內最低價商品

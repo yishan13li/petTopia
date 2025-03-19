@@ -14,6 +14,8 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
+import petTopia.model.shop.Product;
 import petTopia.model.shop.ProductCategory;
 import petTopia.model.shop.ProductDetail;
 
@@ -23,6 +25,7 @@ public class ProductDetailRepositoryCustomImpl implements ProductDetailRepositor
 	@PersistenceContext
 	private EntityManager entityManager;
 
+	// 根據條件搜尋商品的總數
 	@Override
 	public long count(JSONObject obj) {
 
@@ -53,6 +56,20 @@ public class ProductDetailRepositoryCustomImpl implements ProductDetailRepositor
 				predicates.add(cb.like(productDetail.get("name"), "%" + keyword + "%"));
 			}
 		}
+		
+		// 加入 `EXISTS` 子查詢（確保至少有一個 `status = true` 的 Product）
+		Subquery<Long> existsSubquery = criteriaQuery.subquery(Long.class);
+		Root<Product> product = existsSubquery.from(Product.class);
+
+		existsSubquery
+		    .select(cb.literal(1L))  // 只回傳是否存在
+		    .where(
+		        cb.equal(product.get("productDetail"), productDetail), // 關聯條件
+		        cb.equal(product.get("status"), true) // 只篩選 status = true 的 Product
+		    );
+
+		// WHERE EXISTS (子查詢)
+		predicates.add(cb.exists(existsSubquery));
 
 		// 合併 sql where
 		if (predicates != null && !predicates.isEmpty()) {
@@ -67,6 +84,7 @@ public class ProductDetailRepositoryCustomImpl implements ProductDetailRepositor
 
 	};
 	
+	// 根據條件搜尋商品並分頁
 	@Override
 	public List<ProductDetail> find(JSONObject obj) {
 
@@ -76,10 +94,11 @@ public class ProductDetailRepositoryCustomImpl implements ProductDetailRepositor
 		String category = obj.isNull("category") ? null : obj.getString("category");
 		String keywordStr = obj.isNull("keyword") ? null : obj.getString("keyword");
 
+		// Criteria
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<ProductDetail> criteriaQuery = cb.createQuery(ProductDetail.class);
 		Root<ProductDetail> productDetail = criteriaQuery.from(ProductDetail.class);
-
+		
 		// ProductDetail join ProductCategory 獲得name
 		Join<ProductDetail, ProductCategory> categoryJoin = productDetail.join("productCategory");
 
@@ -97,7 +116,21 @@ public class ProductDetailRepositoryCustomImpl implements ProductDetailRepositor
 				predicates.add(cb.like(productDetail.get("name"), "%" + keyword + "%"));
 			}
 		}
+		
+		// 加入 `EXISTS` 子查詢（確保至少有一個 `status = true` 的 Product）
+		Subquery<Long> existsSubquery = criteriaQuery.subquery(Long.class);
+		Root<Product> product = existsSubquery.from(Product.class);
 
+		existsSubquery
+		    .select(cb.literal(1L))  // 只回傳是否存在
+		    .where(
+		        cb.equal(product.get("productDetail"), productDetail), // 關聯條件
+		        cb.equal(product.get("status"), true) // 只篩選 status = true 的 Product
+		    );
+
+		// WHERE EXISTS (子查詢)
+		predicates.add(cb.exists(existsSubquery));
+		
 		// 合併 sql where
 		if (predicates != null && !predicates.isEmpty()) {
 			criteriaQuery = criteriaQuery.where(predicates.toArray(new Predicate[0]));
@@ -119,7 +152,7 @@ public class ProductDetailRepositoryCustomImpl implements ProductDetailRepositor
 
 	};
 
-	// 模糊搜尋 (多個關鍵字)
+	// 關鍵字搜尋商品 (多個關鍵字) (舊版)
 	@Override
 	public List<ProductDetail> searchProducts(String keywordString) {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
