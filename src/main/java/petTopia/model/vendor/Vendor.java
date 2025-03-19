@@ -86,11 +86,17 @@ public class Vendor {
 	@Column(name = "review_count")
 	private int reviewCount = 0;
 
-	@Column(name = "avg_rating", nullable = false)
-	private float avgRating = 0;
-
 	@Column(name = "vendor_level", nullable = false)
 	private String vendorLevel = "普通";
+	
+	@Column(name = "avg_rating_environment")
+	private Float avgRatingEnvironment = 0f;
+	
+	@Column(name = "avg_rating_price")
+	private Float avgRatingPrice = 0f;
+	
+	@Column(name = "avg_rating_service")
+	private Float avgRatinService = 0f;
 
 	@JsonIgnore
 	@OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)

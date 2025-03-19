@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import petTopia.model.vendor.Vendor;
+import petTopia.model.vendor.VendorCategory;
 import petTopia.model.vendor.VendorImages;
+import petTopia.service.vendor.VendorCategoryService;
 import petTopia.service.vendor.VendorImagesService;
 import petTopia.service.vendor.VendorService;
 
@@ -26,13 +28,16 @@ public class VendorController {
 
 	@Autowired
 	private VendorImagesService vendorImagesService;
+	
+	@Autowired
+	private VendorCategoryService vendorCategoryService;
 
 	@GetMapping("/api/vendor/{vendorId}")
 	public ResponseEntity<Vendor> getVendorDetail(@PathVariable Integer vendorId) {
 		Vendor vendor = vendorService.findVendorById(vendorId);
 		return ResponseEntity.ok(vendor);
 	}
-	
+
 	@GetMapping("/api/vendor/all")
 	public ResponseEntity<List<Vendor>> getAllVendors() {
 		List<Vendor> vendorList = vendorService.findAllVendor();
@@ -57,10 +62,23 @@ public class VendorController {
 		return ResponseEntity.ok(vendorList);
 	}
 	
+	@GetMapping("/api/vendor/category/{categoryId}/except/vendor/{vendorId}")
+	public ResponseEntity<List<Vendor>> getVendorsByCategoryExceptOne(@PathVariable Integer categoryId,
+			@PathVariable Integer vendorId) {
+		List<Vendor> vendorList = vendorService.findVendorByCategoryIdExceptOne(categoryId, vendorId);
+		return ResponseEntity.ok(vendorList);
+	}
+
 	@PostMapping(value = "/api/vendor/find", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<List<Vendor>> getVendosrByNameOrDescription(@RequestParam String keyword) {
 		List<Vendor> vendorList = vendorService.findVendorByNameOrDescription(keyword);
 		return ResponseEntity.ok(vendorList);
+	}
+	
+	@GetMapping("/api/vendor/category/show")
+	public ResponseEntity<List<VendorCategory>> getAllCategories() {
+		List<VendorCategory> categoryList = vendorCategoryService.findAllVendorCategory();
+		return ResponseEntity.ok(categoryList);
 	}
 
 }

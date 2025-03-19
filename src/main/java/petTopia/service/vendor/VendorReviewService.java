@@ -30,10 +30,10 @@ public class VendorReviewService {
 
 	@Autowired
 	private ReviewPhotoRepository reviewPhotoRepository;
-	
+
 	@Autowired
 	private ReviewPhotoService reviewPhotoService;
-	
+
 	/* 尋找單一店家其所有的評分及留言 */
 	public List<VendorReview> findVendorReviewByVendorId(Integer vendorId) {
 		List<VendorReview> vendorReviewList = vendorReviewRepository.findByVendorId(vendorId);
@@ -95,11 +95,11 @@ public class VendorReviewService {
 		dto.setRatingEnvironment(review.getRatingEnvironment());
 		dto.setRatingPrice(review.getRatingPrice());
 		dto.setRatingService(review.getRatingService());
-		
+
 		// 設定Base64後再寫入
 		List<ReviewPhoto> reviewPhotoList = reviewPhotoService.findPhotoListByReviewId(review.getId());
 		dto.setReviewPhotos(reviewPhotoList);
-		
+
 		// 判斷 ReviewPhoto 是否為空，以控制按鈕
 		List<ReviewPhoto> reviewPhotos = review.getReviewPhotos();
 		if (reviewPhotos != null && !reviewPhotos.isEmpty()) {
@@ -132,7 +132,7 @@ public class VendorReviewService {
 
 		return dtoList;
 	}
-	
+
 	/* 查詢某個vendorId所有評價之Entity */
 	public List<VendorReview> findReviewsByVendorId(Integer vendorId) {
 		List<VendorReview> reviewList = vendorReviewRepository.findByVendorId(vendorId);
@@ -183,10 +183,10 @@ public class VendorReviewService {
 
 		Integer reviewId = review.getId();
 		addReviewPhotos(reviewId, reviewPhotos);
-		
+
 		return review;
 	}
-	
+
 	/* 新增星星評分 */
 	public VendorReview addStarReview(Integer memberId, Integer vendorId, Integer ratingEnv, Integer ratingPrice,
 			Integer ratingService) {
@@ -202,7 +202,7 @@ public class VendorReviewService {
 			newVendorReview.setRatingService(ratingService);
 			newVendorReview.setReviewTime(new Date());
 			vendorReviewRepository.save(newVendorReview);
-			
+
 			return newVendorReview;
 		} else {
 
@@ -214,5 +214,41 @@ public class VendorReviewService {
 
 			return vendorReview;
 		}
+	}
+
+	/* 找出單一店家有評分的留言 */
+	// 還沒篩出店家!!!
+	public List<VendorReview> findReviewsWithRating(Integer vendorId) {
+		List<VendorReview> list = vendorReviewRepository.findAll();
+		List<VendorReview> filteredList = new ArrayList<>();
+		for (VendorReview review : list) {
+			if (review.getRatingEnvironment() != null && review.getRatingPrice() != null
+					&& review.getRatingService() != null) {
+				filteredList.add(review);
+			}
+		}
+		return filteredList;
+	}
+
+	/* 計算單一店家評分之平均數 */
+	public void setAverageRating(Integer vendorId) {
+		List<VendorReview> reviewList = this.findReviewsWithRating(vendorId);
+		
+		Integer totalRatingEnvironment = 0;
+		Integer totalRatingPrice = 0;
+		Integer totalRatingService = 0;
+		
+		for(VendorReview review:reviewList) {
+			Integer ratingEnvironment = review.getRatingEnvironment();
+			totalRatingEnvironment=totalRatingEnvironment+ratingEnvironment;
+			
+			Integer ratingPrice = review.getRatingPrice();
+			totalRatingPrice=totalRatingPrice+ratingPrice;
+			
+			Integer ratingService = review.getRatingService();
+			totalRatingService=totalRatingService+ratingService;
+		}
+		
+		// 取數量、計算個別平均
 	}
 }
