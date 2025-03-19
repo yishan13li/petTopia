@@ -190,5 +190,10 @@ public class CartService {
     	return null;
     }
     
+    // 根據memberId獲取購物車數量
+    public Integer getMemeberCartCount(Integer memberId) {
+    	Integer count = cartRepo.countByMemberId(memberId);
+    	return count;
+    }
     
 }

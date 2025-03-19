@@ -147,5 +147,13 @@ public class ShopCartController {
         return ResponseEntity.ok(response);
     }
 	
+	// HeaderShop => 更新會員購物車顯示數量
+	@GetMapping("/api/getMemberCartCount")
+	public ResponseEntity<Integer> getMemberCartCount(@RequestParam Integer memberId) {
+		
+		Integer cartCount = cartService.getMemeberCartCount(memberId);
+		
+		return ResponseEntity.ok(cartCount);
+	}
 	
 }

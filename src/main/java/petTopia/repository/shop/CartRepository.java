@@ -27,4 +27,5 @@ public interface CartRepository extends JpaRepository<Cart, Integer> {
     
     List<Cart> findByMemberIdAndProductIdIn(Integer memberId, List<Integer> productIds);
     
+    Integer countByMemberId(Integer memberId);
 }
