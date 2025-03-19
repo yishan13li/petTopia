@@ -179,6 +179,9 @@ export default {
     if (token) {
       console.log('檢測到令牌，進行登入處理...');
       
+      // 檢查是否是第三方登入
+      const isOAuth2Login = urlParams.get('oauth2Success') === 'true';
+      
       // 從 URL 參數中獲取用戶數據
       const userData = {
         name: urlParams.get('name') || urlParams.get('memberName'),
@@ -191,32 +194,52 @@ export default {
         userRole: urlParams.get('role')
       };
       
-      console.log('從 URL 參數獲取的詳細用戶數據:', {
-        name: urlParams.get('name'),
-        memberName: urlParams.get('memberName'),
-        最終使用的name: userData.name,
-        最終使用的memberName: userData.memberName
-      });
+      console.log('從 URL 參數獲取的詳細用戶數據:', userData);
+      
+      // 如果是第三方登入，檢查並使用已存在的用戶名稱
+      if (isOAuth2Login) {
+        const userId = urlParams.get('userId');
+        // 檢查是否有已保存的用戶名稱
+        const savedName = localStorage.getItem(`db_name_${userId}`);
+        if (savedName && savedName !== 'null' && savedName !== 'undefined') {
+          console.log('使用已保存的用戶名稱:', savedName);
+          userData.name = savedName;
+          userData.memberName = savedName;
+        }
+      }
       
       // 存儲 token 和用戶數據
-      authStore.setToken(
-        token, 
-        urlParams.get('userId'), 
-        urlParams.get('role'),
-        userData
-      );
+      authStore.setToken(token, userData.userId, userData.userRole, userData);
+      
+      // 同時保存到 localStorage，確保數據持久化
+      localStorage.setItem('userData', JSON.stringify(userData));
+      
+      // 如果有用戶ID和名稱，保存到專用緩存
+      if (userData.userId && userData.name) {
+        localStorage.setItem(`db_name_${userData.userId}`, userData.name);
+        console.log('保存用戶名稱到緩存:', userData.name);
+      }
       
       // 發送全局事件通知其他組件用戶信息已更新
       window.dispatchEvent(new CustomEvent('user-login', { 
-        detail: { user: userData }
+        detail: { 
+          user: userData,
+          isNewLogin: true,
+          isOAuth2Login
+        }
       }));
       
       this.success = '登入成功';
       
-      // 延遲導航到首頁
-      setTimeout(() => {
-        this.$router.push('/');
-      }, 1500);
+      // 如果是第三方登入，使用完整頁面重載以確保數據更新
+      if (isOAuth2Login) {
+        window.location.href = '/?oauth_success=true&user_new_login=true';
+      } else {
+        // 一般登入使用路由導航
+        setTimeout(() => {
+          this.$router.push('/');
+        }, 1500);
+      }
     }
     
     // 檢查既有的 token 是否有效
