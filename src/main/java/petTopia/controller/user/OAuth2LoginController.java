@@ -93,13 +93,22 @@ public class OAuth2LoginController {
         String name = data.get("name");
         String provider = data.get("provider");
 
-        if (email == null || name == null || provider == null) {
-            logger.error("OAuth2登入失敗 - 缺少必要資訊: email={}, name={}, provider={}", email, name, provider);
+        if (email == null || provider == null) {
+            logger.error("OAuth2登入失敗 - 缺少必要資訊: email={}, provider={}", email, provider);
             return ResponseEntity.badRequest()
                 .body(Map.of("error", "缺少必要的資訊"));
         }
 
         try {
+            // 確保email不為空且規範化
+            email = email.toLowerCase().trim();
+            
+            // 如果name為null，使用email的用戶名部分
+            if (name == null || name.trim().isEmpty()) {
+                name = email.split("@")[0];
+                logger.info("使用郵箱用戶名作為預設名稱: {}", name);
+            }
+
             logger.info("處理OAuth2登入 - 電子郵件: {}, 名稱: {}, 提供者: {}", email, name, provider);
             
             // 驗證提供者是否支持
@@ -111,9 +120,6 @@ public class OAuth2LoginController {
                 return ResponseEntity.badRequest()
                     .body(Map.of("error", "不支持的登入方式: " + provider));
             }
-            
-            // 確保email不為空且規範化
-            email = email.toLowerCase().trim();
             
             // 查找已存在用戶
             Users existingUser = memberLoginService.findByEmail(email);
@@ -138,13 +144,6 @@ public class OAuth2LoginController {
                         ));
                 }
                 
-                // 直接生成JWT
-                String token = jwtUtil.generateToken(
-                    existingUser.getEmail(), 
-                    existingUser.getId(), 
-                    existingUser.getUserRole().toString()
-                );
-                
                 // 檢查會員資料是否存在，不存在則創建
                 Member member = memberService.getMemberById(existingUser.getId());
                 if (member == null) {
@@ -163,42 +162,48 @@ public class OAuth2LoginController {
                         logger.error("創建會員資料失敗", e);
                         // 仍然繼續，因為用戶驗證已通過
                     }
-                } else {
-                    // 檢查會員資料中的名稱是否需要更新
-                    logger.info("檢查會員名稱是否需要更新 - 當前名稱: {}, 郵箱: {}", member.getName(), email);
-                    
-                    // 如果名稱仍然是郵箱格式，嘗試更新為更友好的名稱
-                    if (isEmailFormat(member.getName(), email)) {
-                        String friendlyName = getFriendlyDisplayName(name, email);
-                        
-                        // 只有在新名稱不是郵箱格式時才更新
-                        if (!isEmailFormat(friendlyName, email)) {
-                            logger.info("更新會員名稱為更友好的格式 - 舊名稱: {}, 新名稱: {}", member.getName(), friendlyName);
-                            member.setName(friendlyName);
-                            memberService.createOrUpdateMember(member);
-                        }
-                    }
                 }
                 
                 // 獲取最終要顯示的名稱
-                String displayName = member != null ? member.getName() : name;
+                String displayName = member.getName();
                 
-                // 再次檢查，確保返回的不是郵箱格式
-                displayName = getFriendlyDisplayName(displayName, email);
+                // 只有當資料庫中沒有名稱，且第三方提供了有效名稱時才更新
+                if ((displayName == null || displayName.trim().isEmpty()) && name != null && !name.trim().isEmpty()) {
+                    displayName = name;  // 使用 OAuth2 提供的原始名稱
+                    // 更新會員資料
+                    member.setName(displayName);
+                    member = memberService.createOrUpdateMember(member);
+                    logger.info("使用 OAuth2 提供的名稱更新會員資料: {}", displayName);
+                } else if (displayName == null || displayName.trim().isEmpty()) {
+                    // 如果資料庫中沒有名稱，且第三方也沒提供，使用郵箱用戶名
+                    displayName = email.split("@")[0];
+                    member.setName(displayName);
+                    member = memberService.createOrUpdateMember(member);
+                    logger.info("使用郵箱用戶名作為名稱: {}", displayName);
+                }
                 
                 logger.info("OAuth2登入成功 - 用戶ID: {}, 顯示名稱: {}", existingUser.getId(), displayName);
                 
-                // 構建返回數據，使用 Map.of 無法超過10個鍵值對，此處改用 HashMap
+                // 構建返回數據
                 Map<String, Object> responseData = new HashMap<>();
                 responseData.put("success", true);
-                responseData.put("token", token);
+                responseData.put("token", jwtUtil.generateToken(
+                    existingUser.getEmail(), 
+                    existingUser.getId(), 
+                    existingUser.getUserRole().toString()
+                ));
                 responseData.put("userId", existingUser.getId());
                 responseData.put("email", email);
                 responseData.put("name", displayName);
-                responseData.put("memberName", displayName); // 同時設置 memberName
+                responseData.put("memberName", displayName);
                 responseData.put("role", existingUser.getUserRole().toString());
                 responseData.put("provider", providerEnum.toString());
+                responseData.put("picture", data.get("picture"));
+                responseData.put("avatar", data.get("picture"));
+                responseData.put("hasVendorAccount", data.get("hasVendorAccount"));
                 responseData.put("message", "OAuth2 登入成功");
+                
+                logger.info("返回的用戶資訊: {}", responseData);
                 
                 return ResponseEntity.ok(responseData);
             }
@@ -255,17 +260,22 @@ public class OAuth2LoginController {
             
             logger.info("OAuth2註冊並登入成功 - 用戶ID: {}, 名稱: {}", newUser.getId(), friendlyName);
             
-            // 構建返回數據，使用 HashMap 以支持更多鍵值對
+            // 構建返回數據
             Map<String, Object> responseData = new HashMap<>();
             responseData.put("success", true);
             responseData.put("token", token);
             responseData.put("userId", newUser.getId());
             responseData.put("email", email);
             responseData.put("name", friendlyName);
-            responseData.put("memberName", friendlyName); // 同時設置 memberName
+            responseData.put("memberName", friendlyName);
             responseData.put("role", newUser.getUserRole().toString());
             responseData.put("provider", providerEnum.toString());
+            responseData.put("picture", data.get("picture"));
+            responseData.put("avatar", data.get("picture"));
+            responseData.put("hasVendorAccount", false);
             responseData.put("message", "OAuth2 註冊並登入成功");
+
+            logger.info("返回的新用戶資訊: {}", responseData);
             
             return ResponseEntity.status(HttpStatus.CREATED).body(responseData);
             
