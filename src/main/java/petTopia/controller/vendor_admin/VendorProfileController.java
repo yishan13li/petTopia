@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import petTopia.model.vendor.Vendor;
+import petTopia.model.vendor.VendorActivityImages;
 import petTopia.model.vendor.VendorCategory;
 import petTopia.model.vendor.VendorImages;
 import petTopia.repository.vendor.VendorCategoryRepository;
@@ -143,7 +144,8 @@ public class VendorProfileController {
 			@RequestParam(required = false) String vendorDescription,
 			@RequestParam(required = false) String contactPerson,
 			@RequestParam(required = false) String vendorTaxidNumber, @RequestParam(required = false) Integer category,
-			@RequestParam(required = false) MultipartFile vendorLogoImg, Model model) {
+			@RequestParam(required = false) MultipartFile vendorLogoImg,@RequestParam(value = "files", required = false) MultipartFile[] files,
+			@RequestParam(value = "deletedImageIds", required = false) List<Integer> deletedImageIds, Model model) throws IOException {
 		Map<String, Object> response = new HashMap<>();
 		// 查找原本的商家資料
 		Vendor vendor = vendorService.getVendorById(vendorId)
@@ -193,6 +195,27 @@ public class VendorProfileController {
 		// 保存更新過的資料
 		Vendor updatedVendor = vendorService.updateVendor(vendor);
 
+		
+		if (deletedImageIds != null && !deletedImageIds.isEmpty()) {
+			vendorImagesRepository.deleteAllById(deletedImageIds);
+		}
+
+		// 4. 更新新圖片（如果有新圖片則更新）
+		if (files != null && files.length > 0) {
+			List<VendorImages> vendorImagesList = new ArrayList<>();
+			for (MultipartFile file : files) {
+				if (!file.isEmpty()) {
+					System.out.println("上傳的圖片：" + file.getOriginalFilename());
+					VendorImages vendorImage = new VendorImages();
+					vendorImage.setImage(file.getBytes());
+					vendorImage.setVendor(vendor);
+					vendorImagesList.add(vendorImage);
+					System.out.println(vendorImagesList);
+				}
+			}
+			vendor.getVendorImages().addAll(vendorImagesList);
+			vendorImagesRepository.saveAll(vendorImagesList);
+		}
 		response.put("success", true);
 		response.put("vendor", updatedVendor);
 
@@ -246,22 +269,23 @@ public class VendorProfileController {
 	}
 
 	@GetMapping("/profile_photos/ids")
-	public ResponseEntity<?> findPhotoIdsByVendorId(@RequestParam Integer vendorId) {
-		Optional<Vendor> op = vendorRepository.findById(vendorId);
+	public ResponseEntity<List<Integer>> findPhotoIdsByVendorId(@RequestParam Integer vendorId) {
+	    Optional<Vendor> op = vendorRepository.findById(vendorId);
 
-		List<Integer> imageIdList = new ArrayList<>();
+	    List<Integer> imageIdList = new ArrayList<>();
 
-		if (op.isPresent()) {
-			Vendor vendor = op.get();
-			List<VendorImages> images = vendor.getImages();
+	    if (op.isPresent()) {
+	        Vendor vendor = op.get();
+	        List<VendorImages> images = vendor.getVendorImages(); // 获取店家的所有图片
 
-			for (VendorImages image : images) {
-				imageIdList.add(image.getId()); // 假設每個 VendorActivityPhoto 實體有一個 id 字段
-			}
+	        for (VendorImages image : images) {
+	            imageIdList.add(image.getId()); // 获取图片的 ID
+	        }
 
-			return new ResponseEntity<>(imageIdList, HttpStatus.OK); // 返回所有照片的 ID 列表
-		}
+	        return new ResponseEntity<>(imageIdList, HttpStatus.OK); // 返回所有照片的 ID 列表
+	    }
 
-		return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 如果沒有找到活動，返回 404
+	    return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 如果沒有找到店家，返回 404
 	}
+
 }
