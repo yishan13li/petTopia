@@ -382,28 +382,28 @@
           </div>
 
           <br>
-
-
-
-
         </div>
       </div>
     </div>
   </section>
-  <br>
 
   <!-- 主體結束 -->
 
   <!-- 店家圖片列表開始 -->
 
-  <th:block th:each="image : ${imageList}">
-
-    <img th:src="${image.imageBase64}" class="img-fluid rounded-4" alt="image"
-      style="max-width: 500px; max-height: 300px">
-
-  </th:block>
-
-
+  <section id="about" class="padding-medium mt-xl-5" style="padding: 20px;">
+    <div class="container">
+      <div class="section-header d-md-flex justify-content-between align-items-center mb-3">
+        <h2 class="display-6 fw-normal">店家圖片列表</h2>
+      </div>
+    </div>
+    <div class="container rounded-4" style="background-color:#F9F3EC; padding: 20px;">
+      <th:block th:each="image : ${imageList}">
+        <img th:src="${image.imageBase64}" class="img-fluid rounded-4" alt="image"
+          style="max-width: 500px; max-height: 300px">&emsp;
+      </th:block>
+    </div>
+  </section>
 
   <!-- 店家圖片列表結束 -->
 
@@ -419,6 +419,7 @@
   <br>
   <!--Google Maps-->
 
+  <!-- 留言區 -->
   <br>
   <div class="container">
     <div class="section-header d-md-flex justify-content-between align-items-center mb-3">
@@ -426,7 +427,6 @@
     </div>
   </div>
 
-  <!-- 留言區 -->
   <th:block th:each="review : ${reviewList}">
     <section>
       <div class="comment" th:data-id="${review.reviewId}">
@@ -441,19 +441,51 @@
 
             <div class="col-lg-9">
               <div class="text-container" style="padding-top: 20px">
+
                 <h2><b th:text="${review.name}">會員名稱</b></h2>
-                <p><b th:text="'發表時間：'+${review.reviewTime}">發表時間</b></p>
-                <p th:text="${review.reviewContent}">評論內容</p>
+
+                <p>環境評分 ： <th:block th:if="${review.ratingEnvironment != null}">
+                    <span th:each="i : ${#numbers.sequence(1, review.ratingEnvironment)}" style="color:gold;">★ </span>
+                  </th:block>
+                  <th:block th:if="${(5 - (review.ratingEnvironment ?: 0)) > 0}">
+                    <span th:each="i : ${#numbers.sequence(1, 5 - (review.ratingEnvironment ?: 0))}"
+                      style="color:gray;">★ </span>
+                  </th:block>
+                </p>
+
+                <p>價格評分 ： <th:block th:if="${review.ratingPrice != null}"><span
+                      th:each="i : ${#numbers.sequence(1, review.ratingPrice)}" style="color:gold;">★ </span>
+                  </th:block>
+                  <th:block th:if="${(5 - (review.ratingPrice ?: 0)) > 0}">
+                    <span th:each="i : ${#numbers.sequence(1, 5 - (review.ratingPrice ?: 0))}" style="color:gray;">★
+                    </span>
+                  </th:block>
+                </p>
+
+                <p>服務評分 ： <th:block th:if="${review.ratingService != null}"><span
+                      th:each="i : ${#numbers.sequence(1, review.ratingService)}" style="color:gold;">★ </span>
+                  </th:block>
+                  <th:block th:if="${(5 - (review.ratingService ?: 0)) > 0}">
+                    <span th:each="i : ${#numbers.sequence(1, 5 - (review.ratingService ?: 0))}" style="color:gray;">★
+                    </span>
+                  </th:block>
+                </p>
+
+                <p><b th:text="'發表時間：'+${review.reviewTime}" th:data-time="${review.reviewId}">發表時間</b></p>
+
+                <p th:text="${review.reviewContent}" th:data-review="${review.reviewId}">評論內容</p>
 
                 <div class="d-flex flex-wrap mt-3">
                   <a class="btn btn-outline-dark btn-1g text-uppercase fs-5 rounded-4 me-4"
                     onclick="rewriteComment(this)" th:data-id="${review.reviewId}">
                     修改
                   </a>
+
                   <a class="btn btn-outline-dark btn-lg text-uppercase fs-5 rounded-4 me-4"
                     onclick="deleteComment(this)" th:data-id="${review.reviewId}">
                     刪除
                   </a>
+
                 </div>
               </div>
             </div>
@@ -466,10 +498,7 @@
 
   <!-- 留言區 -->
 
-
-
-
-
+  <!-- 店家列表 -->
   <section id="clothing" class="my-5 overflow-hidden">
     <div class="container pb-5">
 
@@ -498,17 +527,16 @@
                 </div>
 
               </div>
-
             </div>
-          </div>
+          </div>    
         </th:block>
 
       </div>
 
     </div>
-
-    </div>
   </section>
+
+  <!-- 店家列表 -->
 
   <!-- 收藏彈跳視窗 -->
 
@@ -550,13 +578,11 @@
   <div id="popupComment" class="overlay">
     <div class="popup">
       <h3><b>留言</b></h3>
-      <form action="/vendor/user_give_review">
-        <textarea id="inputField" name="context" placeholder="輸入感想" rows="6" col="40" style="resize: none"></textarea>
-        <br>
-        <button class="btn btn-outline-dark btn-1g text-uppercase fs-5 rounded-4" onclick="submitForm()">送出</button>
-        &emsp;
-        <button class="btn btn-outline-dark btn-1g text-uppercase fs-5 rounded-4" onclick="closePopup()">取消</button>
-      </form>
+      <textarea id="newInputField" name="context" placeholder="輸入感想" rows="6" col="40" style="resize: none"></textarea>
+      <br>
+      <button class="btn btn-outline-dark btn-1g text-uppercase fs-5 rounded-4" onclick="submitForm()">送出</button>
+      &emsp;
+      <button class="btn btn-outline-dark btn-1g text-uppercase fs-5 rounded-4" onclick="closePopup()">取消</button>
     </div>
   </div>
 
@@ -711,7 +737,7 @@
   <script th:inline="javascript">
     function openPopup() {
       document.getElementById('popupComment').style.display = 'flex';
-      // document.getElementById('inputField').value = "";
+      document.getElementById('newInputField').value = "";
       document.body.style.overflow = "hidden";
     }
 
@@ -723,22 +749,21 @@
 
     function submitForm() {
       let vendorId = /*[[${vendor.id}]]*/null;
-      let content = document.getElementById('inputField').value;
-
-      let data = {
-        memberId: 19,  // 這裡之後要改
-        vendorId: vendorId,
-        content: content
-      };
+      let content = document.getElementById('newInputField').value;
 
       fetch("/vendor/give_text_review", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
+        body: JSON.stringify({
+          memberId: 18,  // 這裡之後要改
+          vendorId: vendorId,
+          content: content
+        })
       })
-        .then(response => response.json())
+        .then(response => response.json()
+        )
         .then(result => {
-          if (result.sucess) {
+          if (result.success) {
             alert("留言新增成功");
           } else {
             alert("留言新增失敗");
@@ -759,44 +784,26 @@
   <!-- 個別留言視窗JS -->
 
   <script th:inline="javascript">
+    let selectedReviewId = null;
+
     function deleteComment(content) {
-      const isConfirmed = window.confirm("確定要刪除這個評論嗎？");
+      const isConfirmed = window.confirm("確定刪除評論？"); // 之後邏輯要新增符合之memeber才會顯示刪除按鈕
 
       let reviewId = content.getAttribute('data-id');
-      let vendorId = /*[[${vendor.id}]]*/null;
-      let data = {
-        memberId: 19,  // 這裡改成實際的會員 ID
-        vendorId: vendorId
-      };
-
-
-      // if (isConfirmed) {
-      //   let commentDiv = content.closest('.comment');
-      //   let reviewId = commentDiv.getAttribute('data-id'); // 之後邏輯改成符合之memeber和vendor才會顯示刪除按鈕
-      //   if (commentDiv) {
-      //     let targetDiv = document.querySelector(`.comment[data-id='${reviewId}']`);
-      //     if (targetDiv) {
-      //       targetDiv.style.display = 'none'; // 隱藏對應的 .comment
-      //     }
-      //   }
-      // }
 
       if (isConfirmed) {
 
-        fetch("/vendor/delete_review", {
+        fetch(`http://localhost:8080/api/vendor/review/${reviewId}/delete`, {
           method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data)
+          headers: { "Content-Type": "application/json" }
         })
           .then(response => response.json())
           .then(result => {
             if (result.success) {
-
               let targetDiv = document.querySelector(`.comment[data-id='${reviewId}']`);
               if (targetDiv) {
                 targetDiv.style.display = 'none';
               }
-              console.log("我有被執行");
               alert("評論刪除成功");
             } else {
               alert("評論刪除失敗");
@@ -805,23 +812,26 @@
           .catch(error => {
             console.error("發生錯誤:", error);
           });
-
       }
 
 
     }
 
-    let currentCommentP = null; // 用來存當前要修改的 <p> 標籤
+    function rewriteComment(content) { // 之後邏輯要新增符合之memeber才會顯示修改按鈕
+      let reviewId = content.getAttribute('data-id');
+      selectedReviewId = reviewId;
 
-    function rewriteComment(button) {
-      currentCommentP = button.closest(".text-container").querySelector("p:nth-of-type(2)"); // 找到最近的 p 標籤（第二個 <p> 是評論內容）
-
-      if (!currentCommentP) {
-        alert("找不到評論內容");
-        return;
-      }
-
-      document.querySelector(".inputField").value = currentCommentP.textContent; // 設定彈出框的 textarea 預設值
+      fetch(`http://localhost:8080/api/vendor/review/${reviewId}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      })
+        .then(response => response.json())
+        .then(data => {
+          document.querySelector(".inputField").value = data.review.reviewContent;
+        })
+        .catch(error => {
+          console.error("發生錯誤:", error);
+        });
 
       document.querySelector(".comment-rewrite").style.display = "flex";
       document.body.style.overflow = "hidden";
@@ -829,18 +839,33 @@
     }
 
     function submitRewriteComment() {
-      let newText = document.querySelector(".inputField").value.trim();
-      if (newText !== "" && currentCommentP) {
-        currentCommentP.textContent = newText; // 更新 <p> 內容
-      }
+      let newText = document.querySelector(".inputField").value;
+
+      fetch(`http://localhost:8080/api/vendor/review/${selectedReviewId}/rewrite`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: newText })
+      })
+        .then(response => response.json())
+        .then(data => {
+
+          let reviewElement = document.querySelector(`p[data-review="${selectedReviewId}"]`);
+          reviewElement.textContent = data.review.reviewContent; // 渲染留言
+
+          let reviewTime = document.querySelector(`b[data-time="${selectedReviewId}"]`);
+          reviewTime.textContent = "發表時間：" + data.review.reviewTime; // 渲染時間
+
+        })
+        .catch(error => {
+          console.error("發生錯誤:", error);
+        });
       closeRewriteComment();
     }
+
     function closeRewriteComment() {
       document.querySelector(".comment-rewrite").style.display = "none";
       document.body.style.overflow = "scroll";
     }
-
-
 
   </script>
 

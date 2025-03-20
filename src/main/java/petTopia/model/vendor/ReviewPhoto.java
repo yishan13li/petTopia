@@ -12,6 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -39,5 +40,8 @@ public class ReviewPhoto {
 	@Column(name = "photo", nullable = false)
 	private byte[] photo;
 
+	/* 使用Transient防止被序列化，用於Service層賦值 */
+	@Transient
+	private String photoBase64;
 }
 

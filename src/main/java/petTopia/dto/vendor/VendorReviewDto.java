@@ -1,15 +1,15 @@
 package petTopia.dto.vendor;
 
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.net.URLConnection;
 import java.util.Base64;
 import java.util.Date;
+import java.util.List;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import petTopia.model.vendor.ReviewPhoto;
+import petTopia.util.ImageConverter;
 
 @Getter
 @Setter
@@ -24,6 +24,8 @@ public class VendorReviewDto {
     private Integer ratingEnvironment;
     private Integer ratingPrice;
     private Integer ratingService;
+    private List<ReviewPhoto> reviewPhotos;
+    private Boolean hasPhotos;
 	
     /* 會員資訊 */
     private Integer memberId;
@@ -35,26 +37,11 @@ public class VendorReviewDto {
     /* 設定圖片之Base64 */
     public void setProfilePhoto(byte[] profilePhoto) {
     	if(profilePhoto!=null) {    		
-    		String mimeType = getMimeType(profilePhoto);
+    		String mimeType = ImageConverter.getMimeType(profilePhoto);
     		this.profilePhotoBase64 = "data:%s;base64,".formatted(mimeType)
     				+ Base64.getEncoder().encodeToString(profilePhoto);
     	}
 		this.profilePhoto = profilePhoto;
     }
-    
-    /* 讀取檔案之MimeType */
-	public static String getMimeType(byte[] imageBytes) {
-		try {
-			ByteArrayInputStream inputStream = new ByteArrayInputStream(imageBytes);
-			String mimeType = URLConnection.guessContentTypeFromStream(inputStream);
-			
-			inputStream.close();
-			
-			return mimeType;
-
-		} catch (IOException e) {
-			return "image/jpg";
-		}
-	}
 }
 
