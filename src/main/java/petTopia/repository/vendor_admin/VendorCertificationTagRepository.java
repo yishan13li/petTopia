@@ -6,4 +6,6 @@ import petTopia.model.vendor.VendorCertificationTag;
 
 public interface VendorCertificationTagRepository extends JpaRepository<VendorCertificationTag, Integer> {
 
+	boolean existsByVendorIdAndTagId(int vendorId, int certificationTagId);
+
 }
