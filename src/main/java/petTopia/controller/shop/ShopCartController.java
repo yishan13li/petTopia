@@ -101,7 +101,7 @@ public class ShopCartController {
 
 	}
 
-	// 會員購物車頁面 => 獲取商品圖片
+	// 會員購物車頁面 => 刪除購物車
 	@GetMapping("/api/deleteCartById")
 	public ResponseEntity<?> deleteCartById(@RequestParam Integer cartId) {
 		
