@@ -20,7 +20,7 @@ public class Member {
 	    @MapsId
 	    @JoinColumn(name = "id")
 	    @JsonIgnore
-	    private Users user;  // 用這個屬性來建立與 Users 的關聯
+	    private User user;  // 用這個屬性來建立與 Users 的關聯
 
     @Column(name = "name", nullable = true)
     private String name;

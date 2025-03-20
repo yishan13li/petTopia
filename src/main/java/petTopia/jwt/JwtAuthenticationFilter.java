@@ -15,7 +15,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.io.IOException;
 
@@ -63,54 +62,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         
-        // 從請求頭中獲取 Authorization 信息
-        final String authorizationHeader = request.getHeader("Authorization");
-
-        String username = null;
-        String jwt = null;
-
-        // 檢查 Authorization 頭部是否存在且格式正確
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            // 提取 JWT 令牌（去除 "Bearer " 前綴）
-            jwt = authorizationHeader.substring(7);
-            try {
-                // 從令牌中提取用戶名
-                username = jwtUtil.extractUsername(jwt);
-            } catch (Exception e) {
-                // 記錄令牌解析失敗的錯誤
-                logger.error("JWT 令牌解析失敗", e);
-            }
+        final String authHeader = request.getHeader("Authorization");
+        
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
         }
 
-        // 如果找到用戶名且當前沒有認證信息
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            try {
-                // 從數據庫加載用戶詳細信息
-                UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+        try {
+            final String jwt = authHeader.substring(7);
+            final String email = jwtUtil.extractUsername(jwt);
 
-                // 驗證 JWT 令牌是否有效
-                if (jwtUtil.validateToken(jwt, userDetails.getUsername())) {
-                    // 創建認證令牌
-                    UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities());
-                    
-                    // 設置認證詳情
-                    authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    
-                    // 將認證信息設置到 SecurityContext 中
-                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-                    
-                    // 將用戶 ID 和角色添加到請求屬性中，方便控制器訪問
-                    request.setAttribute("userId", jwtUtil.extractUserId(jwt));
-                    request.setAttribute("userRole", jwtUtil.extractUserRole(jwt));
+            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(email);
+                
+                if (jwtUtil.validateToken(jwt, userDetails)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        null,
+                        userDetails.getAuthorities()
+                    );
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
-            } catch (UsernameNotFoundException e) {
-                // 用戶不存在，記錄警告但不中斷請求處理
-                logger.warn("JWT 令牌中的用戶不存在: " + username);
             }
+        } catch (Exception e) {
+            logger.error("JWT 認證失敗", e);
         }
 
-        // 將請求傳遞給下一個過濾器
         filterChain.doFilter(request, response);
     }
 }

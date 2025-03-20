@@ -6,21 +6,21 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import petTopia.model.user.Users;
-import petTopia.repository.user.UsersRepository;
+import petTopia.model.user.User;
+import petTopia.repository.user.UserRepository;
 
 
 @Service
 public class UserService {
 
 	@Autowired
-	private UsersRepository usersRepository;
+	private UserRepository usersRepository;
 //
 //	@Autowired
 //	private VendorService vendorService;
 //
 //	@Override
-	public Users getUserByEmailAndPassword(String email, String password) {
+	public User getUserByEmailAndPassword(String email, String password) {
 		return usersRepository.findByEmailAndPassword(email, password);
 	}
 //

@@ -16,7 +16,7 @@ public class Admin {
     @OneToOne
     @MapsId
     @JoinColumn(name = "id")
-    private Users users;
+    private User users;
     
     @Column(nullable = false)
     private String name;

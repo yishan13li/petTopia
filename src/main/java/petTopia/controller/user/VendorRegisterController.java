@@ -10,12 +10,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 
-import petTopia.model.user.Users;
+import petTopia.model.user.User;
 import petTopia.service.user.VendorRegistrationService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -53,7 +52,7 @@ public class VendorRegisterController {
 
         try {
             // 檢查是否已存在相同email的商家帳號
-            Users existingVendor = vendorRegistrationService.findByEmail(email);
+            User existingVendor = vendorRegistrationService.findByEmail(email);
             if (existingVendor != null) {
                 logger.warn("註冊失敗 - 電子郵件已存在: {}", email);
                 return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -61,11 +60,11 @@ public class VendorRegisterController {
             }
 
             // 創建用戶基本信息
-            Users newUser = new Users();
+            User newUser = new User();
             newUser.setEmail(email);
             newUser.setPassword(password);
-            newUser.setUserRole(Users.UserRole.VENDOR);
-            newUser.setProvider(Users.Provider.LOCAL);
+            newUser.setUserRole(User.UserRole.VENDOR);
+            newUser.setProvider(User.Provider.LOCAL);
 
             // 使用註冊服務處理註冊
             vendorRegistrationService.register(newUser);

@@ -8,17 +8,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 
-import petTopia.model.user.Users;       
+import petTopia.model.user.User;       
 import petTopia.service.user.EmailService;
 import petTopia.service.user.RegistrationService;
-import petTopia.service.user.MemberLoginService;
+
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import java.time.LocalDateTime;
+
 
 @RestController
 @RequestMapping("/api/auth")
@@ -32,8 +32,7 @@ public class MemberRegisterController {
     @Autowired
     private EmailService emailService;
 
-    @Autowired
-    private MemberLoginService memberService;
+
 
     private Map<String, Map<String, Object>> verificationCodes = new HashMap<>();
 
@@ -63,7 +62,7 @@ public class MemberRegisterController {
 
         try {
             // 檢查是否已存在相同email的會員帳號
-            Users existingUser = registrationService.findByEmail(email);
+            User existingUser = registrationService.findByEmail(email);
             if (existingUser != null) {
                 logger.warn("註冊失敗 - 電子郵件已存在: {}", email);
                 return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -71,11 +70,11 @@ public class MemberRegisterController {
             }
 
             // 創建用戶基本信息
-            Users newUser = new Users();
+            User newUser = new User();
             newUser.setEmail(email);
             newUser.setPassword(password);
-            newUser.setUserRole(Users.UserRole.MEMBER);
-            newUser.setProvider(Users.Provider.LOCAL);
+            newUser.setUserRole(User.UserRole.MEMBER);
+            newUser.setProvider(User.Provider.LOCAL);
 
             // 使用註冊服務處理註冊
             Map<String, Object> result = registrationService.register(newUser);
@@ -163,7 +162,7 @@ public class MemberRegisterController {
                 // 如果內存中的驗證碼匹配，則嘗試同時更新數據庫中的驗證狀態
                 try {
                     // 嘗試在數據庫中查找用戶並更新驗證狀態
-                    Users user = registrationService.findByEmail(email);
+                    User user = registrationService.findByEmail(email);
                     if (user != null) {
                         // 更新數據庫中的驗證狀態
                         user.setEmailVerified(true);

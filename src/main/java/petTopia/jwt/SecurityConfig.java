@@ -17,7 +17,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import petTopia.model.user.Users;
+import petTopia.model.user.User;
 import petTopia.service.user.MemberService;
 import petTopia.service.user.MemberLoginService;
 
@@ -49,12 +49,6 @@ public class SecurityConfig {
      */
     @Autowired
     private JwtUtil jwtUtil;
-
-    /**
-     * 會員服務，處理會員相關操作
-     */
-    @Autowired
-    private MemberService memberService;
 
     /**
      * JWT 認證過濾器
@@ -101,13 +95,50 @@ public class SecurityConfig {
             // 配置請求授權
             .authorizeHttpRequests(auth -> auth
                 // 公開接口
-                .requestMatchers("/api/auth/**", "/api/oauth2/**", "/oauth2/authorization/**", "/oauth2/code/**", "/api/public/**").permitAll()
+                .requestMatchers(
+                    "/api/auth/**", 
+                    "/api/oauth2/**", 
+                    "/oauth2/authorization/**", 
+                    "/oauth2/code/**", 
+                    "/oauth2/callback/**",
+                    "/api/public/**",
+                    "/api/vendor/all",
+                    "/api/vendor/category/show"
+                ).permitAll()
+                
                 // 會員接口
-                .requestMatchers("/api/member/**").hasRole("MEMBER")
+                .requestMatchers(
+                    "/api/member/**",
+                    "/api/vendor/{vendorId}",
+                    "/api/vendor/{vendorId}/image",
+                    "/api/vendor/category/{categoryId}",
+                    "/api/vendor/{vendorId}/review",
+                    "/api/vendor/review/{reviewId}",
+                    "/api/vendor/review/{reviewId}/photo",
+                    "/activity/all",
+                    "/activity/{activityId}",
+                    "/activity/{activityId}/review"
+                ).hasRole("MEMBER")
+                
                 // 商家接口
-                .requestMatchers("/api/vendor-admin/**").hasRole("VENDOR")
+                .requestMatchers(
+                    "/api/vendor/**",
+                    "/activity/**",
+                    "/api/vendor/{vendorId}/review/add",
+                    "/api/vendor/{vendorId}/review/star/add",
+                    "/api/vendor/review/{reviewId}/rewrite",
+                    "/api/vendor/review/{reviewId}/delete"
+                ).hasAnyRole("MEMBER", "VENDOR")
+                
                 // 管理員接口
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers(
+                    "/api/admin/**",
+                    "/api/admin/dashboard",
+                    "/api/admin/users/**",
+                    "/api/admin/members",
+                    "/api/admin/vendors"
+                ).hasRole("ADMIN")
+                
                 // 其他請求需要認證
                 .anyRequest().authenticated()
             )
@@ -133,7 +164,7 @@ public class SecurityConfig {
                         }
                         
                         // 查找用戶
-                        Users user = memberLoginService.findByEmail(email);
+                        User user = memberLoginService.findByEmail(email);
                         Integer userId = (user != null) ? user.getId() : null;
                         String role = (user != null) ? user.getUserRole().toString() : "MEMBER";
                         
@@ -146,9 +177,11 @@ public class SecurityConfig {
                         
                         // 生成 JWT 令牌
                         String token = jwtUtil.generateToken(email, userId, role);
-                        response.sendRedirect("http://localhost:5173/login?token=" + token + "&userId=" + userId + "&email=" + email + "&role=" + role);
+                        response.sendRedirect("http://localhost:5173/login?token=" + token + 
+                            "&userId=" + userId + "&email=" + email + "&role=" + role);
                     } catch (Exception e) {
-                        response.sendRedirect("http://localhost:5173/login?error=true&message=" + java.net.URLEncoder.encode("登入過程中發生錯誤: " + e.getMessage(), "UTF-8"));
+                        response.sendRedirect("http://localhost:5173/login?error=true&message=" + 
+                            java.net.URLEncoder.encode("登入過程中發生錯誤: " + e.getMessage(), "UTF-8"));
                     }
                 })
             )

@@ -41,4 +41,8 @@ public interface VendorRepository extends JpaRepository<Vendor, Integer> {
     // 根據email查找商家，使用LEFT JOIN確保即使某些欄位為null也能查到
     @Query("SELECT v FROM Vendor v LEFT JOIN v.user u WHERE u.email = :email")
     Vendor findByEmail(@Param("email") String email);
+
+    List<Vendor> findByVendorCategoryIdAndIdNot(Integer categoryId, Integer vendorId);
+
+    List<Vendor> findAllByIdNot(Integer vendorId);
 }

@@ -10,7 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import petTopia.jwt.JwtUtil;
-import petTopia.model.user.Users;
+import petTopia.model.user.User;
 import petTopia.service.user.VendorRegistrationService;
 
 import java.util.Map;
@@ -66,14 +66,14 @@ public class VendorConversionController {
             Integer userId = jwtUtil.extractUserId(token);
             
             // 檢查是否已有商家帳號
-            Users existingVendor = vendorRegistrationService.findVendorByEmail(email);
+            User existingVendor = vendorRegistrationService.findVendorByEmail(email);
             
             if (existingVendor != null) {
                 logger.info("用戶已有商家帳號，執行切換 - 用戶ID: {}, 電子郵件: {}", 
                     userId, email);
                 
                 // 檢查是否為第三方登入用戶
-                if (existingVendor.getProvider() != Users.Provider.LOCAL || 
+                if (existingVendor.getProvider() != User.Provider.LOCAL || 
                     existingVendor.getPassword() == null || 
                     existingVendor.getPassword().isEmpty()) {
                     
@@ -153,7 +153,7 @@ public class VendorConversionController {
             Map<String, Object> conversionResult = vendorRegistrationService.convertMemberToVendor(userId);
             
             if ((Boolean) conversionResult.get("success")) {
-                Users newVendor = (Users) conversionResult.get("vendorUser");
+                User newVendor = (User) conversionResult.get("vendorUser");
                 logger.info("會員轉換為商家成功 - 會員ID: {}, 新商家ID: {}", 
                     userId, newVendor.getId());
                 
@@ -221,7 +221,7 @@ public class VendorConversionController {
             }
             
             // 檢查是否已有商家帳號
-            Users existingVendor = vendorRegistrationService.findVendorByEmail(email);
+            User existingVendor = vendorRegistrationService.findVendorByEmail(email);
             
             if (existingVendor != null) {
                 logger.info("用戶已有商家帳號 - 用戶ID: {}, 商家ID: {}", 

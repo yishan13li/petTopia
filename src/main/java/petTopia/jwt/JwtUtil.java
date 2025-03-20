@@ -4,10 +4,11 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,18 +28,14 @@ public class JwtUtil {
 
     /**
      * JWT 密鑰
-     * 從配置文件中讀取，如果未配置則使用默認值
-     * 建議在生產環境中使用更長的密鑰
+     * 使用 Base64 編碼的隨機字符串
      */
-    @Value("${jwt.secret:petTopiaSecretKey12345678901234567890}")
-    private String secret;
+    private static final String SECRET = "bXlTdXBlclNlY3VyZUtleUZvckpXVFNpZ25pbmdBbmRWZXJpZmljYXRpb25PZk5vbmV4cGlyaW5nVG9rZW5zRm9yUGV0VG9waWE=";
 
     /**
-     * JWT 令牌有效期
-     * 從配置文件中讀取，默認為 24 小時（86400000 毫秒）
+     * JWT 令牌有效期（24小時）
      */
-    @Value("${jwt.expiration:86400000}")
-    private long expiration;
+    private static final long EXPIRATION = 86400000L; // 24 hours in milliseconds
 
     /**
      * 生成用於簽名的密鑰
@@ -46,7 +43,7 @@ public class JwtUtil {
      * @return 用於簽名的 Key 對象
      */
     private Key getSigningKey() {
-        byte[] keyBytes = secret.getBytes();
+        byte[] keyBytes = Base64.getDecoder().decode(SECRET);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
@@ -74,7 +71,7 @@ public class JwtUtil {
      * @return 用戶 ID
      */
     public Integer extractUserId(String token) {
-        final Claims claims = extractAllClaims(token);
+        Claims claims = extractAllClaims(token);
         return claims.get("userId", Integer.class);
     }
 
@@ -84,8 +81,8 @@ public class JwtUtil {
      * @return 用戶角色
      */
     public String extractUserRole(String token) {
-        final Claims claims = extractAllClaims(token);
-        return claims.get("userRole", String.class);
+        Claims claims = extractAllClaims(token);
+        return claims.get("role", String.class);
     }
 
     /**
@@ -117,22 +114,22 @@ public class JwtUtil {
      * @param token JWT 令牌
      * @return 如果令牌已過期返回 true
      */
-    public Boolean isTokenExpired(String token) {
+    private Boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
     /**
      * 為用戶生成新的 JWT 令牌
-     * @param username 用戶名
+     * @param email 用戶電子郵件
      * @param userId 用戶 ID
-     * @param userRole 用戶角色
+     * @param role 用戶角色
      * @return 生成的 JWT 令牌
      */
-    public String generateToken(String username, Integer userId, String userRole) {
+    public String generateToken(String email, Integer userId, String role) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
-        claims.put("userRole", userRole);
-        return createToken(claims, username);
+        claims.put("role", role);
+        return createToken(claims, email);
     }
 
     /**
@@ -146,9 +143,20 @@ public class JwtUtil {
                 .setClaims(claims)
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    /**
+     * 驗證 JWT 令牌
+     * @param token JWT 令牌
+     * @param userDetails 用戶詳情
+     * @return 如果令牌有效返回 true
+     */
+    public Boolean validateToken(String token, UserDetails userDetails) {
+        final String username = extractUsername(token);
+        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
     /**
@@ -158,7 +166,24 @@ public class JwtUtil {
      * @return 如果令牌有效返回 true
      */
     public Boolean validateToken(String token, String username) {
-        final String extractedUsername = extractUsername(token);
-        return (extractedUsername.equals(username) && !isTokenExpired(token));
+        return (username.equals(extractUsername(token)) && !isTokenExpired(token));
+    }
+
+    /**
+     * 從令牌中提取用戶資訊
+     * @param token JWT 令牌
+     * @return 用戶資訊
+     */
+    public Map<String, Object> extractUserInfo(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            Map<String, Object> userInfo = new HashMap<>();
+            userInfo.put("username", claims.getSubject());
+            userInfo.put("userId", claims.get("userId", Integer.class));
+            userInfo.put("userRole", claims.get("role", String.class));
+            return userInfo;
+        } catch (Exception e) {
+            return new HashMap<>();
+        }
     }
 } 

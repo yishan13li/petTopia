@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import petTopia.model.user.Member;
 import java.util.List;
 import java.util.Optional;
+import petTopia.model.user.User;
 
 @Repository
 public interface MemberRepository extends JpaRepository<Member, Integer> {

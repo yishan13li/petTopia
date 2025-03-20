@@ -8,10 +8,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.view.RedirectView;
 
 import petTopia.jwt.JwtUtil;
-import petTopia.model.user.Users;
+import petTopia.model.user.User;
 import petTopia.service.user.MemberLoginService;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.Map;
+
 
 @Controller
 @RequestMapping("/oauth2")
@@ -35,7 +35,7 @@ public class OAuth2RedirectController {
         
         try {
             // 查找或創建用戶
-            Users user = memberLoginService.findByEmail(email);
+            User user = memberLoginService.findByEmail(email);
             boolean isNewUser = false;
             
             if (user == null) {

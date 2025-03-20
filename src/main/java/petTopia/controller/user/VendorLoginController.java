@@ -1,6 +1,5 @@
 package petTopia.controller.user;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,12 +10,11 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import petTopia.jwt.JwtUtil;
-import petTopia.model.user.Users;
+import petTopia.model.user.User;
 import petTopia.service.user.VendorLoginService;
 
 import org.slf4j.Logger;
@@ -63,7 +61,7 @@ public class VendorLoginController {
                     .body(Map.of("error", loginResult.get("message")));
             }
 
-            Users user = (Users) loginResult.get("user");
+            User user = (User) loginResult.get("user");
             
             // 創建認證令牌
             Authentication authentication = authenticationManager.authenticate(
@@ -107,35 +105,22 @@ public class VendorLoginController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<?> getVendorProfile(@RequestHeader(value = "Authorization", required = false) String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("error", "請先登入"));
-        }
-
-        String token = authHeader.substring(7);
+    public ResponseEntity<?> getVendorProfile() {
         try {
-            // 先驗證 token 是否過期
-            if (jwtUtil.isTokenExpired(token)) {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "登入已過期，請重新登入"));
+                    .body(Map.of("error", "請先登入"));
             }
 
-            String email = jwtUtil.extractUsername(token);
-            if (!jwtUtil.validateToken(token, email)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "無效的令牌"));
+            String email = authentication.getName();
+            User user = vendorService.findByEmail(email);
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "用戶不存在"));
             }
 
-            String role = jwtUtil.extractUserRole(token);
-            if (!"VENDOR".equals(role)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "無權限訪問此資源"));
-            }
-
-            Integer userId = jwtUtil.extractUserId(token);
-            Map<String, Object> vendorInfo = vendorService.getVendorInfo(userId);
-            
+            Map<String, Object> vendorInfo = vendorService.getVendorInfo(user.getId());
             return ResponseEntity.ok(vendorInfo);
         } catch (Exception e) {
             logger.error("獲取商家資料失敗", e);
@@ -158,7 +143,7 @@ public class VendorLoginController {
                     .body(Map.of("error", loginResult.get("message")));
             }
 
-            Users user = (Users) loginResult.get("user");
+            User user = (User) loginResult.get("user");
             
             // 創建認證令牌
             Authentication authentication = authenticationManager.authenticate(
@@ -191,32 +176,27 @@ public class VendorLoginController {
     }
 
     @GetMapping("/status")
-    public ResponseEntity<?> getLoginStatus(@RequestHeader(value = "Authorization", required = false) String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.ok(Map.of("isLoggedIn", false));
-        }
-
-        String token = authHeader.substring(7);
+    public ResponseEntity<?> getLoginStatus() {
         try {
-            String email = jwtUtil.extractUsername(token);
-            if (!jwtUtil.validateToken(token, email)) {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
                 return ResponseEntity.ok(Map.of("isLoggedIn", false));
             }
 
-            String role = jwtUtil.extractUserRole(token);
-            if (!"VENDOR".equals(role)) {
+            String email = authentication.getName();
+            User user = vendorService.findByEmail(email);
+            if (user == null) {
                 return ResponseEntity.ok(Map.of("isLoggedIn", false));
             }
 
-            Integer userId = jwtUtil.extractUserId(token);
-            Map<String, Object> vendorInfo = vendorService.getVendorInfo(userId);
+            Map<String, Object> vendorInfo = vendorService.getVendorInfo(user.getId());
             
             return ResponseEntity.ok(Map.of(
                 "isLoggedIn", true,
-                "userId", userId,
+                "userId", user.getId(),
                 "vendorName", vendorInfo.get("vendorName"),
                 "email", email,
-                "role", role
+                "role", user.getUserRole().toString()
             ));
         } catch (Exception e) {
             logger.error("獲取登入狀態失敗", e);

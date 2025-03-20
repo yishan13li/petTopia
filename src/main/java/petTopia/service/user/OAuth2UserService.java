@@ -9,10 +9,10 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import petTopia.model.user.Member;
-import petTopia.model.user.Users;
+import petTopia.model.user.User;
 import petTopia.model.vendor.Vendor;
 import petTopia.repository.user.MemberRepository;
-import petTopia.repository.user.UsersRepository;
+import petTopia.repository.user.UserRepository;
 import petTopia.repository.vendor.VendorRepository;
 
 import java.time.LocalDateTime;
@@ -36,7 +36,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
     private MemberRepository memberRepository;
 
     @Autowired
-    private UsersRepository usersRepository;
+    private UserRepository usersRepository;
     
     @Autowired
     private VendorRepository vendorRepository;
@@ -55,12 +55,12 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
         
         try {
             // 只檢查會員角色的本地帳號
-            List<Users> localUsers = usersRepository.findByEmailAndProviderAndUserRole(
-                email, Users.Provider.LOCAL, Users.UserRole.MEMBER);
+            List<User> localUsers = usersRepository.findByEmailAndProviderAndUserRole(
+                email, User.Provider.LOCAL, User.UserRole.MEMBER);
             
             if (!localUsers.isEmpty()) {
                 // 如果存在本地會員帳號，使用第一個找到的帳號進行綁定
-                Users localUser = localUsers.get(0);
+                User localUser = localUsers.get(0);
                 
                 // 如果有多個本地會員帳號，記錄警告
                 if (localUsers.size() > 1) {
@@ -68,7 +68,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
                 }
                 
                 // 檢查是否有對應的商家帳號
-                Optional<Users> vendorAccount = usersRepository.findVendorByEmail(email);
+                Optional<User> vendorAccount = usersRepository.findVendorByEmail(email);
                 
                 Map<String, Object> attributes = new HashMap<>(oauth2User.getAttributes());
                 attributes.put("localAccountExists", true);
@@ -89,10 +89,10 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
             }
             
             // 查找是否有相同 email 的第三方登入會員帳號
-            List<Users> existingUsers = usersRepository.findByEmailAndProviderAndUserRole(
-                email, Users.Provider.valueOf(provider), Users.UserRole.MEMBER);
+            List<User> existingUsers = usersRepository.findByEmailAndProviderAndUserRole(
+                email, User.Provider.valueOf(provider), User.UserRole.MEMBER);
             
-            Users existingUser = existingUsers.isEmpty() ? null : existingUsers.get(0);
+            User existingUser = existingUsers.isEmpty() ? null : existingUsers.get(0);
             
             if (existingUser != null) {
                 // 獲取會員資訊
@@ -102,7 +102,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
                 logger.info("對應的會員信息 - Member: {}", member);
                 
                 // 檢查是否有對應的商家帳號
-                Optional<Users> vendorAccount = usersRepository.findVendorByEmail(email);
+                Optional<User> vendorAccount = usersRepository.findVendorByEmail(email);
                 
                 // 建立包含額外資訊的屬性Map
                 Map<String, Object> attributes = new HashMap<>();
@@ -151,12 +151,12 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
                 );
             } else {
                 // 建立新的會員帳號
-                existingUser = new Users();
+                existingUser = new User();
                 existingUser.setEmail(email);
                 existingUser.setPassword(""); // 第三方登入不需要密碼
-                existingUser.setUserRole(Users.UserRole.MEMBER);
+                existingUser.setUserRole(User.UserRole.MEMBER);
                 existingUser.setEmailVerified(true);
-                existingUser.setProvider(Users.Provider.valueOf(provider));
+                existingUser.setProvider(User.Provider.valueOf(provider));
                 existingUser = usersRepository.saveAndFlush(existingUser);
                 
                 // 建立新的會員資料

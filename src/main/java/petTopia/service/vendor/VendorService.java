@@ -84,4 +84,12 @@ public class VendorService {
 		return finalList;
 	}
 
+	public List<Vendor> findVendorByCategoryIdExceptOne(Integer categoryId, Integer vendorId) {
+		return vendorRepository.findByVendorCategoryIdAndIdNot(categoryId, vendorId);
+	}
+
+	public List<Vendor> findAllVendorExceptOne(Integer vendorId) {
+		return vendorRepository.findAllByIdNot(vendorId);
+	}
+
 }

@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -12,14 +13,16 @@ import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
-import petTopia.model.user.Users;
+import petTopia.model.user.User;
 import petTopia.model.vendor.Vendor;
 import petTopia.model.user.Member;
-import petTopia.repository.user.UsersRepository;
+import petTopia.repository.user.UserRepository;
 import petTopia.repository.vendor.VendorRepository;
 import petTopia.repository.user.MemberRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import petTopia.model.vendor.VendorCategory;
+import petTopia.repository.vendor.VendorCategoryRepository;
 
 @Service
 public class VendorRegistrationService {
@@ -27,10 +30,13 @@ public class VendorRegistrationService {
     private static final Logger logger = LoggerFactory.getLogger(VendorRegistrationService.class);
     
     @Autowired
-    private UsersRepository usersRepository;
+    private UserRepository usersRepository;
     
     @Autowired
     private VendorRepository vendorRepository;
+    
+    @Autowired
+    private VendorCategoryRepository vendorCategoryRepository;
     
     @Autowired
     private MemberRepository memberRepository;
@@ -45,14 +51,14 @@ public class VendorRegistrationService {
     private EntityManager entityManager;
     
     @Transactional
-    public Map<String, Object> register(Users user) {
+    public Map<String, Object> register(User user) {
         Map<String, Object> result = new HashMap<>();
         logger.info("開始商家註冊流程，email: {}", user.getEmail());
         
         try {
             // 檢查是否已存在相同email的商家帳號
-            Users existingVendor = usersRepository.findByEmailAndUserRole(
-                    user.getEmail(), Users.UserRole.VENDOR);
+            User existingVendor = usersRepository.findByEmailAndUserRole(
+                    user.getEmail(), User.UserRole.VENDOR);
             if (existingVendor != null) {
                 logger.warn("註冊失敗：商家帳號已存在，email: {}", user.getEmail());
                 result.put("success", false);
@@ -64,24 +70,24 @@ public class VendorRegistrationService {
             String token = UUID.randomUUID().toString();
             user.setVerificationToken(token);
             user.setTokenExpiry(LocalDateTime.now().plusHours(24));
-            user.setUserRole(Users.UserRole.VENDOR);
-            user.setProvider(Users.Provider.LOCAL);
+            user.setUserRole(User.UserRole.VENDOR);
+            user.setProvider(User.Provider.LOCAL);
             
             // 加密密碼
             String encodedPassword = passwordEncoder.encode(user.getPassword());
             user.setPassword(encodedPassword);
             
             // 保存用戶
-            Users savedUser = usersRepository.save(user);
+            User savedUser = usersRepository.save(user);
             logger.info("商家用戶資訊儲存成功，userId: {}", savedUser.getId());
             
             // 創建商家資料
             Vendor vendor = new Vendor();
             vendor.setUser(savedUser);  // 設置關聯，ID 會自動對應
-            vendor.setRegistrationDate(LocalDateTime.now());
-            vendor.setUpdatedDate(LocalDateTime.now());
+            vendor.setRegistrationDate(new Date());
+            vendor.setUpdatedDate(new Date());
             vendor.setStatus(false); // 預設為未認證狀態
-            vendor.setVendorCategoryId(1); // 預設分類
+            vendor.setVendorCategory(vendorCategoryRepository.findById(1).orElse(null)); // 預設分類
             
             // 保存商家資料
             Vendor savedVendor = vendorRepository.save(vendor);
@@ -108,7 +114,7 @@ public class VendorRegistrationService {
     
     @Transactional
     public boolean verifyEmail(String token) {
-        Users user = usersRepository.findByVerificationToken(token);
+        User user = usersRepository.findByVerificationToken(token);
         
         if (user != null && !user.isEmailVerified() && 
             LocalDateTime.now().isBefore(user.getTokenExpiry())) {
@@ -140,12 +146,12 @@ public class VendorRegistrationService {
         return false;
     }
 
-    public Users findByEmail(String email) {
-        return usersRepository.findByEmailAndUserRole(email, Users.UserRole.VENDOR);
+    public User findByEmail(String email) {
+        return usersRepository.findByEmailAndUserRole(email, User.UserRole.VENDOR);
     }
     
-    public Users findVendorByEmail(String email) {
-        return usersRepository.findByEmailAndUserRole(email, Users.UserRole.VENDOR);
+    public User findVendorByEmail(String email) {
+        return usersRepository.findByEmailAndUserRole(email, User.UserRole.VENDOR);
     }
 
     @Transactional
@@ -155,16 +161,16 @@ public class VendorRegistrationService {
         
         try {
             // 檢查會員是否存在
-            Users memberUser = usersRepository.findById(memberId)
+            User memberUser = usersRepository.findById(memberId)
                 .orElseThrow(() -> new RuntimeException("會員不存在"));
             
-            if (memberUser.getUserRole() != Users.UserRole.MEMBER) {
+            if (memberUser.getUserRole() != User.UserRole.MEMBER) {
                 throw new RuntimeException("只有會員帳號可以轉換為商家");
             }
             
             // 檢查是否已經有相同 email 的商家帳號
-            Users existingVendor = usersRepository.findByEmailAndUserRole(
-                memberUser.getEmail(), Users.UserRole.VENDOR);
+            User existingVendor = usersRepository.findByEmailAndUserRole(
+                memberUser.getEmail(), User.UserRole.VENDOR);
             if (existingVendor != null) {
                 throw new RuntimeException("此 email 已註冊為商家");
             }
@@ -173,10 +179,10 @@ public class VendorRegistrationService {
                 .orElseThrow(() -> new RuntimeException("會員資料不存在"));
             
             // 創建新的商家用戶
-            Users vendorUser = new Users();
+            User vendorUser = new User();
             vendorUser.setEmail(memberUser.getEmail());
             vendorUser.setPassword(memberUser.getPassword()); // 直接使用已加密的密碼
-            vendorUser.setUserRole(Users.UserRole.VENDOR);
+            vendorUser.setUserRole(User.UserRole.VENDOR);
             vendorUser.setProvider(memberUser.getProvider());
             vendorUser.setEmailVerified(true); // 因為會員已驗證過 email
             
@@ -186,21 +192,20 @@ public class VendorRegistrationService {
             
             // 創建新的商家資料
             Vendor vendor = new Vendor();
-            vendor.setUser(vendorUser);  // 設置關聯
+            vendor.setId(vendorUser.getId());  // 手動設置 ID
             vendor.setName(member.getName());
             vendor.setPhone(member.getPhone());
             vendor.setAddress(member.getAddress());
             vendor.setStatus(false);  // 預設未認證
-            vendor.setRegistrationDate(LocalDateTime.now());
-            vendor.setUpdatedDate(LocalDateTime.now());
-            vendor.setVendorCategoryId(1); // 預設分類
+            vendor.setRegistrationDate(new Date());
+            vendor.setUpdatedDate(new Date());
+            vendor.setVendorCategory(vendorCategoryRepository.findById(1).orElse(null)); // 預設分類
             
-            // 保存商家資料並立即刷新
-            vendor = vendorRepository.saveAndFlush(vendor);
-            entityManager.refresh(vendor);
+            // 保存商家資料
+            vendor = vendorRepository.save(vendor);
             
             // 重新獲取完整的商家用戶資訊
-            Users newVendorUser = usersRepository.findById(vendorUser.getId())
+            User newVendorUser = usersRepository.findById(vendorUser.getId())
                 .orElseThrow(() -> new RuntimeException("商家用戶資料不存在"));
             
             result.put("success", true);

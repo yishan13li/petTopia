@@ -2,6 +2,7 @@ package petTopia.model.vendor;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import java.util.List;
 
 @Entity
 @Table(name = "vendor_category")
@@ -14,4 +15,7 @@ public class VendorCategory {
     
     @Column(unique = true, nullable = false)
     private String name;
+
+    @OneToMany(mappedBy = "vendorCategory")
+    private List<Vendor> vendors;
 } 

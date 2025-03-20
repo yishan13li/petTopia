@@ -7,9 +7,9 @@ import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.util.Optional;
 import petTopia.model.user.Member;
-import petTopia.model.user.Users;
+import petTopia.model.user.User;
 import petTopia.repository.user.MemberRepository;
-import petTopia.repository.user.UsersRepository;
+import petTopia.repository.user.UserRepository;
 
 @Service
 @Transactional
@@ -18,7 +18,7 @@ public class MemberService {
     private MemberRepository memberRepository;
 
     @Autowired
-    private UsersRepository usersRepository;
+    private UserRepository usersRepository;
 
     @Transactional
     public Member createOrUpdateMember(Member member) {
@@ -26,7 +26,7 @@ public class MemberService {
             validateMemberInput(member);
     
             // 確保用戶已存在於 `users` 表
-            Users user = usersRepository.findById(member.getId())
+            User user = usersRepository.findById(member.getId())
                 .orElseThrow(() -> new RuntimeException("用戶不存在"));
             member.setUser(user);  // 關聯 `Users`
     

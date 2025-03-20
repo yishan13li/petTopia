@@ -5,9 +5,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import petTopia.model.user.Users;
+import petTopia.model.user.User;
 import petTopia.model.user.Member;
-import petTopia.repository.user.UsersRepository;
+import petTopia.repository.user.UserRepository;
 import petTopia.repository.user.MemberRepository;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,7 +20,7 @@ public class MemberLoginService extends BaseUserService {
     private static final Logger logger = LoggerFactory.getLogger(MemberLoginService.class);
     
     @Autowired
-    private UsersRepository usersRepository;
+    private UserRepository usersRepository;
 
     @Autowired
     private MemberRepository memberRepository;
@@ -38,7 +38,7 @@ public class MemberLoginService extends BaseUserService {
         logger.info("開始會員登入流程，email: {}", email);
 
         try {
-            Users user = usersRepository.findByEmailAndUserRole(email, Users.UserRole.MEMBER);
+            User user = usersRepository.findByEmailAndUserRole(email, User.UserRole.MEMBER);
 
             if (user == null) {
                 logger.warn("登入失敗：會員帳號不存在，email: {}", email);
@@ -48,7 +48,7 @@ public class MemberLoginService extends BaseUserService {
             }
 
             // 檢查是否是第三方登入帳號且未啟用本地密碼
-            if (user.getProvider() != Users.Provider.LOCAL && !user.isLocalEnabled()) {
+            if (user.getProvider() != User.Provider.LOCAL && !user.isLocalEnabled()) {
                 logger.warn("登入失敗：第三方登入帳號嘗試使用密碼登入，userId: {}, provider: {}", user.getId(), user.getProvider());
                 result.put("success", false);
                 result.put("message", "此帳號是使用" + user.getProvider().toString() + "註冊的，請使用對應的登入方式，或設定本地密碼");
@@ -102,15 +102,15 @@ public class MemberLoginService extends BaseUserService {
         }
     }
 
-    public Users findByEmail(String email) {
-        return usersRepository.findByEmailAndUserRole(email, Users.UserRole.MEMBER);
+    public User findByEmail(String email) {
+        return usersRepository.findByEmailAndUserRole(email, User.UserRole.MEMBER);
     }
 
-    public Users findById(Integer id) {
+    public User findById(Integer id) {
         return usersRepository.findById(id).orElse(null);
     }
 
-    public Users updateUser(Users user) {
+    public User updateUser(User user) {
         return usersRepository.save(user);
     }
 }

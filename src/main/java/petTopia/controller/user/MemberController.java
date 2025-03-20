@@ -3,33 +3,30 @@ package petTopia.controller.user;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
-import petTopia.jwt.JwtUtil;
 import petTopia.model.user.Member;
-import petTopia.model.user.Users;
+import petTopia.model.user.User;
 import petTopia.service.user.MemberService;
 import petTopia.service.user.MemberLoginService;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.HashMap;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @RestController
 @RequestMapping("/api/member")
@@ -42,9 +39,6 @@ public class MemberController {
 
     @Autowired
     private MemberLoginService memberLoginService;
-
-    @Autowired
-    private JwtUtil jwtUtil;
 
     /**
      * 檢查名稱是否為郵箱格式
@@ -92,32 +86,26 @@ public class MemberController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<?> getProfile(@RequestHeader(value = "Authorization", required = false) String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("error", "未登入"));
-        }
-
-        String token = authHeader.substring(7);
+    public ResponseEntity<?> getProfile() {
         try {
-            String email = jwtUtil.extractUsername(token);
-            if (!jwtUtil.validateToken(token, email)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "無效的令牌"));
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String email = authentication.getName();
+            
+            User user = memberLoginService.findByEmail(email);
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "用戶不存在"));
             }
 
-            Integer userId = jwtUtil.extractUserId(token);
+            Integer userId = user.getId();
             Member member = memberService.getMemberById(userId);
             if (member == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "會員不存在"));
             }
             
-            // 獲取用戶資料，以檢查提供者
-            Users user = memberLoginService.findByEmail(email);
-            
             // 檢查名稱是否為郵箱格式，如果是則嘗試使用更友好的格式
-            if (user != null && user.getProvider() != Users.Provider.LOCAL) {
+            if (user.getProvider() != User.Provider.LOCAL) {
                 // 對於第三方登入用戶，特別檢查名稱格式
                 String currentName = member.getName();
                 
@@ -144,13 +132,9 @@ public class MemberController {
             memberData.put("birthdate", member.getBirthdate());
             memberData.put("status", member.getStatus());
             memberData.put("updatedDate", member.getUpdatedDate());
-            
-            // 如果有用戶資料，添加用戶資訊
-            if (user != null) {
-                memberData.put("email", user.getEmail());
-                memberData.put("provider", user.getProvider().toString());
-                memberData.put("userRole", user.getUserRole().toString());
-            }
+            memberData.put("email", user.getEmail());
+            memberData.put("provider", user.getProvider().toString());
+            memberData.put("userRole", user.getUserRole().toString());
             
             return ResponseEntity.ok(memberData);
         } catch (Exception e) {
@@ -161,24 +145,18 @@ public class MemberController {
     }
 
     @PutMapping("/profile")
-    public ResponseEntity<?> updateProfile(
-            @RequestBody Member member,
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("error", "未登入"));
-        }
-
-        String token = authHeader.substring(7);
+    public ResponseEntity<?> updateProfile(@RequestBody Member member) {
         try {
-            String email = jwtUtil.extractUsername(token);
-            if (!jwtUtil.validateToken(token, email)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "無效的令牌"));
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String email = authentication.getName();
+            
+            User user = memberLoginService.findByEmail(email);
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "用戶不存在"));
             }
 
-            Integer userId = jwtUtil.extractUserId(token);
+            Integer userId = user.getId();
             
             // 獲取現有會員資料
             Member existingMember = memberService.getMemberById(userId);
@@ -200,7 +178,7 @@ public class MemberController {
             
             existingMember.setUpdatedDate(LocalDateTime.now());
             
-            Member updatedMember = memberService.createOrUpdateMember(existingMember);
+            memberService.createOrUpdateMember(existingMember);
             return ResponseEntity.ok(Map.of("message", "會員資料更新成功"));
         } catch (Exception e) {
             logger.error("更新會員資料失敗", e);
@@ -210,24 +188,18 @@ public class MemberController {
     }
     
     @PostMapping("/upload-photo")
-    public ResponseEntity<?> uploadProfilePhoto(
-            @RequestParam("photo") MultipartFile photo,
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("error", "未登入"));
-        }
-
-        String token = authHeader.substring(7);
+    public ResponseEntity<?> uploadProfilePhoto(@RequestParam("photo") MultipartFile photo) {
         try {
-            String email = jwtUtil.extractUsername(token);
-            if (!jwtUtil.validateToken(token, email)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "無效的令牌"));
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String email = authentication.getName();
+            
+            User user = memberLoginService.findByEmail(email);
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "用戶不存在"));
             }
 
-            Integer userId = jwtUtil.extractUserId(token);
+            Integer userId = user.getId();
             
             // 獲取現有會員資料
             Member member = memberService.getMemberById(userId);
@@ -249,92 +221,72 @@ public class MemberController {
                     .body(Map.of("error", "未提供頭像文件"));
             }
         } catch (Exception e) {
-            logger.error("上傳頭像失敗", e);
+            logger.error("更新頭像失敗", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "上傳頭像失敗：" + e.getMessage()));
+                .body(Map.of("error", "更新失敗：" + e.getMessage()));
         }
     }
 
     @GetMapping("/address")
-    public ResponseEntity<?> getAddress(@RequestHeader(value = "Authorization", required = false) String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("error", "未登入"));
-        }
-
-        String token = authHeader.substring(7);
+    public ResponseEntity<?> getAddress() {
         try {
-            String email = jwtUtil.extractUsername(token);
-            if (!jwtUtil.validateToken(token, email)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "無效的令牌"));
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String email = authentication.getName();
+            
+            User user = memberLoginService.findByEmail(email);
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "用戶不存在"));
             }
 
-            Integer userId = jwtUtil.extractUserId(token);
+            Integer userId = user.getId();
             Member member = memberService.getMemberById(userId);
             if (member == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "會員不存在"));
             }
-
+            
             return ResponseEntity.ok(Map.of("address", member.getAddress()));
         } catch (Exception e) {
+            logger.error("獲取地址失敗", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "獲取地址失敗：" + e.getMessage()));
         }
     }
 
     @GetMapping("/profile-photo")
-    public ResponseEntity<byte[]> getProfilePhoto(@RequestHeader(value = "Authorization", required = false) String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            logger.warn("未提供有效的认证头");
-            return ResponseEntity.ok()
-                .contentType(MediaType.IMAGE_JPEG)
-                .body(getDefaultAvatar());
-        }
-
-        String token = authHeader.substring(7);
+    public ResponseEntity<byte[]> getProfilePhoto() {
         try {
-            String email = jwtUtil.extractUsername(token);
-            if (!jwtUtil.validateToken(token, email)) {
-                logger.warn("无效的令牌: {}", email);
-                return ResponseEntity.ok()
-                    .contentType(MediaType.IMAGE_JPEG)
-                    .body(getDefaultAvatar());
-            }
-
-            Integer userId = jwtUtil.extractUserId(token);
-            Member member = memberService.getMemberById(userId);
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String email = authentication.getName();
             
-            // 如果会员不存在或没有头像，返回默认头像
-            if (member == null || member.getProfilePhoto() == null) {
-                logger.info("会员不存在或没有头像: userId={}", userId);
-                return ResponseEntity.ok()
-                    .contentType(MediaType.IMAGE_JPEG)
-                    .body(getDefaultAvatar());
+            User user = memberLoginService.findByEmail(email);
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             }
 
-            // 返回会员头像
+            Integer userId = user.getId();
+            Member member = memberService.getMemberById(userId);
+            if (member == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+            
+            byte[] photo = member.getProfilePhoto();
+            if (photo == null) {
+                photo = getDefaultAvatar();
+            }
+            
             return ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_JPEG)
-                .body(member.getProfilePhoto());
+                .body(photo);
         } catch (Exception e) {
-            logger.error("获取头像失败", e);
-            return ResponseEntity.ok()
-                .contentType(MediaType.IMAGE_JPEG)
-                .body(getDefaultAvatar());
+            logger.error("獲取頭像失敗", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    // 获取默认头像
-    private byte[] getDefaultAvatar() {
-        try {
-            // 从资源文件加载默认头像
-            Resource resource = new ClassPathResource("static/user_static/images/default-avatar.png");
-            return resource.getInputStream().readAllBytes();
-        } catch (IOException e) {
-            // 如果加载失败，返回一个空的字节数组
-            return new byte[0];
-        }
+    private byte[] getDefaultAvatar() throws IOException {
+        Resource resource = new ClassPathResource("static/images/default-avatar.jpg");
+        return resource.getInputStream().readAllBytes();
     }
 }

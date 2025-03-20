@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 
-import petTopia.model.user.Users;
+import petTopia.model.user.User;
 import petTopia.service.user.RegistrationService;
 
 import org.slf4j.Logger;
@@ -37,15 +37,15 @@ public class RegistrationController {
         
         try {
             String trimmedEmail = email.toLowerCase().trim();
-            Users existingUser = registrationService.findByEmail(trimmedEmail);
+            User existingUser = registrationService.findByEmail(trimmedEmail);
             
             Map<String, Object> response = new HashMap<>();
             
             if (existingUser != null) {
                 String message;
-                if (existingUser.getProvider() == Users.Provider.GOOGLE) {
+                if (existingUser.getProvider() == User.Provider.GOOGLE) {
                     message = "此 email 已使用 Google 帳號登入過，請點擊「使用 Google 登入」按鈕";
-                } else if (existingUser.getUserRole() == Users.UserRole.VENDOR) {
+                } else if (existingUser.getUserRole() == User.UserRole.VENDOR) {
                     message = "此 email 已註冊為商家帳號，請使用其他 email 註冊會員";
                 } else {
                     message = "此 email 已註冊為會員帳號，請直接登入";

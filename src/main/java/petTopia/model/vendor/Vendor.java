@@ -1,102 +1,138 @@
 package petTopia.model.vendor;
 
-import jakarta.persistence.*;
-
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
-import lombok.Data;
-import petTopia.model.user.Users;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapsId;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import petTopia.model.user.User;
+
+@Getter
+@Setter
+@NoArgsConstructor
 @Entity
 @Table(name = "vendor")
-@Data
+@AllArgsConstructor
+
+
 public class Vendor {
 
-    @Id
-    @Column(name = "id")
-    private Integer id;  // 不使用 @GeneratedValue，因為要與 user id 相同
+	@Id
+	@Column(name = "id")
+	private Integer id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @MapsId  // 重要：使用 user 的 id 作為 vendor 的 id
-    @JoinColumn(name = "id")
-    private Users user;
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "id", insertable = false, updatable = false)
+	private User user;
 
-    private String name;
-    private String description;
+	@Column(name = "name")
+	private String name;
 
-    @Lob
-    @Column(name = "logo_img")
-    private byte[] logoImg;
+	@Column(name = "description")
+	private String description;
 
-    @Transient
-    private String logoImgBase64;
+	@JsonIgnore
+	@Column(name = "logo_img")
+	private byte[] logoImg;
 
-    private String address;
-    private String phone;
+	@Column(name = "address")
+	private String address;
 
-    @Column(name = "contact_email")
-    private String contactEmail;
+	@Column(name = "phone")
+	private String phone;
 
-    @Column(name = "contact_person")
-    private String contactPerson;
+	@Column(name = "contact_email")
+	private String contactEmail;
 
-    @Column(name = "taxid_number")
-    private String taxidNumber;
+	@Column(name = "contact_person")
+	private String contactPerson;
 
-    private Boolean status = false;
+	@Column(name = "taxid_number")
+	private String taxidNumber;
 
-    @Column(name = "vendor_category_id")
-    private Integer vendorCategoryId = 1;  // 預設分類
+	@Column(name = "status", nullable = false)
+	private boolean status = false;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vendor_category_id", insertable = false, updatable = false)
-    private VendorCategory vendorCategory;
+	@ManyToOne
+	@JoinColumn(name = "vendor_category_id")
+	private VendorCategory vendorCategory;
 
-    @Column(name = "registration_date")
-    private LocalDateTime registrationDate;
+	@Column(name = "registration_date", updatable = false)
+	private java.util.Date registrationDate = new Date();
 
-    @Column(name = "updated_date")
-    private LocalDateTime updatedDate;
+	@Column(name = "updated_date")
+	private java.util.Date updatedDate = new Date();
 
-    @Column(name = "event_count")
-    private int eventCount;
+	@Column(name = "event_count")
+	private int eventCount = 0;
 
-    @Column(name = "total_rating")
-    private float totalRating;
+	@Column(name = "total_rating")
+	private float totalRating = 0;
 
-    @Column(name = "review_count")
-    private int reviewCount;
+	@Column(name = "review_count")
+	private int reviewCount = 0;
 
-    @Column(name = "avg_rating")
-    private float avgRating;
+	@Column(name = "vendor_level", nullable = false)
+	private String vendorLevel = "普通";
+	
+	@Column(name = "avg_rating_environment")
+	private float avgRatingEnvironment = 0;
+	
+	@Column(name = "avg_rating_price")
+	private float avgRatingPrice = 0;
+	
+	@Column(name = "avg_rating_service")
+	private float avgRatinService = 0;
 
-    @Column(name = "vendor_level")
-    private String vendorLevel;
+	@JsonIgnore
+	@OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CalendarEvent> calendarEvents;
+	
+	@JsonIgnore
+	@OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<VendorCertification> certifications;
 
-    @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL)
-    private List<VendorImages> images;
+	@JsonIgnore
+	@OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<VendorActivity> activities;
 
-    public void setRegistrationDate(LocalDateTime registrationDate) {
-        this.registrationDate = registrationDate;
-    }
+//    @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
+//    private List<VendorReview> reviews;
+//    
+//    @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
+//    private List<Notification> notifications;
 
-    public void setUpdatedDate(LocalDateTime updatedDate) {
-        this.updatedDate = updatedDate;
-    }
+	@JsonIgnore
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "vendor", cascade = CascadeType.ALL)
+	private List<VendorActivityReview> reviews;
 
-    public void setStatus(Boolean status) {
-        this.status = status;
-    }
+//	@JsonIgnore
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "vendor", cascade = CascadeType.ALL)
+	private List<VendorImages> vendorImages;
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	
 
-    public void setVendorCategory(VendorCategory vendorCategory) {
-        this.vendorCategory = vendorCategory;
-        if (vendorCategory != null) {
-            this.vendorCategoryId = vendorCategory.getId();
-        }
-    }
+	/* 使用Transient防止被序列化，用於Service層賦值 */
+	@Transient
+	private String logoImgBase64;
+
 }

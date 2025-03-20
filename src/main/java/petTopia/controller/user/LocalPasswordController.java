@@ -6,10 +6,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import petTopia.model.user.Users;
+import petTopia.model.user.User;
 import petTopia.service.user.EmailService;
 import petTopia.service.user.MemberLoginService;
-import petTopia.repository.user.UsersRepository; 
+import petTopia.repository.user.UserRepository; 
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,7 +34,7 @@ public class LocalPasswordController {
     private EmailService emailService;
     
     @Autowired
-    private UsersRepository usersRepository;
+    private UserRepository usersRepository;
     
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -47,13 +47,13 @@ public class LocalPasswordController {
      */
     @GetMapping("/check")
     public ResponseEntity<?> checkEmailStatus(@RequestParam String email) {
-        Users user = memberLoginService.findByEmail(email);
+        User user = memberLoginService.findByEmail(email);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(Map.of("error", "找不到會員帳號"));
         }
         
-        if (user.getProvider() == Users.Provider.LOCAL) {
+        if (user.getProvider() == User.Provider.LOCAL) {
             return ResponseEntity.badRequest()
                 .body(Map.of("error", "此帳號已是本地帳號"));
         }
@@ -72,12 +72,12 @@ public class LocalPasswordController {
         }
         
         try {
-            Users user = memberLoginService.findByEmail(email);
+            User user = memberLoginService.findByEmail(email);
             if (user == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "找不到會員帳號"));
             }
             
-            if (user.getProvider() == Users.Provider.LOCAL) {
+            if (user.getProvider() == User.Provider.LOCAL) {
                 return ResponseEntity.badRequest().body(Map.of("error", "此帳號已是本地帳號"));
             }
             
@@ -132,7 +132,7 @@ public class LocalPasswordController {
         }
         
         try {
-            Users user = memberLoginService.findByEmail(email);
+            User user = memberLoginService.findByEmail(email);
             if (user == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "找不到用戶"));
             }

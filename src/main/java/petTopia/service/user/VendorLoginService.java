@@ -25,9 +25,9 @@ import java.time.LocalDateTime;
 import java.util.Random;
 import java.util.Optional;
 
-import petTopia.model.user.Users;
+import petTopia.model.user.User;
 import petTopia.model.vendor.Vendor;
-import petTopia.repository.user.UsersRepository;
+import petTopia.repository.user.UserRepository;
 import petTopia.repository.vendor.VendorRepository;
 
 import org.slf4j.Logger;
@@ -40,7 +40,7 @@ public class VendorLoginService extends BaseUserService {
     private static final Logger logger = LoggerFactory.getLogger(VendorLoginService.class);
 
     @Autowired
-    private UsersRepository usersRepository;
+    private UserRepository usersRepository;
 
     @Autowired
     private VendorRepository vendorRepository;
@@ -55,7 +55,7 @@ public class VendorLoginService extends BaseUserService {
     private EntityManager entityManager;
 
     @Transactional
-    public void updateUser(Users user) {
+    public void updateUser(User user) {
         try {
             entityManager.merge(user);
             entityManager.flush();
@@ -66,8 +66,8 @@ public class VendorLoginService extends BaseUserService {
     }
 
     @Override
-    public Users findByEmail(String email) {
-        return usersRepository.findByEmailAndUserRole(email, Users.UserRole.VENDOR);
+    public User findByEmail(String email) {
+        return usersRepository.findByEmailAndUserRole(email, User.UserRole.VENDOR);
     }
 
     public Map<String, Object> vendorLogin(String email, String password) {
@@ -100,14 +100,14 @@ public class VendorLoginService extends BaseUserService {
 
             // 查找用戶
             logger.info("開始查找商家用戶，email: {}", email);
-            Users user = usersRepository.findByEmailAndUserRole(email, Users.UserRole.VENDOR);
+            User user = usersRepository.findByEmailAndUserRole(email, User.UserRole.VENDOR);
             logger.info("查詢用戶結果: {}, 用戶角色: {}", 
                 user != null ? "找到用戶" : "未找到用戶",
                 user != null ? user.getUserRole() : "無");
 
             if (user == null) {
                 // 檢查是否是會員帳號
-                Users memberUser = usersRepository.findByEmailAndUserRole(email, Users.UserRole.MEMBER);
+                User memberUser = usersRepository.findByEmailAndUserRole(email, User.UserRole.MEMBER);
                 if (memberUser != null) {
                     logger.warn("登入失敗：會員帳號嘗試登入商家系統，email: {}", email);
                     result.put("success", false);
@@ -123,7 +123,7 @@ public class VendorLoginService extends BaseUserService {
 
             // 檢查是否是Google帳號
             logger.info("檢查帳號類型，Provider: {}", user.getProvider());
-            if (user.getProvider() == Users.Provider.GOOGLE) {
+            if (user.getProvider() == User.Provider.GOOGLE) {
                 logger.warn("登入失敗：Google帳號嘗試使用密碼登入，userId: {}", user.getId());
                 result.put("success", false);
                 result.put("message", "此帳號是使用Google註冊的，請點擊「使用Google登入」按鈕");
@@ -175,7 +175,7 @@ public class VendorLoginService extends BaseUserService {
             result.put("vendorName", vendor.getName() != null ? vendor.getName() : "未設置名稱");
             result.put("userRole", user.getUserRole());
             result.put("loggedInUser", user);
-            result.put("vendorStatus", vendor.getStatus());
+            result.put("vendorStatus", vendor.isStatus());
             logger.info("商家登入成功，userId: {}, vendorName: {}, userRole: {}", 
                 user.getId(), 
                 vendor.getName() != null ? vendor.getName() : "未設置名稱",
@@ -198,7 +198,7 @@ public class VendorLoginService extends BaseUserService {
         
         try {
             // 檢查是否有對應的商家帳號
-            Users vendor = usersRepository.findByEmailAndUserRole(email, Users.UserRole.VENDOR);
+            User vendor = usersRepository.findByEmailAndUserRole(email, User.UserRole.VENDOR);
             
             if (vendor == null) {
                 result.put("success", false);
@@ -227,7 +227,7 @@ public class VendorLoginService extends BaseUserService {
             result.put("userId", vendor.getId());
             result.put("vendorName", vendor.getEmail());
             result.put("userRole", vendor.getUserRole());
-            result.put("vendorStatus", vendorInfo.get().getStatus());
+            result.put("vendorStatus", vendorInfo.get().isStatus());
             
             logger.info("OAuth2商家登入成功 - 使用者ID: {}", vendor.getId());
             
@@ -243,10 +243,10 @@ public class VendorLoginService extends BaseUserService {
     public Map<String, Object> getVendorInfo(Integer userId) {
         Map<String, Object> result = new HashMap<>();
         
-        Users user = usersRepository.findById(userId)
+        User user = usersRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("用戶不存在"));
             
-        if (user.getUserRole() != Users.UserRole.VENDOR) {
+        if (user.getUserRole() != User.UserRole.VENDOR) {
             throw new RuntimeException("此帳號不是商家帳號");
         }
         
@@ -259,8 +259,8 @@ public class VendorLoginService extends BaseUserService {
         result.put("phone", vendor.getPhone());
         result.put("address", vendor.getAddress());
         result.put("description", vendor.getDescription());
-        result.put("category", vendor.getVendorCategoryId());
-        result.put("status", vendor.getStatus());
+        result.put("category", vendor.getVendorCategory());
+        result.put("status", vendor.isStatus());
         
         return result;
     }

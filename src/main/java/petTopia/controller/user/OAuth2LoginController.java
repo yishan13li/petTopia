@@ -3,21 +3,18 @@ package petTopia.controller.user;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import petTopia.model.user.Users;
+import petTopia.model.user.User;
 import petTopia.jwt.JwtUtil;
 import petTopia.model.user.Member;
 import petTopia.service.user.MemberLoginService;
 import petTopia.service.user.MemberService;
-import petTopia.service.user.RegistrationService;
-import petTopia.repository.user.UsersRepository;
-import petTopia.repository.user.MemberRepository;
+
+import petTopia.repository.user.UserRepository;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,8 +29,7 @@ import java.time.LocalDateTime;
 public class OAuth2LoginController {
     private static final Logger logger = LoggerFactory.getLogger(OAuth2LoginController.class);
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -44,17 +40,15 @@ public class OAuth2LoginController {
     @Autowired
     private MemberService memberService;
 
-    @Autowired
-    private RegistrationService registrationService;
+
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private UsersRepository usersRepository;
+    private UserRepository usersRepository;
 
-    @Autowired
-    private MemberRepository memberRepository;
+
     
     // 添加默認的空構造函數
     public OAuth2LoginController() {
@@ -112,9 +106,9 @@ public class OAuth2LoginController {
             logger.info("處理OAuth2登入 - 電子郵件: {}, 名稱: {}, 提供者: {}", email, name, provider);
             
             // 驗證提供者是否支持
-            Users.Provider providerEnum;
+            User.Provider providerEnum;
             try {
-                providerEnum = Users.Provider.valueOf(provider.toUpperCase());
+                providerEnum = User.Provider.valueOf(provider.toUpperCase());
             } catch (IllegalArgumentException e) {
                 logger.warn("不支持的OAuth2提供者: {}", provider);
                 return ResponseEntity.badRequest()
@@ -122,11 +116,11 @@ public class OAuth2LoginController {
             }
             
             // 查找已存在用戶
-            Users existingUser = memberLoginService.findByEmail(email);
+            User existingUser = memberLoginService.findByEmail(email);
 
             if (existingUser != null) {
                 // 檢查用戶角色
-                if (existingUser.getUserRole() != Users.UserRole.MEMBER) {
+                if (existingUser.getUserRole() != User.UserRole.MEMBER) {
                     logger.warn("OAuth2登入失敗 - 非會員帳號 - 電子郵件: {}, 角色: {}", 
                         email, existingUser.getUserRole());
                     return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -134,7 +128,7 @@ public class OAuth2LoginController {
                 }
                 
                 // 檢查提供者是否匹配
-                if (existingUser.getProvider() != providerEnum && existingUser.getProvider() != Users.Provider.LOCAL) {
+                if (existingUser.getProvider() != providerEnum && existingUser.getProvider() != User.Provider.LOCAL) {
                     logger.warn("OAuth2登入失敗 - 提供者不匹配 - 電子郵件: {}, 期望提供者: {}, 實際提供者: {}", 
                         email, provider, existingUser.getProvider());
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -209,9 +203,9 @@ public class OAuth2LoginController {
             }
             
             // 創建新會員帳號
-            Users newUser = new Users();
+            User newUser = new User();
             newUser.setEmail(email);
-            newUser.setUserRole(Users.UserRole.MEMBER);
+            newUser.setUserRole(User.UserRole.MEMBER);
             
             // 生成安全的隨機密碼
             String randomPassword = UUID.randomUUID().toString();

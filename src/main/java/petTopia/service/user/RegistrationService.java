@@ -11,9 +11,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import petTopia.model.user.Users;
+import petTopia.model.user.User;
 import petTopia.model.user.Member;
-import petTopia.repository.user.UsersRepository;
+import petTopia.repository.user.UserRepository;
 import petTopia.repository.user.MemberRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +29,7 @@ public class RegistrationService {
     private EntityManager entityManager;
     
     @Autowired
-    private UsersRepository usersRepository;
+    private UserRepository usersRepository;
     
     @Autowired
     private MemberRepository memberRepository;
@@ -41,7 +41,7 @@ public class RegistrationService {
     private PasswordEncoder passwordEncoder;
     
     @Transactional
-    public Map<String, Object> register(Users user) {
+    public Map<String, Object> register(User user) {
         Map<String, Object> result = new HashMap<>();
         String email = user.getEmail().toLowerCase().trim();
         
@@ -59,8 +59,8 @@ public class RegistrationService {
             String code = String.format("%06d", new Random().nextInt(1000000));
             user.setVerificationToken(code);
             user.setTokenExpiry(LocalDateTime.now().plusMinutes(5));
-            user.setUserRole(Users.UserRole.MEMBER);
-            user.setProvider(Users.Provider.LOCAL);
+            user.setUserRole(User.UserRole.MEMBER);
+            user.setProvider(User.Provider.LOCAL);
             
             // 加密密碼
             String encodedPassword = passwordEncoder.encode(user.getPassword());
@@ -106,7 +106,7 @@ public class RegistrationService {
     
     @Transactional
     public boolean verifyEmail(String code) {
-        Users user = usersRepository.findByVerificationToken(code);
+        User user = usersRepository.findByVerificationToken(code);
         
         if (user != null && !user.isEmailVerified() && 
             LocalDateTime.now().isBefore(user.getTokenExpiry())) {
@@ -129,13 +129,13 @@ public class RegistrationService {
         return false;
     }
 
-    public Users findByEmail(String email) {
+    public User findByEmail(String email) {
         // 查找任何類型的帳號（會員、商家、本地、Google）
-        return usersRepository.findByEmailAndUserRole(email.toLowerCase().trim(), Users.UserRole.MEMBER);
+        return usersRepository.findByEmailAndUserRole(email.toLowerCase().trim(), User.UserRole.MEMBER);
     }
     
     @Transactional
-    public Users updateUser(Users user) {
+    public User updateUser(User user) {
         // 保存用戶信息
         logger.info("更新用戶信息，userId: {}", user.getId());
         return usersRepository.save(user);

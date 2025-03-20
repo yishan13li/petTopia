@@ -17,7 +17,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import petTopia.jwt.JwtUtil;      
-import petTopia.model.user.Users;
+import petTopia.model.user.User;
 import petTopia.service.user.AdminService;
 
 import org.slf4j.Logger;
@@ -56,7 +56,7 @@ public class AdminController {
         }
         
         try {
-            Users admin = adminService.adminLogin(email, password);
+            User admin = adminService.adminLogin(email, password);
             
             if (admin != null && admin.isAdmin()) {
                 // 創建認證令牌

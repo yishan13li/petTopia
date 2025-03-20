@@ -9,7 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import petTopia.model.user.Users;
+import petTopia.model.user.User;
 import petTopia.service.user.MemberLoginService;
 import petTopia.jwt.JwtUtil;
 import petTopia.model.user.Member;
@@ -20,6 +20,30 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+
+/**
+ * JWT 認證流程說明
+ * 
+ * 1. 登入流程
+ *    - 用戶輸入帳號密碼
+ *    - 系統驗證帳號密碼
+ *    - 驗證成功後生成 JWT 令牌
+ * 
+ * 2. JWT 令牌組成
+ *    - Header（標頭）：包含令牌類型和加密算法
+ *    - Payload（負載）：包含用戶資訊（ID、角色等）
+ *    - Signature（簽名）：確保令牌未被篡改
+ * 
+ * 3. 安全機制
+ *    - 使用 Bearer Token 認證
+ *    - 令牌有效期限制
+ *    - 簽名驗證機制
+ * 
+ * 4. 使用方式
+ *    - 前端：在請求標頭加入 Authorization: Bearer {token}
+ *    - 後端：驗證令牌並提取用戶資訊
+ * 
+ */
 
 @RestController
 @RequestMapping("/api/auth")
@@ -64,6 +88,23 @@ public class MemberLoginController {
         return name;
     }
 
+    /**
+     * 登入處理流程
+     * 
+     * 1. 驗證流程
+     *    - 檢查帳號密碼
+     *    - 驗證用戶狀態
+     *    - 檢查登入權限
+     * 
+     * 2. JWT 生成流程
+     *    - 創建認證物件
+     *    - 設置安全上下文
+     *    - 生成 JWT 令牌
+     * 
+     * 3. 回傳資料
+     *    - 成功：返回 JWT 令牌和用戶資訊
+     *    - 失敗：返回錯誤訊息
+     */
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
         String email = credentials.get("email");
@@ -79,7 +120,7 @@ public class MemberLoginController {
             
             // 檢查是否是第三方登入帳號
             if (loginResult.containsKey("isThirdPartyAccount") && (Boolean) loginResult.get("isThirdPartyAccount")) {
-                Users.Provider provider = (Users.Provider) loginResult.get("provider");
+                User.Provider provider = (User.Provider) loginResult.get("provider");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of(
                         "error", "此帳號是使用" + provider.toString() + "註冊的，請使用對應的登入方式，或設定本地密碼",
@@ -90,18 +131,38 @@ public class MemberLoginController {
             }
             
             if ((Boolean) loginResult.get("success")) {
-                Users user = (Users) loginResult.get("user");
+                User user = (User) loginResult.get("user");
                 
-                // 創建認證令牌
+                /**
+                 * 創建認證令牌
+                 * 1. 使用 AuthenticationManager 進行認證
+                 * 2. 創建 UsernamePasswordAuthenticationToken
+                 * 3. 包含用戶名和密碼資訊
+                 */
                 Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(email, password)
                 );
                 
-                // 設置安全上下文
+                /**
+                 * 設置安全上下文
+                 * 1. 將認證資訊存入 SecurityContext
+                 * 2. 供後續請求使用
+                 * 3. 確保請求安全性
+                 */
                 SecurityContextHolder.getContext().setAuthentication(authentication);
                 
-                // 生成 JWT
-                String token = jwtUtil.generateToken(user.getEmail(), user.getId(), user.getUserRole().toString());
+                /**
+                 * 生成 JWT 令牌
+                 * 1. 包含用戶郵箱（作為唯一識別）
+                 * 2. 包含用戶 ID
+                 * 3. 包含用戶角色
+                 * 4. 設置過期時間
+                 */
+                String token = jwtUtil.generateToken(
+                    user.getEmail(),    // 用戶郵箱
+                    user.getId(),       // 用戶 ID
+                    user.getUserRole().toString()  // 用戶角色
+                );
                 
                 Member member = memberService.getMemberById(user.getId());
                 if (member == null) {
@@ -145,6 +206,12 @@ public class MemberLoginController {
                     .body(Map.of("error", loginResult.get("message")));
             }
         } catch (Exception e) {
+            /**
+             * 錯誤處理
+             * 1. 記錄錯誤日誌
+             * 2. 回傳適當的錯誤訊息
+             * 3. 確保安全性
+             */
             logger.error("登入失敗", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "登入失敗: " + e.getMessage()));
@@ -180,11 +247,11 @@ public class MemberLoginController {
             }
             
             // 獲取用戶資料
-            Users user = memberLoginService.findByEmail(email);
+            User user = memberLoginService.findByEmail(email);
             
             // 檢查名稱是否為郵箱格式，如果是則使用更友好的格式
             String displayName = member.getName();
-            if (user != null && user.getProvider() != Users.Provider.LOCAL && isEmailFormat(displayName, email)) {
+            if (user != null && user.getProvider() != User.Provider.LOCAL && isEmailFormat(displayName, email)) {
                 displayName = getFriendlyDisplayName(displayName, email);
                 
                 // 如果名稱已更改，更新資料庫
