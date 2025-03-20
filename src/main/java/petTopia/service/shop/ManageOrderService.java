@@ -114,7 +114,7 @@ public class ManageOrderService {
 	    managedOrder.setMemberId(order.getMember().getId());
 	    managedOrder.setOrderId(order.getId());
 	    managedOrder.setOrderStatus(order.getOrderStatus().getName());
-	    managedOrder.setCreatedTime(new java.sql.Date(order.getCreatedTime().getTime()));
+	    managedOrder.setOrderDate(new java.sql.Date(order.getCreatedTime().getTime()));
 	    managedOrder.setTotalAmount(order.getTotalAmount());
 
 	    // 查詢付款狀態

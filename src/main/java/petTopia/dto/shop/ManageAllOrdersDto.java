@@ -14,7 +14,7 @@ public class ManageAllOrdersDto {
 	private Integer memberId;    	//會員編號
     private Integer orderId;         // 訂單編號
     private String orderStatus;      // 訂單狀態
-    private Date createdTime;        // 訂單日期
+    private Date orderDate;        // 訂單日期
     private String paymentStatus;    // 付款狀態
     private String paymentCategory;  // 付款方式
     private String shippingCategory;  // 配送方式
