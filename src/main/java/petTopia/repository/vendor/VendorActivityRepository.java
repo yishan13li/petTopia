@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import petTopia.model.vendor.ActivityType;
 import petTopia.model.vendor.Vendor;
 import petTopia.model.vendor.VendorActivity;
 
@@ -16,4 +17,6 @@ public interface VendorActivityRepository extends JpaRepository<VendorActivity, 
 		List<VendorActivity> findByVendorId(Integer vendorId);
 
 		int countByVendor(Vendor vendor);
+		
+		public List<VendorActivity> findByActivityType(ActivityType activityType);
 }

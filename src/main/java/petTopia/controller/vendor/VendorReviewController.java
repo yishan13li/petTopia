@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import petTopia.dto.vendor.VendorReviewDto;
 import petTopia.model.vendor.ReviewPhoto;
+import petTopia.model.vendor.Vendor;
 import petTopia.model.vendor.VendorReview;
 import petTopia.service.vendor.ReviewPhotoService;
 import petTopia.service.vendor.VendorReviewService;
@@ -31,7 +32,7 @@ public class VendorReviewController {
 
 	@Autowired
 	private VendorReviewService vendorReviewService;
-	
+
 	@Autowired
 	private ReviewPhotoService reviewPhotoService;
 
@@ -40,21 +41,27 @@ public class VendorReviewController {
 		List<VendorReviewDto> reviewList = vendorReviewService.findReviewListByVendorId(vendorId);
 		return ResponseEntity.ok(reviewList);
 	}
-	
+
+	@GetMapping("/api/vendor/{vendorId}/update/rating")
+	public ResponseEntity<Vendor> updateVendorRating(@PathVariable Integer vendorId) {
+		Vendor vendor = vendorReviewService.setAverageRating(vendorId);
+		return ResponseEntity.ok(vendor);
+	}
+
 	@GetMapping("/api/vendor/review/{reviewId}")
 	public Map<String, Object> getVendorReviewById(@PathVariable Integer reviewId) {
-		VendorReview review = vendorReviewService.findReviewById(reviewId);		
+		VendorReview review = vendorReviewService.findReviewById(reviewId);
 		Map<String, Object> response = new HashMap<>();
 		response.put("review", review);
 		return response;
 	}
-	
+
 	@GetMapping("/api/vendor/review/{reviewId}/photo")
 	public ResponseEntity<List<ReviewPhoto>> getReviewPhoto(@PathVariable Integer reviewId) {
 		List<ReviewPhoto> photoList = reviewPhotoService.findPhotoListByReviewId(reviewId);
 		return ResponseEntity.ok(photoList);
 	}
-	
+
 	@PostMapping(value = "/api/vendor/{vendorId}/review/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public Map<String, Object> giveReview(@PathVariable Integer vendorId, @RequestParam Integer memberId,
 			@RequestParam String content, @RequestPart(required = false) List<MultipartFile> reviewPhotos)
@@ -66,7 +73,7 @@ public class VendorReviewController {
 			List<MultipartFile> nullList = new ArrayList<MultipartFile>();
 			review = vendorReviewService.addReview(memberId, vendorId, content, nullList);
 		}
-		
+
 		Map<String, Object> response = new HashMap<>();
 		response.put("success", true);
 		response.put("review", review);
