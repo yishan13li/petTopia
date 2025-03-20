@@ -27,6 +27,10 @@ public class VendorCertificationTag {
 	private Integer id;
 
 	@ManyToOne
+	@JoinColumn(name = "vendor_id", nullable = false)
+	private Vendor vendor;
+	
+	@ManyToOne
 	@JoinColumn(name = "certification_id", nullable = false)
 	private VendorCertification certification;
 

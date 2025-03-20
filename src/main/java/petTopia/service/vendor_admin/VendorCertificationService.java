@@ -1,6 +1,7 @@
 package petTopia.service.vendor_admin;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +48,13 @@ public class VendorCertificationService {
 		certificationTag.setCertification(certification);
 		certificationTag.setTag(tag.get());
 		certificationTag.setMeetsStandard(false); // 默认不符合标准
+		certificationTag.setVendor(vendor.get());
 		vendorCertificationTagRepository.save(certificationTag);
-	}  
+	}
+
+	// 获取所有认证语类型
+    public List<CertificationTag> getAllCertificationTypes() {
+        return certificationTagRepository.findAll(); // 这个方法需要根据您的实际数据库实现
+    }
 
 }
