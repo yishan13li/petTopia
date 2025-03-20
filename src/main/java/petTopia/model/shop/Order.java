@@ -65,6 +65,9 @@ public class Order {
 
     @Column(name = "updated_date")
     private java.util.Date updatedDate;
+    
+    @Column(name="note")
+    private String note;
 
     @OneToOne(mappedBy = "order")
     private Shipping shipping;
