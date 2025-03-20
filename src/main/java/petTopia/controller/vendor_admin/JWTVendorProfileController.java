@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
  * 主要功能：處理商家資料的查詢、更新、圖片上傳等操作
  */
 @RestController  // 標記為 REST 控制器，直接返回 JSON 數據
-@RequestMapping("/api/vendor")  // 設定基礎 URL 路徑
+@RequestMapping("/api/vendor-admin")  // 修改基礎 URL 路徑
 @PreAuthorize("hasRole('VENDOR')")  // 確保只有商家角色可以訪問
 public class JWTVendorProfileController {
 
@@ -93,8 +93,8 @@ public class JWTVendorProfileController {
      * 獲取商家資料
      * 需要 JWT token 驗證
      */
-    @GetMapping("/profile")
-    public ResponseEntity<Map<String, Object>> getVendorProfile(HttpServletRequest request) {
+    @GetMapping("/profile/{vendorId}")  // 修改路徑
+    public ResponseEntity<Map<String, Object>> getVendorProfile(HttpServletRequest request, @PathVariable Integer vendorId) {
         try {
             // 1. 驗證 token
             String authHeader = request.getHeader("Authorization");
@@ -113,13 +113,13 @@ public class JWTVendorProfileController {
 
             // 3. 從 token 中獲取用戶 ID
             Integer userId = jwtUtil.extractUserId(token);
-            if (userId == null) {
+            if (userId == null || !userId.equals(vendorId)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "無效的令牌"));
+                    .body(Map.of("error", "無效的令牌或權限不足"));
             }
 
             // 4. 獲取商家資料
-            Optional<Vendor> vendorDetail = vendorRepository.findById(userId);
+            Optional<Vendor> vendorDetail = vendorRepository.findById(vendorId);
             if (vendorDetail.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "找不到商家資料"));
@@ -154,9 +154,10 @@ public class JWTVendorProfileController {
      * 更新商家資料
      * 支持更新基本資料和上傳圖片
      */
-    @PutMapping("/profile")
+    @PutMapping("/profile/{vendorId}")  // 修改路徑
     public ResponseEntity<Map<String, Object>> updateVendorProfile(
             HttpServletRequest request,
+            @PathVariable Integer vendorId,
             @RequestParam(required = false) String vendorName,
             @RequestParam(required = false) String contactEmail,
             @RequestParam(required = false) String vendorPhone,
@@ -185,9 +186,9 @@ public class JWTVendorProfileController {
 
             // 3. 從 token 中獲取用戶 ID
             Integer userId = jwtUtil.extractUserId(token);
-            if (userId == null) {
+            if (userId == null || !userId.equals(vendorId)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "無效的令牌"));
+                    .body(Map.of("error", "無效的令牌或權限不足"));
             }
 
             // 4. 獲取並更新商家資料
@@ -241,8 +242,8 @@ public class JWTVendorProfileController {
     /**
      * 獲取商家 logo 圖片
      */
-    @GetMapping("/profile/image")
-    public ResponseEntity<?> getProfileImage(HttpServletRequest request) {
+    @GetMapping("/profile/{vendorId}/logo")  // 修改路徑
+    public ResponseEntity<?> getProfileImage(HttpServletRequest request, @PathVariable Integer vendorId) {
         try {
             // 1. 驗證 token
             String authHeader = request.getHeader("Authorization");
@@ -261,9 +262,9 @@ public class JWTVendorProfileController {
 
             // 3. 從 token 中獲取用戶 ID
             Integer userId = jwtUtil.extractUserId(token);
-            if (userId == null) {
+            if (userId == null || !userId.equals(vendorId)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "無效的令牌"));
+                    .body(Map.of("error", "無效的令牌或權限不足"));
             }
 
             // 4. 獲取商家資料
