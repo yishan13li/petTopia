@@ -24,19 +24,19 @@ public class ActivityController {
 	@Autowired
 	private ActivityTypeUserService activityTypeUserService;
 
-	@GetMapping("api/activity/all")
+	@GetMapping("/api/activity/all")
 	public ResponseEntity<List<VendorActivity>> getAllActivities() {
 		List<VendorActivity> activityList = vendorActivityService.findAllActivity();
 		return ResponseEntity.ok(activityList);
 	}
 
-	@GetMapping("api/activity/{activityId}")
+	@GetMapping("/api/activity/{activityId}")
 	public ResponseEntity<VendorActivity> getActivityDetail(@PathVariable Integer activityId) {
 		VendorActivity activity = vendorActivityService.findActivityById(activityId);
 		return ResponseEntity.ok(activity);
 	}
 
-	@GetMapping("api/activity/all/except/{activityId}")
+	@GetMapping("/api/activity/all/except/{activityId}")
 	public ResponseEntity<List<VendorActivity>> getAllActivitiesExceptOne(@PathVariable Integer activityId) {
 		List<VendorActivity> activityList = vendorActivityService.findAllActivityExceptOne(activityId);
 		return ResponseEntity.ok(activityList);
