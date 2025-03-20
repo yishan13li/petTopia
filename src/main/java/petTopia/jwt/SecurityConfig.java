@@ -118,6 +118,7 @@ public class SecurityConfig {
                     "/activity/all",
                     "/activity/{activityId}",
                     "/activity/{activityId}/review"
+                    
                 ).hasRole("MEMBER")
                 
                 // 商家接口
