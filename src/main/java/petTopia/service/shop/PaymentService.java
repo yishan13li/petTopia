@@ -138,9 +138,9 @@ public class PaymentService {
         paymentResponse.setTotalAmount(paymentAmount);
         paymentResponse.setTradeDesc("petTopia商品付款");
         paymentResponse.setItemName(itemName);
-        paymentResponse.setReturnURL("https://f3e5-59-125-142-166.ngrok-free.app/shop/payment/ecpay/callback");
+        paymentResponse.setReturnURL("https://63ca-59-125-142-166.ngrok-free.app/shop/payment/ecpay/callback");
         paymentResponse.setOrderResultURL("");
-        paymentResponse.setClientBackURL("https://2619-59-125-142-166.ngrok-free.app/shop/ecpay/success");
+        paymentResponse.setClientBackURL("https://685c-59-125-142-166.ngrok-free.app/shop/ecpay/success");
 //        paymentResponse.setClientBackURL("https://localhost:5173/shop/orders/" + order.getId());
         paymentResponse.setChoosePayment("ALL");
         paymentResponse.setEncryptType("1");
