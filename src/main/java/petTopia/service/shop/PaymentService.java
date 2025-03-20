@@ -53,8 +53,7 @@ import petTopia.util.EcpayUtils; // 引入 EcpayUtils
 
 @Service
 public class PaymentService {
-	private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
-
+	
     @Value("${ecpay.merchantId}")
     private String merchantId;
 
@@ -132,7 +131,7 @@ public class PaymentService {
         // 創建 PaymentResponseDto 並設置值
         PaymentResponseDto paymentResponse = new PaymentResponseDto();
         paymentResponse.setMerchantId(merchantId);
-        paymentResponse.setMerchantTradeNo("PetTopia" + order.getId());
+        paymentResponse.setMerchantTradeNo("petTopiaID" + order.getId());
         paymentResponse.setMerchantTradeDate(new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date()));
         paymentResponse.setPaymentType("aio");
         paymentResponse.setTotalAmount(paymentAmount);
@@ -141,7 +140,6 @@ public class PaymentService {
         paymentResponse.setReturnURL("https://f3e5-59-125-142-166.ngrok-free.app/shop/payment/ecpay/callback");
         paymentResponse.setOrderResultURL("");
         paymentResponse.setClientBackURL("https://2619-59-125-142-166.ngrok-free.app/shop/ecpay/success");
-//        paymentResponse.setClientBackURL("https://localhost:5173/shop/orders/" + order.getId());
         paymentResponse.setChoosePayment("ALL");
         paymentResponse.setEncryptType("1");
 
@@ -168,7 +166,7 @@ public class PaymentService {
         String paymentDateStr = callbackParams.get("PaymentDate");
 
         // 3. 去除前綴，取得訂單 ID
-        String orderIdStr = merchantTradeNo.replace("PetTopia", "");
+        String orderIdStr = merchantTradeNo.replace("petTopiaID", "");
         Integer orderId = Integer.valueOf(orderIdStr);
         BigDecimal paymentAmount = new BigDecimal(tradeAmt);
 
