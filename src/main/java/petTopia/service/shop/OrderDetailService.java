@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import petTopia.dto.shop.ManageOrderItemDto;
 import petTopia.dto.shop.OrderDetailDto;
 import petTopia.dto.shop.OrderItemDto;
 import petTopia.dto.shop.PaymentInfoDto;
@@ -94,11 +95,18 @@ public class OrderDetailService {
         return orderItemDto;
     }
 
+    //將訂單的商品細節轉成manageOrderItem  //後台用
+    public ManageOrderItemDto getManagedOrderItemDto(OrderDetail orderDetail) {
+    	ManageOrderItemDto manageOrderItemDto = new ManageOrderItemDto();
+    	manageOrderItemDto.setProductId(orderDetail.getProduct().getId());
+    	manageOrderItemDto.setProductName(orderDetail.getProduct().getProductDetail().getName());
+        return manageOrderItemDto;
+    }
     
     // 查詢訂單的詳情
     public OrderDetailDto getOrderDetailById(Integer orderId) {
         // 查詢訂單
-        Order order = orderRepo.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
+        Order order = orderRepo.findById(orderId).orElseThrow(() -> new RuntimeException("找不到該訂單"));
 
         // 查詢該訂單的明細
         List<OrderDetail> orderDetails = orderDetailRepo.findByOrderId(orderId);
@@ -127,18 +135,24 @@ public class OrderDetailService {
 
         // 填充 ShippingInfoDto
         ShippingInfoDto shippingInfoDto = new ShippingInfoDto();
-        shippingInfoDto.setReceiverName(shipping.getReceiverName());
-        shippingInfoDto.setReceiverPhone(shipping.getReceiverPhone());
-        shippingInfoDto.setStreet(shipping.getShippingAddress().getStreet());
-        shippingInfoDto.setCity(shipping.getShippingAddress().getCity());
-        shippingInfoDto.setShippingCategory(shipping.getShippingCategory().getName());
-
-        // 填充 PaymentInfoDto
+        shippingInfoDto.setReceiverName(shipping.getReceiverName() != null ? shipping.getReceiverName() : "無"); // 如果 null 設為 "無"
+        shippingInfoDto.setReceiverPhone(shipping.getReceiverPhone() != null ? shipping.getReceiverPhone() : "無"); // 如果 null 設為 "無"
+        shippingInfoDto.setStreet(shipping.getShippingAddress() != null ? shipping.getShippingAddress().getStreet() : "無"); // 如果 null 設為 "無"
+        shippingInfoDto.setCity(shipping.getShippingAddress() != null ? shipping.getShippingAddress().getCity() : ""); // 如果 null 設為 "無"
+        shippingInfoDto.setShippingCategory(shipping.getShippingCategory() != null ? shipping.getShippingCategory().getName() : "無"); // 如果 null 設為 "無"
+   
+     // 填充 PaymentInfoDto，加入 null 檢查
         PaymentInfoDto paymentInfoDto = new PaymentInfoDto();
-        paymentInfoDto.setPaymentCategory(payment.getPaymentCategory().getName());
-        paymentInfoDto.setPaymentAmount(payment.getPaymentAmount());
-        paymentInfoDto.setPaymentStatus(payment.getPaymentStatus().getName());
-
+        if (payment != null) {
+            paymentInfoDto.setPaymentCategory(payment.getPaymentCategory().getName());
+            paymentInfoDto.setPaymentAmount(payment.getPaymentAmount());
+            paymentInfoDto.setPaymentStatus(payment.getPaymentStatus().getName());
+        } else {
+            // 如果沒有支付資訊，設置預設的資訊
+            paymentInfoDto.setPaymentCategory("待確認");
+            paymentInfoDto.setPaymentAmount(new BigDecimal(0));  
+            paymentInfoDto.setPaymentStatus("待付款");
+        }
         // 設定配送和支付資訊
         orderDetailDto.setShippingInfo(shippingInfoDto);
         orderDetailDto.setPaymentInfo(paymentInfoDto);

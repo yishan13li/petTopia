@@ -59,9 +59,6 @@ public class PaymentService {
     private String merchantId;
 
     @Autowired
-    private CartService cartService;
-    
-    @Autowired
     private PaymentRepository paymentRepo;
     
     @Autowired
@@ -82,7 +79,7 @@ public class PaymentService {
     @Autowired
     private EcpayUtils ecpayUtils; // 引入 EcpayUtils
 
-    public PaymentInfoDto getPaymentInfoDto(Order order) {
+	public PaymentInfoDto getPaymentInfoDto(Order order) {
         PaymentInfoDto paymentInfoDto = new PaymentInfoDto();
         paymentInfoDto.setPaymentAmount(order.getPayment().getPaymentAmount());
         paymentInfoDto.setPaymentCategory(order.getPayment().getPaymentCategory().getName());
@@ -90,11 +87,28 @@ public class PaymentService {
         return paymentInfoDto;
     }
     
+    // 新建信用卡支付
+    public boolean createCreditCardPayment(Order order, PaymentCategory paymentCategory) {
+        Payment payment = new Payment();
+        payment.setOrder(order);
+        payment.setPaymentCategory(paymentCategory);
+        payment.setPaymentDate(null);
+        payment.setUpdatedDate(new Date());
+
+        // 設置為 "待付款"（ID = 1）
+        setPaymentStatus(payment, 1); 
+
+        try {
+            paymentRepo.save(payment);
+            return true;  // 如果成功保存，回傳 true
+        } catch (Exception e) {
+            return false; // 如果發生錯誤，回傳 false
+        }
+    }
+	
     //訂單建立後為待處理(1)，先從訂單資訊取得ECpay需要的參數
     @Transactional
     public PaymentResponseDto processCreditCardPayment(Order order, Integer paymentCategoryId) throws Exception {
-        log.info("開始處理信用卡付款, 訂單編號: {}", order.getId());
-
         // 檢查是否為 paymentCategoryId == 1
         if (paymentCategoryId != 1) {
             throw new IllegalArgumentException("只有信用卡付款才可執行該方法");
@@ -124,9 +138,11 @@ public class PaymentService {
         paymentResponse.setTotalAmount(paymentAmount);
         paymentResponse.setTradeDesc("petTopia商品付款");
         paymentResponse.setItemName(itemName);
-        paymentResponse.setReturnURL("http://localhost:8080/shop/payment/ecpay/callback");
-//        paymentResponse.setOrderResultURL("http://localhost:5173/shop/orders/" + order.getId());
-        paymentResponse.setChoosePayment("Credit");
+        paymentResponse.setReturnURL("https://f3e5-59-125-142-166.ngrok-free.app/shop/payment/ecpay/callback");
+        paymentResponse.setOrderResultURL("");
+        paymentResponse.setClientBackURL("https://2619-59-125-142-166.ngrok-free.app/shop/ecpay/success");
+//        paymentResponse.setClientBackURL("https://localhost:5173/shop/orders/" + order.getId());
+        paymentResponse.setChoosePayment("ALL");
         paymentResponse.setEncryptType("1");
 
         // 計算 CheckValue
@@ -157,15 +173,11 @@ public class PaymentService {
         BigDecimal paymentAmount = new BigDecimal(tradeAmt);
 
         // 4. 查找訂單
-        Optional<Order> orderOptional = orderRepo.findById(orderId);
-        if (!orderOptional.isPresent()) {
-            return "0|Error: Order not found"; // 符合 ECPay 的格式
-        }
-        Order order = orderOptional.get();
+        Order order = orderRepo.findById(orderId)
+            .orElseThrow(() -> new IllegalArgumentException("找不到訂單"));
 
         // 5. 設定付款資訊
-        Payment payment = new Payment();
-        payment.setOrder(order);
+        Payment payment = order.getPayment(); 
         payment.setTradeNo(tradeNo);
 
         // 6. 解析付款日期
@@ -185,7 +197,7 @@ public class PaymentService {
             setPaymentStatus(payment, 3); // 設定為付款失敗
             payment.setPaymentAmount(null);
         }
-
+  
         // 8. 設定 PaymentCategory
         paymentCategoryRepo.findById(1).ifPresentOrElse(
             payment::setPaymentCategory,

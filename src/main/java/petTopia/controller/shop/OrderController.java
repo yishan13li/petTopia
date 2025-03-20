@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,7 +19,9 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.servlet.http.HttpSession;
 import petTopia.dto.shop.OrderDetailDto;
 import petTopia.dto.shop.OrderHistoryDto;
+import petTopia.model.shop.Order;
 import petTopia.model.user.Member;
+import petTopia.repository.shop.OrderRepository;
 import petTopia.repository.shop.PaymentCategoryRepository;
 import petTopia.repository.shop.ShippingCategoryRepository;
 import petTopia.service.shop.OrderDetailService;
@@ -34,6 +37,10 @@ public class OrderController {
 	@Autowired
 	private OrderDetailService orderDetailService;
 	
+	@Autowired
+	private OrderRepository orderRepo;
+	
+	//訂單詳情頁
     @GetMapping("/orders/{orderId}")
     public ResponseEntity<OrderDetailDto> getOrderDetail(HttpSession session,@PathVariable("orderId") Integer orderId) {
         try {
@@ -95,6 +102,32 @@ public class OrderController {
         } catch (Exception e) {
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+    // 取消訂單的 API
+    @PutMapping("/orders/{orderId}/cancel")
+    public ResponseEntity<String> cancelOrder(HttpSession session,
+        @PathVariable Integer orderId) {
+
+        // 從 session 取得 userId 和 member 資訊
+        Member member = (Member) session.getAttribute("member");
+        Integer memberId = member.getId();
+        
+        try {
+            // 找訂單
+            Order order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("找不到訂單"));
+            order.setId(orderId);
+            orderService.cancelOrder(order, memberId); // 呼叫服務層的 cancelOrder 方法
+
+            return ResponseEntity.ok("訂單已成功取消");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                 .body("訂單不存在或取消失敗");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                 .body("伺服器錯誤，請稍後再試");
         }
     }
 

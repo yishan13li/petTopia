@@ -13,11 +13,11 @@ import java.nio.charset.StandardCharsets;
 @Component
 public class EcpayUtils {
 
-    @Value("${ecpay.hashKey}")
-    private String hashKey;
-
-    @Value("${ecpay.hashIv}")
-    private String hashIv;
+//    @Value("${ecpay.hashKey}")
+//    private String hashKey;
+//
+//    @Value("${ecpay.hashIv}")
+//    private String hashIv;
 
     public String createCheckValue(Map<String, String> params) throws Exception {
         Map<String, String> sortedParams = new TreeMap<>(params);
@@ -30,23 +30,21 @@ public class EcpayUtils {
             
             String value = entry.getValue();
             
-            // 如果需要進行其他處理（如去除空格等），可以在這裡處理
             sb.append(entry.getKey()).append("=").append(value).append("&");
         }
 
-
         sb.deleteCharAt(sb.length() - 1);
-        sb.insert(0, "HashKey=" + hashKey + "&");
-        sb.append("&HashIV=" + hashIv);
-        System.out.println("原始字串: " + sb);
+        
+        sb.insert(0, "HashKey=" + "pwFHCqoQZGmho4w6" + "&");
+        sb.append("&HashIV=" + "EkRm7iFT261dpevs");
 
         String encodedString = encodeString(sb.toString());
-        System.out.println("URL 編碼後: " + encodedString);
-
+        
         String lowerCaseString = encodedString.toLowerCase();
+        
         String checkMacValue = sha256(lowerCaseString);
         
-        System.out.println("CheckMacValue: " + checkMacValue.toUpperCase());
+        System.out.println(checkMacValue.toUpperCase());
         return checkMacValue.toUpperCase();
     }
 
@@ -88,6 +86,8 @@ public class EcpayUtils {
                          .replaceAll("%2c", ",")   // `,`
                          .replaceAll("%7c", "|");  // `|`
 
+        // 確保替換 `&` 為 `%26`
+        encoded = encoded.replace("&", "%26");
         return encoded;
     }
 

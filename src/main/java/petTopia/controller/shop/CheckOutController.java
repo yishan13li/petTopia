@@ -139,16 +139,13 @@ public class CheckOutController {
     
     
     @GetMapping("/coupons")
-    public ResponseEntity<Object> getCoupons(@RequestParam Optional<Integer> selectedCouponId, HttpSession session, 
+    public ResponseEntity<Object> getCoupons(HttpSession session, 
     											@RequestParam List<Integer> productIds) {
         Member member = (Member) session.getAttribute("member");
         Integer memberId = member.getId();
         
-//        List<Cart> AllCarts= cartRepo.findByMemberIdAndProductIdIn(memberId, cartItems);
-
         BigDecimal subtotal = cartService.calculateTotalPrice(memberId,productIds);
 
-        Map<String, Object> response = new HashMap<>();
         
         // 更新優惠券使用次數
         couponService.updateCouponUsageCount(memberId);
@@ -158,17 +155,9 @@ public class CheckOutController {
         List<Coupon> notMeetCoupons = couponsMap.get("notMeet");
         
         // 獲取選取的優惠券
-        Coupon selectedCoupon = null;
-        if (selectedCouponId.orElse(null) != null) {
-        	selectedCoupon = couponService.getCouponById(selectedCouponId.get());
-        }
-        
-        if (availableCoupons != null)
-        	response.put("availableCoupons", availableCoupons);
-        if (notMeetCoupons != null)
-        	response.put("notMeetCoupons", notMeetCoupons);
-        if (selectedCoupon != null)
-        	response.put("selectedCoupon", selectedCoupon);
+        Map<String, Object> response = new HashMap<>();
+        response.put("availableCoupons", availableCoupons);
+        response.put("notMeetCoupons", notMeetCoupons);
 
         return ResponseEntity.ok(response);
     }
@@ -177,8 +166,6 @@ public class CheckOutController {
     public ResponseEntity<?> processCheckout(@RequestBody Map<String, Object> checkoutData, 
                                               HttpSession session,
                                               @RequestHeader(value = "Accept", defaultValue = "application/json") String acceptHeader) throws Exception {
-
-        System.out.println("收到前端請求：" + checkoutData);
 
         // 從 Session 中獲取會員資訊
         Member member = (Member) session.getAttribute("member");
@@ -233,12 +220,13 @@ public class CheckOutController {
     }
 
 
-
     @PostMapping("/payment/ecpay/callback")
-    public ResponseEntity<String> handleEcpayCallback(@RequestBody Map<String, String> ecpayResponse) {
-        try {
+    public ResponseEntity<String> handleEcpayCallback(@RequestParam Map<String, String> callbackParams) {
+        
+    	try {
             // 呼叫 Service 層處理回調邏輯
-            String response = paymentService.handleEcpayCallback(ecpayResponse);
+            String response = paymentService.handleEcpayCallback(callbackParams);
+            
             return ResponseEntity.ok(response); // 確保回應是 "1|OK" 或 "0|Error: XXX"
         } catch (Exception e) {
             return ResponseEntity.ok("0|Error: " + e.getMessage()); // 發生錯誤時，仍符合 ECPay 格式

@@ -25,6 +25,8 @@ import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.transaction.Transactional;
+import petTopia.dto.shop.ManageAllOrdersDto;
+import petTopia.dto.shop.ManageOrderItemDto;
 import petTopia.dto.shop.OrderHistoryDto;
 import petTopia.dto.shop.OrderItemDto;
 import petTopia.dto.shop.OrderSummaryAmoutDto;
@@ -57,7 +59,7 @@ import petTopia.repository.shop.ShippingCategoryRepository;
 import petTopia.repository.shop.ShippingRepository;
 
 @Service
-public class OrderService {
+public class ManageOrderService {
 	
 	@Autowired
 	private CouponRepository couponRepo;
@@ -101,13 +103,136 @@ public class OrderService {
 	@Autowired
 	private PaymentRepository paymentRepo;
 	
-	@Autowired
-	private MemberCouponRepository memberCouponRepo;
-	
 	@PersistenceContext
 	private EntityManager entityManager;
 //	================================================
 
+	//把order轉成manageAllOrdersDto
+	private ManageAllOrdersDto convertToManageAllOrdersDto(Order order) {
+	    ManageAllOrdersDto managedOrder = new ManageAllOrdersDto();
+
+	    managedOrder.setMemberId(order.getMember().getId());
+	    managedOrder.setOrderId(order.getId());
+	    managedOrder.setOrderStatus(order.getOrderStatus().getName());
+	    managedOrder.setCreatedTime(new java.sql.Date(order.getCreatedTime().getTime()));
+	    managedOrder.setTotalAmount(order.getTotalAmount());
+
+	    // 查詢付款狀態
+	    Payment payment = paymentRepo.findByOrderId(order.getId());
+	    managedOrder.setPaymentStatus(payment != null ? payment.getPaymentStatus().getName() : "待付款");
+	    managedOrder.setPaymentCategory(payment.getPaymentCategory().getName());
+	    
+	    // 配送狀態
+	    Shipping shipping = shippingRepo.findByOrderId(order.getId());
+	    managedOrder.setShippingCategory(shipping.getShippingCategory().getName());
+
+	    // 查詢該訂單的商品明細
+	    List<OrderDetail> orderDetails = orderDetailRepo.findByOrderId(order.getId());
+
+	    // 使用 getManagedOrderItemDto 方法來轉換商品明細
+	    List<ManageOrderItemDto> manageOrderItemDtos = orderDetails.stream()
+	        .map(orderDetail -> {
+	            ManageOrderItemDto manageOrderItemDto = orderDetailService.getManagedOrderItemDto(orderDetail);
+
+	            if (manageOrderItemDto != null) {
+	                manageOrderItemDto.setProductId(orderDetail.getProduct().getId());
+	                manageOrderItemDto.setProductName(orderDetail.getProduct().getProductDetail().getName());
+	            }
+
+	            return manageOrderItemDto; // 確保在處理後返回 manageOrderItemDto
+	        })
+	        .collect(Collectors.toList());
+
+	    managedOrder.setManagedOrderItems(manageOrderItemDtos);
+
+	    return managedOrder;
+	}
+
+    public Page<ManageAllOrdersDto> getManageOrderHistoryFilter(
+    	    String memberId, String orderStatus, Date startDate, Date endDate, String orderId, 
+    	    String paymentStatus, String productKeyword,
+    	    String paymentCategory, String shippingCategory, int page, int size) {
+
+    	    if (page < 1) page = 1;
+    	    if (size < 1) size = 10;
+
+    	    CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+    	    CriteriaQuery<Order> query = criteriaBuilder.createQuery(Order.class);
+    	    Root<Order> root = query.from(Order.class);
+
+    	    List<Predicate> predicates = new ArrayList<>();
+
+    	    // 會員編號
+    	    if (memberId != null && !memberId.isEmpty()) {
+    	        predicates.add(criteriaBuilder.equal(root.get("member").get("id"), memberId));
+    	    }
+    	    
+    	    // 訂單狀態篩選
+    	    if (orderStatus != null && !orderStatus.isEmpty()) {
+    	        Predicate statusPredicate = criteriaBuilder.equal(root.get("orderStatus").get("name"), orderStatus);
+    	        predicates.add(statusPredicate);
+    	    }
+
+    	    // 付款狀態篩選
+    	    if (paymentStatus != null && !paymentStatus.isEmpty()) {
+    	        Join<Order, Payment> paymentJoin = root.join("payment", JoinType.LEFT);
+    	        Predicate paymentStatusPredicate = criteriaBuilder.equal(paymentJoin.get("paymentStatus").get("name"), paymentStatus);
+    	        predicates.add(paymentStatusPredicate);
+    	    }
+
+    	    // 付款方式篩選
+    	    if (paymentCategory != null && !paymentCategory.isEmpty()) {
+    	        Join<Order, Payment> paymentJoin = root.join("payment", JoinType.LEFT);
+    	        predicates.add(criteriaBuilder.equal(paymentJoin.get("paymentCategory").get("name"), paymentCategory));
+    	    }
+
+    	    // 配送方式篩選
+    	    if (shippingCategory != null && !shippingCategory.isEmpty()) {
+    	        Join<Order, Shipping> shippingJoin = root.join("shipping", JoinType.LEFT);
+    	        predicates.add(criteriaBuilder.equal(shippingJoin.get("shippingCategory").get("name"), shippingCategory));
+    	    }
+
+    	    // 訂單日期範圍
+    	    if (startDate != null) {
+    	        predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("createdTime"), startDate));
+    	    }
+    	    if (endDate != null) {
+    	        predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("createdTime"), endDate));
+    	    }
+
+    	    // 搜尋關鍵字（訂單編號 or 商品名稱）
+    	    if (productKeyword != null && !productKeyword.isEmpty()) {
+    	        Predicate orderIdPredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("id").as(String.class)), "%" + productKeyword.toLowerCase() + "%");
+
+    	        // 商品名稱搜尋
+    	        Join<Order, OrderDetail> orderDetailsJoin = root.join("orderDetails", JoinType.LEFT);
+    	        Join<OrderDetail, Product> productJoin = orderDetailsJoin.join("product", JoinType.LEFT);
+    	        Predicate productNamePredicate = criteriaBuilder.like(criteriaBuilder.lower(productJoin.get("productDetail").get("name")), "%" + productKeyword.toLowerCase() + "%");
+
+    	        predicates.add(criteriaBuilder.or(orderIdPredicate, productNamePredicate));
+    	    }
+    	    
+    	    // 設定查詢條件
+    	    query.where(predicates.toArray(new Predicate[0]));
+    	    query.orderBy(criteriaBuilder.desc(root.get("id")));
+
+    	    // 執行查詢，得到所有符合條件的資料
+    	    List<Order> orders = entityManager.createQuery(query).getResultList();
+
+    	    // 計算總記錄數
+    	    long totalRecords = orders.size();
+
+    	    // 分頁
+    	    int startIndex = (page - 1) * size;
+    	    int endIndex = Math.min(startIndex + size, orders.size());
+    	    List<Order> paginatedOrders = orders.subList(startIndex, endIndex);
+
+    	    // 轉換 DTO
+    	    List<ManageAllOrdersDto> orderDtos = paginatedOrders.stream().map(this::convertToManageAllOrdersDto).collect(Collectors.toList());
+
+    	    return new PageImpl<>(orderDtos, PageRequest.of(page - 1, size), totalRecords);
+    	}
+	
 	
 	public OrderSummaryAmoutDto calculateOrderSummary(Integer memberId, Integer couponId, Integer shippingCategoryId,List<Integer> productIds) {
 
@@ -257,132 +382,6 @@ public class OrderService {
 	    return response;
 	}
 
-	  //把order轉成orderHistoryDto
-    private OrderHistoryDto convertToOrderHistoryDto(Order order) {
-        OrderHistoryDto orderHistory = new OrderHistoryDto();
-        orderHistory.setOrderId(order.getId());
-        orderHistory.setOrderStatus(order.getOrderStatus().getName()); // 設定訂單狀態
-        orderHistory.setCreatedTime(new java.sql.Date(order.getCreatedTime().getTime()));
-        orderHistory.setTotalAmount(order.getTotalAmount());
-
-        // 查詢付款狀態
-        Payment payment = paymentRepo.findByOrderId(order.getId());
-        orderHistory.setPaymentStatus(payment != null ? payment.getPaymentStatus().getName() : "待付款"); // 設定付款狀態
-        orderHistory.setPaymentCategory(payment.getPaymentCategory().getName());
-        
-        Shipping shipping = shippingRepo.findByOrderId(order.getId());
-        orderHistory.setShippingCategory(shipping.getShippingCategory().getName());
-
-        // 查詢該訂單的商品明細
-        List<OrderDetail> orderDetails = orderDetailRepo.findByOrderId(order.getId());
-
-        // 使用 getOrderItemDto 方法來轉換商品明細
-        List<OrderItemDto> orderItemDtos = orderDetails.stream()
-            .map(orderDetail -> {
-                OrderItemDto orderItemDto = orderDetailService.getOrderItemDto(orderDetail);
-
-                // 確保 ProductSize 和 ProductColor 可以為 null
-                if (orderItemDto != null) {
-                	orderItemDto.setProductId(orderDetail.getProduct().getId());
-                    ProductSize productSize = orderDetail.getProduct().getProductSize();
-                    ProductColor productColor = orderDetail.getProduct().getProductColor();
-
-                    // 如果 productSize 不為 null，則設置其名稱
-                    orderItemDto.setProductSize(productSize != null ? productSize.getName() : null);
-
-                    // 如果 productColor 不為 null，則設置其名稱
-                    orderItemDto.setProductColor(productColor != null ? productColor.getName() : null);
-                }
-
-                return orderItemDto;
-            })
-            .collect(Collectors.toList());
-
-        orderHistory.setOrderItems(orderItemDtos);
-
-        return orderHistory;
-    }
-
-    public Page<OrderHistoryDto> getOrderHistoryFilter(
-    	    Integer memberId, String orderStatus, Date startDate, Date endDate, String keyword, 
-    	    String paymentCategory, String shippingCategory, int page, int size) {
-
-    	    if (page < 1) page = 1;
-    	    if (size < 1) size = 5;
-
-    	    CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-    	    CriteriaQuery<Order> query = criteriaBuilder.createQuery(Order.class);
-    	    Root<Order> root = query.from(Order.class);
-
-    	    List<Predicate> predicates = new ArrayList<>();
-    	    predicates.add(criteriaBuilder.equal(root.get("member").get("id"), memberId));
-
-    	    // 訂單狀態 or 付款狀態篩選
-    	    if (orderStatus != null && !orderStatus.isEmpty()) {
-    	        Predicate statusPredicate;
-    	        Join<Order, Payment> paymentJoin = root.join("payment", JoinType.LEFT);
-    	        if (orderStatus.equals("已付款") || orderStatus.equals("待付款")) {
-    	            statusPredicate = criteriaBuilder.equal(paymentJoin.get("paymentStatus").get("name"), orderStatus);
-    	        } else {
-    	            statusPredicate = criteriaBuilder.equal(root.get("orderStatus").get("name"), orderStatus);
-    	        }
-    	        predicates.add(statusPredicate);
-    	    }
-
-    	    // 付款方式篩選
-    	    if (paymentCategory != null && !paymentCategory.isEmpty()) {
-    	        Join<Order, Payment> paymentJoin = root.join("payment", JoinType.LEFT);
-    	        predicates.add(criteriaBuilder.equal(paymentJoin.get("paymentCategory").get("name"), paymentCategory));
-    	    }
-
-    	    // 配送方式篩選
-    	    if (shippingCategory != null && !shippingCategory.isEmpty()) {
-    	        Join<Order, Shipping> shippingJoin = root.join("shipping", JoinType.LEFT);
-    	        predicates.add(criteriaBuilder.equal(shippingJoin.get("shippingCategory").get("name"), shippingCategory));
-    	    }
-
-    	    // 訂單日期範圍
-    	    if (startDate != null) {
-    	        predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("createdTime"), startDate));
-    	    }
-    	    if (endDate != null) {
-    	        predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("createdTime"), endDate));
-    	    }
-
-    	    // 搜尋關鍵字（訂單編號 or 商品名稱）
-    	    if (keyword != null && !keyword.isEmpty()) {
-    	        Predicate orderIdPredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("id").as(String.class)), "%" + keyword.toLowerCase() + "%");
-
-    	        // 商品名稱搜尋
-    	        Join<Order, OrderDetail> orderDetailsJoin = root.join("orderDetails", JoinType.LEFT);
-    	        Join<OrderDetail, Product> productJoin = orderDetailsJoin.join("product", JoinType.LEFT);
-    	        Predicate productNamePredicate = criteriaBuilder.like(criteriaBuilder.lower(productJoin.get("productDetail").get("name")), "%" + keyword.toLowerCase() + "%");
-
-    	        predicates.add(criteriaBuilder.or(orderIdPredicate, productNamePredicate));
-    	    }
-
-    	    // 設定查詢條件
-    	    query.where(predicates.toArray(new Predicate[0]));
-    	    query.orderBy(criteriaBuilder.desc(root.get("id")));
-
-    	    // 執行查詢，得到所有符合條件的資料
-    	    List<Order> orders = entityManager.createQuery(query).getResultList();
-
-    	    // 計算總記錄數
-    	    long totalRecords = orders.size();
-
-    	    // 分頁
-    	    int startIndex = (page - 1) * size;
-    	    int endIndex = Math.min(startIndex + size, orders.size());
-    	    List<Order> paginatedOrders = orders.subList(startIndex, endIndex);
-
-    	    // 轉換 DTO
-    	    List<OrderHistoryDto> orderDtos = paginatedOrders.stream().map(this::convertToOrderHistoryDto).collect(Collectors.toList());
-
-    	    return new PageImpl<>(orderDtos, PageRequest.of(page - 1, size), totalRecords);
-    	}
-
-
     @Transactional
     public void cancelOrder(Order order,Integer memberId) {
         order = orderRepo.findById(order.getId())
@@ -406,35 +405,5 @@ public class OrderService {
         Optional<OrderStatus> orderStatus = orderStatusRepo.findById(statusId);
         orderStatus.ifPresent(order::setOrderStatus); // 只有當 orderStatus 存在時才設置
     }
-    
 
-
-    // 查詢該會員的所有訂單
-//    public List<OrderHistoryDto> getOrderHistoryByMemberId(Integer memberId) {
-//        List<Order> orders = orderRepo.findByMemberId(memberId);
-//
-//        return orders.stream().map(order -> {
-//            OrderHistoryDto orderHistory = new OrderHistoryDto();
-//            orderHistory.setOrderId(order.getId());
-//            orderHistory.setOrderStatus(order.getOrderStatus().getName());
-//            orderHistory.setCreatedTime(new java.sql.Date(order.getCreatedTime().getTime()));
-//            orderHistory.setTotalAmount(order.getTotalAmount());
-//
-//            // 查詢付款狀態
-//            Payment payment = paymentRepo.findByOrderId(order.getId());
-//            orderHistory.setPaymentStatus(payment.getPaymentStatus().getName());
-//
-//            // 查詢該訂單的商品明細
-//            List<OrderDetail> orderDetails = orderDetailRepo.findByOrderId(order.getId());
-//
-//            // **這裡改用 getOrderItemDto 方法**
-//            List<OrderItemDto> orderItemDtos = orderDetails.stream()
-//                    .map(orderDetailService::getOrderItemDto) // 呼叫已經寫好的方法
-//                    .collect(Collectors.toList());
-//
-//            orderHistory.setOrderItems(orderItemDtos);
-//
-//            return orderHistory;
-//        }).collect(Collectors.toList());
-//    }
 }
