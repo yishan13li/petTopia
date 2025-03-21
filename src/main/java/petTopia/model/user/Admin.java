@@ -1,34 +1,34 @@
 package petTopia.model.user;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.Data;
+import java.time.LocalDateTime;
 
-@Getter
-@Setter
-@NoArgsConstructor
 @Entity
-@Table(name="admin")
+@Table(name = "admin")
+@Data
 public class Admin {
-	
+    
     @Id
     @Column(name = "id")
-    private int id; // 管理員ID，自動遞增主鍵
+    private Integer id;
     
-    @Column(name = "name", nullable = false)
-    private String name; // 管理員姓名
+    @OneToOne
+    @MapsId
+    @JoinColumn(name = "id")
+    private User users;
+    
+    @Column(nullable = false)
+    private String name;
     
     @Column(name = "role", nullable = false)
     @Enumerated(EnumType.STRING)
-    private Role role; // 管理員角色，'SA', 'admin', 'employee'
+    private AdminRole role;
     
-    public enum Role {
-        SA, admin, employee
+    @Column(name = "registration_date")
+    private LocalDateTime registrationDate = LocalDateTime.now();
+    
+    public enum AdminRole {
+        SA, ADMIN, EMPLOYEE
     }
 }
