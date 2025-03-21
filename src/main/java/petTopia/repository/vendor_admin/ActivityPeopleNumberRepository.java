@@ -10,5 +10,6 @@ public interface ActivityPeopleNumberRepository extends JpaRepository<ActivityPe
 
 	 Optional<ActivityPeopleNumber> findByVendorActivity_Id(Integer activityId);
 
-	
+	 public ActivityPeopleNumber findByVendorActivityId(Integer activityId);
+	 
 }

@@ -11,6 +11,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Transient;
 import lombok.Data;
 
 @Entity
@@ -53,4 +54,7 @@ public class MemberBean {
 	// 不需要額外的 @ManyToOne 或 @JoinColumn
 
 	// getters 和 setters 會自動由 @Data 提供
+	
+	@Transient
+	private String profilePhotoBase64;
 }

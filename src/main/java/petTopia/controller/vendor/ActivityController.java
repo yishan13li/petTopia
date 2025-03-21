@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import petTopia.model.vendor.ActivityType;
 import petTopia.model.vendor.VendorActivity;
+import petTopia.model.vendor.VendorActivityImages;
 import petTopia.service.vendor.ActivityTypeUserService;
+import petTopia.service.vendor.VendorActivityImagesService;
 import petTopia.service.vendor.VendorActivityService;
 
 @CrossOrigin
@@ -20,7 +22,10 @@ public class ActivityController {
 
 	@Autowired
 	private VendorActivityService vendorActivityService;
-	
+
+	@Autowired
+	private VendorActivityImagesService vendorActivityImagesService;
+
 	@Autowired
 	private ActivityTypeUserService activityTypeUserService;
 
@@ -41,18 +46,29 @@ public class ActivityController {
 		List<VendorActivity> activityList = vendorActivityService.findAllActivityExceptOne(activityId);
 		return ResponseEntity.ok(activityList);
 	}
-	
-	
+
+	@GetMapping("/api/activity/{activityId}/image")
+	public ResponseEntity<List<VendorActivityImages>> getActivityImages(@PathVariable Integer activityId) {
+		List<VendorActivityImages> imageList = vendorActivityImagesService.findImageListByActivityId(activityId);
+		return ResponseEntity.ok(imageList);
+	}
+
 	@GetMapping("/api/activity/type/{typeId}")
 	public ResponseEntity<List<VendorActivity>> getVendorsByCategory(@PathVariable Integer typeId) {
 		List<VendorActivity> activityList = vendorActivityService.findActivityByTypeId(typeId);
 		return ResponseEntity.ok(activityList);
 	}
-	
+
 	@GetMapping("/api/activity/type/show")
 	public ResponseEntity<List<ActivityType>> getAllTypes() {
 		List<ActivityType> typeList = activityTypeUserService.findAllActivityType();
 		return ResponseEntity.ok(typeList);
+	}
+
+	@GetMapping("/api/activity/{activityId}/increase/number/visitor")
+	public ResponseEntity<VendorActivity> increaseNumberOfVisitor(@PathVariable Integer activityId) {
+		VendorActivity activity = vendorActivityService.increaseNumberOfVisitor(activityId);
+		return ResponseEntity.ok(activity);
 	}
 
 }

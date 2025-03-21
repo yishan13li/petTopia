@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import petTopia.model.vendor.VendorActivity;
 import petTopia.model.vendor.VendorActivityImages;
 
 public interface VendorActivityImagesRepository extends JpaRepository<VendorActivityImages, Integer> {
@@ -12,4 +13,6 @@ public interface VendorActivityImagesRepository extends JpaRepository<VendorActi
 //	Optional<VendorActivityImages> findFirstByVendorActivityId(Integer vendorActivityId);
 	
 	void deleteAllByIdIn(List<Integer> ids);
+	
+	public List<VendorActivityImages> findByVendorActivity(VendorActivity vendorActivity);
 }

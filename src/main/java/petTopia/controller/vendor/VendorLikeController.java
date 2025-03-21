@@ -45,8 +45,4 @@ public class VendorLikeController {
 		response.put("action", isLiked ? true : false);
 		return response;
 	}
-	
-
-
-
 }

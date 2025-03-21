@@ -52,4 +52,17 @@ public class VendorActivityService {
 		return activityList;
 	}
 	
+	/* 瀏覽數增加 */
+	public VendorActivity increaseNumberOfVisitor(Integer activityId) {
+		VendorActivity activity = vendorActivityRepository.findById(activityId).orElse(null);
+		
+		Integer numberVisitor = activity.getNumberVisitor();
+		numberVisitor=numberVisitor+1;
+		
+		activity.setNumberVisitor(numberVisitor);
+		vendorActivityRepository.save(activity);
+		
+		return activity;
+	}
+	
 }

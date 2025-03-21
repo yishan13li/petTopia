@@ -5,7 +5,9 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import petTopia.model.user.MemberBean;
 import petTopia.model.vendor.ActivityRegistration;
+import petTopia.model.vendor.VendorActivity;
 
 public interface ActivityRegistrationRepository extends JpaRepository<ActivityRegistration, Integer> {
 
@@ -13,4 +15,7 @@ public interface ActivityRegistrationRepository extends JpaRepository<ActivityRe
 	
 	public Optional<ActivityRegistration> findByMemberId(Integer memberId);
 
+	public ActivityRegistration findByMemberAndVendorActivity(MemberBean member,VendorActivity activity);
+	
+	List<ActivityRegistration> findByVendorActivityIdAndStatus(Integer vendorActivityId, String status);
 }
