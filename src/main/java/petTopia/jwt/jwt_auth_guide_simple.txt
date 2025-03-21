@@ -1,0 +1,100 @@
+JWT 認證系統使用教學（簡易版）
+============================
+
+什麼是 JWT？
+-----------
+JWT（JSON Web Token）就像是一張電子門票，用來證明使用者的身份。
+當使用者登入後，系統會發給他一張門票（Token），之後每次要使用系統時，都要出示這張門票。
+
+系統組成
+--------
+1. 前端（使用者介面）
+2. 後端（伺服器）
+3. JWT 工具（處理門票的發放和驗證）
+
+基本使用步驟
+------------
+1. 使用者登入
+   - 輸入帳號密碼
+   - 系統驗證成功後，發給一張門票（Token）
+
+2. 使用系統
+   - 每次要使用系統時，都要把門票（Token）交給系統
+   - 系統會檢查門票是否有效
+   - 如果門票有效，就允許使用系統
+
+程式碼範例
+----------
+1. 前端發送請求（使用 axios）：
+```javascript
+// 設定 axios
+
+const api = axios.create({
+  baseURL: '/api'
+});
+
+
+
+// 自動加入門票
+
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// 使用範例
+const getProfile = async () => {
+  try {
+    const response = await api.get('/profile');
+    return response.data;
+  } catch (error) {
+    if (error.response?.status === 401) {
+      // 門票過期，重新登入
+      window.location.href = '/login';
+    }
+  }
+};
+```
+
+2. 後端驗證（Java）：
+```java
+@RestController
+@RequestMapping("/api")
+public class UserController {
+    
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @GetMapping("/profile")
+    public ResponseEntity<?> getProfile(HttpServletRequest request) {
+        try {
+            // 1. 取得門票
+            String token = request.getHeader("Authorization").substring(7);
+            
+            // 2. 檢查門票是否過期
+            if (jwtUtil.isTokenExpired(token)) {
+                return ResponseEntity.status(401).body("門票已過期，請重新登入");
+            }
+
+            // 3. 取得使用者資料
+            Integer userId = jwtUtil.extractUserId(token);
+            
+            // 4. 回傳資料
+            return ResponseEntity.ok(userService.getProfile(userId));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("系統錯誤");
+        }
+    }
+}
+```
+
+使用流程圖
+----------
+登入流程：
+使用者 -> 輸入帳密 -> 系統驗證 -> 發給門票 -> 儲存門票
+
+使用系統流程：
+使用者 -> 出示門票 -> 系統檢查 -> 允許使用 -> 回傳資料
