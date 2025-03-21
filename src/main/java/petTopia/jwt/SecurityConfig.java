@@ -118,6 +118,7 @@ public class SecurityConfig {
                     "/activity/all",
                     "/activity/{activityId}",
                     "/activity/{activityId}/review"
+                    
                 ).hasRole("MEMBER")
                 
                 // 商家接口 只要新增新的api街口就在這裡添加

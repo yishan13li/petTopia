@@ -194,6 +194,7 @@ public class MemberLoginController {
                 response.put("token", token);
                 response.put("userId", user.getId());
                 response.put("email", user.getEmail());
+                response.put("memberId", member.getId());
                 response.put("name", displayName);
                 response.put("memberName", displayName); // 同時設置 memberName
                 response.put("role", user.getUserRole().name());
