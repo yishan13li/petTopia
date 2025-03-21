@@ -29,7 +29,7 @@
 		<link>
 			<name>target/test-classes</name>
 			<type>2</type>
-			<location>//C:/petTopia/workspace/pettopia-vue/target/test-classes/</location>
+			<location>C:/petTopia/workspace/pettopia-vue/target/test-classes</location>
 		</link>
 	</linkedResources>
 	<filteredResources>

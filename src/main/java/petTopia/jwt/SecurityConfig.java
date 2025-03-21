@@ -23,6 +23,7 @@ import petTopia.service.user.MemberLoginService;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.HashMap;
 
 /**
  * Spring Security 配置類
@@ -154,7 +155,6 @@ public class SecurityConfig {
                         
                         // 提取用戶信息
                         String email = oauth2User.getAttribute("email");
-                        String name = oauth2User.getAttribute("name");
                         String provider = oauthToken.getAuthorizedClientRegistrationId().toUpperCase();
                         
                         // 驗證郵箱
@@ -166,8 +166,6 @@ public class SecurityConfig {
                         
                         // 查找用戶
                         User user = memberLoginService.findByEmail(email);
-                        Integer userId = (user != null) ? user.getId() : null;
-                        String role = (user != null) ? user.getUserRole().toString() : "MEMBER";
                         
                         // 驗證用戶存在
                         if (user == null) {
@@ -177,9 +175,18 @@ public class SecurityConfig {
                         }
                         
                         // 生成 JWT 令牌
-                        String token = jwtUtil.generateToken(email, userId, role);
-                        response.sendRedirect("http://localhost:5173/login?token=" + token + 
-                            "&userId=" + userId + "&email=" + email + "&role=" + role);
+                        String token = jwtUtil.generateToken(email, user.getId(), user.getUserRole().toString());
+                        
+                        // 獲取完整的會員信息
+                        Map<String, Object> userInfo = memberLoginService.getMemberInfo(user);
+                        userInfo.put("token", token);
+                        
+                        // 將用戶信息轉換為 JSON
+                        String userInfoJson = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(userInfo);
+                        
+                        // 重定向到前端，攜帶完整的用戶信息
+                        response.sendRedirect("http://localhost:5173/login?userInfo=" + 
+                            java.net.URLEncoder.encode(userInfoJson, "UTF-8"));
                     } catch (Exception e) {
                         response.sendRedirect("http://localhost:5173/login?error=true&message=" + 
                             java.net.URLEncoder.encode("登入過程中發生錯誤: " + e.getMessage(), "UTF-8"));

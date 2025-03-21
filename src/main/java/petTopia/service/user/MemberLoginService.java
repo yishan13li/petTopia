@@ -113,4 +113,24 @@ public class MemberLoginService extends BaseUserService {
     public User updateUser(User user) {
         return usersRepository.save(user);
     }
+
+    public Map<String, Object> getMemberInfo(User user) {
+        Map<String, Object> memberInfo = new HashMap<>();
+        try {
+            Member member = memberRepository.findByUserId(user.getId()).orElse(null);
+            
+            memberInfo.put("userId", user.getId());
+            memberInfo.put("email", user.getEmail());
+            memberInfo.put("userRole", user.getUserRole());
+            memberInfo.put("name", member != null ? member.getName() : user.getEmail().split("@")[0]);
+            memberInfo.put("provider", user.getProvider());
+            memberInfo.put("avatar", null); // 如果需要頭像，可以從 member.getProfilePhoto() 轉換
+            memberInfo.put("memberName", member != null ? member.getName() : user.getEmail().split("@")[0]);
+            
+            return memberInfo;
+        } catch (Exception e) {
+            logger.error("獲取會員信息時發生錯誤", e);
+            throw new RuntimeException("獲取會員信息失敗：" + e.getMessage());
+        }
+    }
 }
