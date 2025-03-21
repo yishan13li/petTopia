@@ -106,7 +106,7 @@ public class SecurityConfig {
                     "/api/vendor/category/show"
                 ).permitAll()
                 
-                // 會員接口
+                // 會員接口 只要新增新的api街口就在這裡添加
                 .requestMatchers(
                     "/api/member/**",
                     "/api/vendor/{vendorId}",
@@ -120,7 +120,7 @@ public class SecurityConfig {
                     "/activity/{activityId}/review"
                 ).hasRole("MEMBER")
                 
-                // 商家接口
+                // 商家接口 只要新增新的api街口就在這裡添加
                 .requestMatchers(
                     "/api/vendor/**",
                     "/activity/**",
@@ -130,7 +130,7 @@ public class SecurityConfig {
                     "/api/vendor/review/{reviewId}/delete"
                 ).hasAnyRole("MEMBER", "VENDOR")
                 
-                // 管理員接口
+                // 管理員接口 只要新增新的api街口就在這裡添加
                 .requestMatchers(
                     "/api/admin/**",
                     "/api/admin/dashboard",
