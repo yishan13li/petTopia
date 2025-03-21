@@ -42,12 +42,8 @@ public class OrderController {
 	
 	//訂單詳情頁
     @GetMapping("/orders/{orderId}")
-    public ResponseEntity<OrderDetailDto> getOrderDetail(HttpSession session,@PathVariable("orderId") Integer orderId) {
+    public ResponseEntity<OrderDetailDto> getOrderDetail(@RequestParam Integer memberId, @PathVariable("orderId") Integer orderId) {
         try {
-            // 從 session 取得 userId 和 member 資訊
-            Member member = (Member) session.getAttribute("member");
-        
-            Integer memberId = member.getId();
             
             // 使用 Service 層方法查詢訂單詳情
             OrderDetailDto orderDetailDto = orderDetailService.getOrderDetailById(orderId);
@@ -69,7 +65,7 @@ public class OrderController {
  // 查詢會員訂單歷史紀錄
     @GetMapping("/orderHistory")
     public ResponseEntity<Page<OrderHistoryDto>> getOrderHistory(
-            HttpSession session,
+    		@RequestParam Integer memberId,
             @RequestParam(required = false) String orderStatus,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
@@ -80,13 +76,6 @@ public class OrderController {
             @RequestParam(defaultValue = "5") int size) {
 
         try {
-            // 從 session 取得會員資訊
-            Member member = (Member) session.getAttribute("member");
-            if (member == null) {
-                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-            }
-
-            Integer memberId = member.getId();
 
             // 查詢訂單
             Page<OrderHistoryDto> orderHistoryPage = orderService.getOrderHistoryFilter(
@@ -107,13 +96,9 @@ public class OrderController {
     
     // 取消訂單的 API
     @PutMapping("/orders/{orderId}/cancel")
-    public ResponseEntity<String> cancelOrder(HttpSession session,
+    public ResponseEntity<String> cancelOrder(@RequestParam Integer memberId,
         @PathVariable Integer orderId) {
 
-        // 從 session 取得 userId 和 member 資訊
-        Member member = (Member) session.getAttribute("member");
-        Integer memberId = member.getId();
-        
         try {
             // 找訂單
             Order order = orderRepo.findById(orderId)
