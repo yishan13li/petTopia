@@ -2,35 +2,23 @@ package petTopia.controller.shop;
 
 import java.math.BigDecimal;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.ModelAndView;
-
-import jakarta.servlet.http.HttpSession;
-import petTopia.dto.shop.OrderSummaryAmoutDto;
 import petTopia.dto.shop.PaymentResponseDto;
 import petTopia.model.shop.Cart;
 import petTopia.model.shop.Coupon;
 import petTopia.model.shop.Order;
-import petTopia.model.shop.Payment;
 import petTopia.model.shop.PaymentCategory;
-import petTopia.model.shop.PaymentStatus;
 import petTopia.model.shop.ShippingAddress;
 import petTopia.model.shop.ShippingCategory;
 import petTopia.model.user.Member;
@@ -38,12 +26,8 @@ import petTopia.service.shop.CartService;
 import petTopia.service.shop.CouponService;
 import petTopia.service.shop.OrderService;
 import petTopia.service.shop.PaymentService;
-import petTopia.util.EcpayUtils;
-import petTopia.repository.shop.CartRepository;
-import petTopia.repository.shop.OrderRepository;
+import petTopia.service.user.MemberService;
 import petTopia.repository.shop.PaymentCategoryRepository;
-import petTopia.repository.shop.PaymentRepository;
-import petTopia.repository.shop.PaymentStatusRepository;
 import petTopia.repository.shop.ShippingCategoryRepository;
 import petTopia.repository.shop.ShippingAddressRepository;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -53,9 +37,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 @RestController
 @RequestMapping("/shop")
 public class CheckOutController {
-
-	@Autowired
-	private EcpayUtils ecpayUtils;
 
     @Autowired
     private CartService cartService;
@@ -79,32 +60,17 @@ public class CheckOutController {
     private PaymentService paymentService;
     
     @Autowired
-    private PaymentRepository paymentRepo;
-    
-    @Autowired
-    private PaymentStatusRepository paymentStatusRepo;
-    
-    @Autowired
-    private OrderRepository orderRepo;
-    
-    @Autowired
-    private CartRepository cartRepo;
+    private MemberService memberService;
 
     @GetMapping("/checkout")
-    public ResponseEntity<Object> getCheckoutInfo(@RequestParam List<Integer> productIds, HttpSession session) {
-        Member member = (Member) session.getAttribute("member");
-        if (member == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "請先登入"));
-        }
+    public ResponseEntity<Object> getCheckoutInfo(@RequestParam List<Integer> productIds, @RequestParam Integer memberId) {
         
-        Integer memberId = member.getId();
         List<Cart> cartItems = cartService.getCartByMemberIdAndProductIds(memberId, productIds);
         BigDecimal subtotal = cartService.calculateTotalPrice(memberId,productIds);
         List<ShippingCategory> shippingCategories = shippingCategoryRepo.findAll();
         List<PaymentCategory> paymentCategories = paymentCategoryRepo.findAll();
         
         Map<String, Object> response = new HashMap<>();
-        response.put("member", member);
         response.put("cartItems", cartItems.isEmpty() ? Collections.emptyList() : cartItems);
         response.put("subtotal", subtotal);
         response.put("shippingCategories", shippingCategories);
@@ -114,22 +80,24 @@ public class CheckOutController {
     }
 
     @GetMapping("/member")
-    public ResponseEntity<Object> getMemberInfo(HttpSession session) {
-        Member member = (Member) session.getAttribute("member");
-        
-        // 如果會員資訊不存在，返回錯誤訊息
-        if (member == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                                 .body(Map.of("message", "未找到會員資料"));
-        }
+    public ResponseEntity<Object> getMemberInfo(@RequestParam Integer memberId) {
+    	Optional<Member> member = memberService.findById(memberId);
+    	
+    	if (member.isEmpty()) {
+          return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(Map.of("message", "未找到會員資料"));
+    	}
 
         // 若會員資料存在，返回該會員資訊
-        return ResponseEntity.ok(member);
+        return ResponseEntity.ok(member.get());
     }
     
     @GetMapping("/shipping/address")
-    public ResponseEntity<Object> getShippingAddress(HttpSession session) {
-        Member member = (Member) session.getAttribute("member");
+    public ResponseEntity<Object> getShippingAddress(@RequestParam Integer memberId) {
+    	Optional<Member> memberOpt = memberService.findById(memberId);
+    	
+    	Member member=memberOpt.get();
+    	
         ShippingAddress lastShippingAddress = shippingAddressRepo.findByMemberAndIsCurrent(member, true);
         if (lastShippingAddress == null) {
             lastShippingAddress = new ShippingAddress();  // 避免前端渲染錯誤
@@ -139,13 +107,9 @@ public class CheckOutController {
     
     
     @GetMapping("/coupons")
-    public ResponseEntity<Object> getCoupons(HttpSession session, 
-    											@RequestParam List<Integer> productIds) {
-        Member member = (Member) session.getAttribute("member");
-        Integer memberId = member.getId();
-        
+    public ResponseEntity<Object> getCoupons(@RequestParam List<Integer> productIds, @RequestParam Integer memberId) {
+    	
         BigDecimal subtotal = cartService.calculateTotalPrice(memberId,productIds);
-
         
         // 更新優惠券使用次數
         couponService.updateCouponUsageCount(memberId);
@@ -164,21 +128,21 @@ public class CheckOutController {
     
     @PostMapping("/checkout")
     public ResponseEntity<?> processCheckout(@RequestBody Map<String, Object> checkoutData, 
-                                              HttpSession session,
+    										@RequestParam Integer memberId,
                                               @RequestHeader(value = "Accept", defaultValue = "application/json") String acceptHeader) throws Exception {
 
-        // 從 Session 中獲取會員資訊
-        Member member = (Member) session.getAttribute("member");
-        Integer memberId = member.getId();
-
+    	Optional<Member> memberOpt = memberService.findById(memberId);
+    	
+    	Member member= memberOpt.get();
+    	
         // 從 checkoutData 取得各種資料
         Integer couponId = checkoutData.get("couponId") != null ? (Integer) checkoutData.get("couponId") : null;
         Integer shippingCategoryId = (Integer) checkoutData.get("shippingCategoryId");
         Integer paymentCategoryId = (Integer) checkoutData.get("paymentCategoryId");
 
         // 取得前端傳來的購物車 ID 清單
-//        List<Integer> productIdList = (List<Integer>) checkoutData.get("cartItems");
-        List<Integer> productIdList = ((List<Map<String, Object>>) checkoutData.get("cartItems"))
+        @SuppressWarnings("unchecked")
+		List<Integer> productIdList = ((List<Map<String, Object>>) checkoutData.get("cartItems"))
                 .stream()
                 .map(item -> (Integer) item.get("productId")) // 假設每個 item 中有 productId 欄位
                 .collect(Collectors.toList());
@@ -218,7 +182,6 @@ public class CheckOutController {
         return ResponseEntity.ok(Map.of("message", "訂單建立成功，請查看訂單詳情",
                 "orderId", order.getId()));
     }
-
 
     @PostMapping("/payment/ecpay/callback")
     public ResponseEntity<String> handleEcpayCallback(@RequestParam Map<String, String> callbackParams) {

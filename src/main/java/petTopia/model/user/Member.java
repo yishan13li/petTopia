@@ -1,40 +1,53 @@
 package petTopia.model.user;
 
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.time.LocalDate;
+import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-@NoArgsConstructor
-@Setter
-@Getter
 @Entity
 @Table(name = "member")
+@Data
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Member {
-	
-    @Id
-    @Column(name = "id")
-    private int id; // 會員ID，對應到 Users 表中的 UserId
-    
-    @JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY)  // 外來鍵關聯
-    @JoinColumn(name = "id", referencedColumnName = "id", insertable = false, updatable = false)
-    private Users user;  // 對應到 Users 表中的 UserId（外來鍵）
-    
-    @Column(name = "name", nullable = false)
-    private String name; // 會員姓名
-    
-    @Column(name = "phone", nullable = false)
-    private String phone; // 會員電話，必填
-    
-    @Column(name = "address")
-    private String address; // 會員地址
+
+	 @Id
+	    private Integer id;  // 與 user id 相同
+
+	    @OneToOne(fetch = FetchType.LAZY)
+	    @MapsId
+	    @JoinColumn(name = "id")
+	    @JsonIgnore
+	    private User user;  // 用這個屬性來建立與 Users 的關聯
+
+    @Column(name = "name", nullable = true)
+    private String name;
+
+    @Column(nullable = true)
+    private String phone;
+
+    @Column(name = "birthdate")
+    private LocalDate birthdate;
+
+    @Column(nullable = false)
+    private Boolean gender = false;  // false = 男性, true = 女性
+
+    private String address;
+
+    @Lob
+    @Column(name = "profile_photo")
+    private byte[] profilePhoto;
+
+    @Column(nullable = false, columnDefinition = "BIT DEFAULT 0")
+    private Boolean status = false;  // 預設為未認證 (0)
+
+    @Column(name = "updated_date")
+    private LocalDateTime updatedDate;
+
+    // 這裡不需要額外的 user_id 外鍵欄位，因為 id 已經作為外鍵連結
+    // 不需要額外的 @ManyToOne 或 @JoinColumn
+
+    // getters 和 setters 會自動由 @Data 提供
 }
