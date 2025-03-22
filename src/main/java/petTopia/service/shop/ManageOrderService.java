@@ -133,13 +133,8 @@ public class ManageOrderService {
 	    List<ManageOrderItemDto> manageOrderItemDtos = orderDetails.stream()
 	        .map(orderDetail -> {
 	            ManageOrderItemDto manageOrderItemDto = orderDetailService.getManagedOrderItemDto(orderDetail);
-
-	            if (manageOrderItemDto != null) {
-	                manageOrderItemDto.setProductId(orderDetail.getProduct().getId());
-	                manageOrderItemDto.setProductName(orderDetail.getProduct().getProductDetail().getName());
-	            }
-
-	            return manageOrderItemDto; // 確保在處理後返回 manageOrderItemDto
+	           
+	            return manageOrderItemDto;
 	        })
 	        .collect(Collectors.toList());
 
@@ -165,6 +160,11 @@ public class ManageOrderService {
     	    // 會員編號
     	    if (memberId != null && !memberId.isEmpty()) {
     	        predicates.add(criteriaBuilder.equal(root.get("member").get("id"), memberId));
+    	    }
+    	    
+    	 // 訂單編號篩選
+    	    if (orderId != null && !orderId.isEmpty()) {
+    	        predicates.add(criteriaBuilder.equal(root.get("id"), orderId));
     	    }
     	    
     	    // 訂單狀態篩選
@@ -233,7 +233,48 @@ public class ManageOrderService {
     	    return new PageImpl<>(orderDtos, PageRequest.of(page - 1, size), totalRecords);
     	}
 	
-	
+    //修改訂單(數量、收件資訊)
+    public Order updateOrder(Integer orderId, List<OrderDetail> updatedOrderDetails, Shipping updatedShipping) {
+    
+        Order existOrder = orderRepo.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+
+        // 更新訂單中的商品數量
+        if (updatedOrderDetails != null) {
+            for (OrderDetail updatedDetail : updatedOrderDetails) {
+                for (OrderDetail existDetail : existOrder.getOrderDetails()) {
+                    if (existDetail.getId().equals(updatedDetail.getId())) {
+                    	existDetail.setQuantity(updatedDetail.getQuantity());
+                        orderDetailRepo.save(existDetail); // 保存修改後的商品數量
+                    }
+                }
+            }
+        }
+
+        if (updatedShipping != null) {
+            Shipping existShipping = existOrder.getShipping();
+            existShipping.setReceiverName(updatedShipping.getReceiverName());
+            existShipping.setReceiverPhone(updatedShipping.getReceiverPhone());
+
+            // 使用 ShippingService 來處理地址創建或更新
+            ShippingAddress updatedShippingAddress = updatedShipping.getShippingAddress();
+            ShippingAddress existingShippingAddress = shippingService.createShippingAddress(
+            		existOrder.getMember(),
+                    updatedShippingAddress.getCity(),
+                    updatedShippingAddress.getStreet()
+            );
+
+            // 更新 Shipping 地址
+            existShipping.setShippingAddress(existingShippingAddress);
+
+            // 保存更新後的 Shipping
+            shippingRepo.save(existShipping);
+        }
+
+        // 保存更新後的訂單
+        return orderRepo.save(existOrder);
+    }
+
 	public OrderSummaryAmoutDto calculateOrderSummary(Integer memberId, Integer couponId, Integer shippingCategoryId,List<Integer> productIds) {
 
 	    // 計算商品總金額

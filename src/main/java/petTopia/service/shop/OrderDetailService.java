@@ -76,6 +76,7 @@ public class OrderDetailService {
   //將訂單的商品細節轉成orderItem
     public OrderItemDto getOrderItemDto(OrderDetail orderDetail) {
         OrderItemDto orderItemDto = new OrderItemDto();
+        orderItemDto.setProductId(orderDetail.getProduct().getId());
         orderItemDto.setProductPhoto(orderDetail.getProduct().getPhoto());
         orderItemDto.setProductName(orderDetail.getProduct().getProductDetail().getName());
 
@@ -93,14 +94,6 @@ public class OrderDetailService {
         orderItemDto.setTotalPrice(orderDetail.getTotalPrice());
 
         return orderItemDto;
-    }
-
-    //將訂單的商品細節轉成manageOrderItem  //後台用
-    public ManageOrderItemDto getManagedOrderItemDto(OrderDetail orderDetail) {
-    	ManageOrderItemDto manageOrderItemDto = new ManageOrderItemDto();
-    	manageOrderItemDto.setProductId(orderDetail.getProduct().getId());
-    	manageOrderItemDto.setProductName(orderDetail.getProduct().getProductDetail().getName());
-        return manageOrderItemDto;
     }
     
     // 查詢訂單的詳情
@@ -159,4 +152,14 @@ public class OrderDetailService {
 
         return orderDetailDto;
     }
+    
+
+    //將訂單的商品細節轉成manageOrderItem  //後台用
+    public ManageOrderItemDto getManagedOrderItemDto(OrderDetail orderDetail) {
+    	ManageOrderItemDto manageOrderItemDto = new ManageOrderItemDto();
+    	manageOrderItemDto.setProductId(orderDetail.getProduct().getId());
+    	manageOrderItemDto.setProductName(orderDetail.getProduct().getProductDetail().getName());
+        return manageOrderItemDto;
+    }
+    
 }
