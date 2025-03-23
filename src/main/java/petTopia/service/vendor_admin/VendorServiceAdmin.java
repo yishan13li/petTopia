@@ -7,7 +7,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import petTopia.model.vendor.User;
+import petTopia.model.user.User;
 import petTopia.model.vendor.Vendor;
 import petTopia.model.vendor.VendorActivity;
 import petTopia.model.vendor.VendorCategory;
@@ -49,7 +49,7 @@ public class VendorServiceAdmin {
 	public Optional<Vendor> getVendorProfile(String email, String password) {
 		Optional<User> user = getUserByEmailAndPassword(email, password);
 		if (user.isPresent()) {  //&& user.get().getUserRole() == UserRole.vendor
-			return vendorRepository.findById(user.get().getUserId());
+			return vendorRepository.findById(user.get().getId());
 		}
 		return Optional.empty();
 	}

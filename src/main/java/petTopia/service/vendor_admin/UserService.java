@@ -6,8 +6,8 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import petTopia.model.user.UsersBean;
-import petTopia.model.vendor.User;
+
+import petTopia.model.user.User;
 import petTopia.repository.vendor_admin.UserRepository;
 
 @Service

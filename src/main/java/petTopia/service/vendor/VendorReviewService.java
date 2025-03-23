@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import petTopia.dto.vendor.VendorReviewDto;
-import petTopia.model.user.MemberBean;
+import petTopia.model.user.Member;
 import petTopia.model.vendor.ReviewPhoto;
 import petTopia.model.vendor.Vendor;
 import petTopia.model.vendor.VendorReview;
@@ -88,7 +88,7 @@ public class VendorReviewService {
 	}
 
 	/* 將Member和VendorReview轉換成DTO */
-	public VendorReviewDto ConvertVendorReviewToDto(MemberBean member, VendorReview review) {
+	public VendorReviewDto ConvertVendorReviewToDto(Member member, VendorReview review) {
 
 		VendorReviewDto dto = new VendorReviewDto();
 
@@ -127,11 +127,11 @@ public class VendorReviewService {
 		List<VendorReview> reviewList = vendorReviewRepository.findByVendorId(vendorId);
 
 		List<VendorReviewDto> dtoList = reviewList.stream().map(review -> {
-			Optional<MemberBean> optional = memberRepository.findById(review.getMemberId());
+			Optional<Member> optional = memberRepository.findById(review.getMemberId());
 			if (optional.isEmpty()) {
 				return null;
 			}
-			MemberBean member = optional.get();
+			Member member = optional.get();
 			return ConvertVendorReviewToDto(member, review);
 		}).collect(Collectors.toList());
 

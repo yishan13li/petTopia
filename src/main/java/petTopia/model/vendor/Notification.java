@@ -17,7 +17,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import petTopia.model.user.MemberBean;
+import petTopia.model.user.Member;
 
 @Entity
 @Table(name = "notification")
@@ -34,7 +34,7 @@ public class Notification {
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", referencedColumnName = "id")
-    private MemberBean member;  // 接收通知的會員
+    private Member member;  // 接收通知的會員
     
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
