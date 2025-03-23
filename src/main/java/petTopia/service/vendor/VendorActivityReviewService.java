@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import petTopia.dto.vendor.ActivityReviewDto;
-import petTopia.model.user.MemberBean;
+import petTopia.model.user.Member;
 import petTopia.model.vendor.Vendor;
 import petTopia.model.vendor.VendorActivity;
 import petTopia.model.vendor.VendorActivityReview;
@@ -76,7 +76,7 @@ public class VendorActivityReviewService {
 	}
 
 	/* 將Member和ActivityReview轉換成DTO */
-	public ActivityReviewDto ConvertActivityReviewToDto(MemberBean member, VendorActivityReview review) {
+	public ActivityReviewDto ConvertActivityReviewToDto(Member member, VendorActivityReview review) {
 
 		ActivityReviewDto dto = new ActivityReviewDto();
 
@@ -100,7 +100,7 @@ public class VendorActivityReviewService {
 		List<VendorActivityReview> reviewList = vendorActivityReviewRepository.findByVendorActivityId(activiyId);
 
 		List<ActivityReviewDto> dtoList = reviewList.stream().map(review -> {
-			MemberBean member = memberRepository.findById(review.getMemberId()).orElse(null);
+			Member member = memberRepository.findById(review.getMemberId()).orElse(null);
 			return ConvertActivityReviewToDto(member, review);
 		}).collect(Collectors.toList());
 

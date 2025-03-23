@@ -1,6 +1,6 @@
 package petTopia.dto.vendor_admin;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 public class MemberDTO {
 
@@ -10,11 +10,11 @@ public class MemberDTO {
 
 	private String phone;
 
-	private LocalDateTime birthdate;
+	private LocalDate birthdate;
 
 	private Boolean gender;
 
-	public MemberDTO(Integer id, String name, String phone, LocalDateTime birthdate, Boolean gender) {
+	public MemberDTO(Integer id, String name, String phone, LocalDate birthdate, Boolean gender) {
 		this.id = id;
 		this.name = name;
 		this.phone = phone;
@@ -46,11 +46,11 @@ public class MemberDTO {
 		this.phone = phone;
 	}
 
-	public LocalDateTime getBirthdate() {
+	public LocalDate getBirthdate() {
 		return birthdate;
 	}
 
-	public void setBirthdate(LocalDateTime birthdate) {
+	public void setBirthdate(LocalDate birthdate) {
 		this.birthdate = birthdate;
 	}
 

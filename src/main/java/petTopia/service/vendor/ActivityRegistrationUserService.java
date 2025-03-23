@@ -6,7 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import petTopia.model.user.MemberBean;
+import petTopia.model.user.Member;
 import petTopia.model.vendor.ActivityPeopleNumber;
 import petTopia.model.vendor.ActivityRegistration;
 import petTopia.model.vendor.VendorActivity;
@@ -33,7 +33,7 @@ public class ActivityRegistrationUserService {
 
 	/* 報名與取消活動 */
 	public boolean toggleRegistration(Integer memberId, Integer activityId) {
-		MemberBean member = memberRepository.findById(memberId).orElse(null);
+		Member member = memberRepository.findById(memberId).orElse(null);
 		VendorActivity activity = vendorActivityRepository.findById(activityId).orElse(null);
 		ActivityRegistration registration = activityRegistrationRepository.findByMemberAndVendorActivity(member,
 				activity);
@@ -70,7 +70,7 @@ public class ActivityRegistrationUserService {
 
 	/* 獲取報名狀態(有報名或沒有報名) */
 	public boolean getRegistrationStatus(Integer memberId, Integer activityId) {
-		MemberBean member = memberRepository.findById(memberId).orElse(null);
+		Member member = memberRepository.findById(memberId).orElse(null);
 		VendorActivity activity = vendorActivityRepository.findById(activityId).orElse(null);
 		ActivityRegistration registration = activityRegistrationRepository.findByMemberAndVendorActivity(member,
 				activity);
@@ -126,6 +126,20 @@ public class ActivityRegistrationUserService {
 		activityPeopleNumberRepository.save(peopleNumber);
 
 		return peopleNumber;
+	}
+
+	/* 是否達到報名人數上限 */
+	public boolean isActivityAvailable(Integer activityId) {
+		ActivityPeopleNumber peopleNumber = activityPeopleNumberRepository.findById(activityId).orElse(null);
+
+		Integer current = peopleNumber.getCurrentParticipants();
+		Integer max = peopleNumber.getMaxParticipants();
+		if (current == max) {
+			return false;
+		} else {
+			return true;
+		}
+
 	}
 
 }

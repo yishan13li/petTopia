@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import petTopia.dto.vendor.ActivityLikeDto;
-import petTopia.model.user.MemberBean;
+import petTopia.model.user.Member;
 import petTopia.model.vendor.ActivityLike;
 import petTopia.model.vendor.VendorActivity;
 import petTopia.repository.user.MemberRepository;
@@ -40,7 +40,7 @@ public class ActivityLikeService {
 
 	/* 新增或取消活動收藏 */
 	public Boolean toggleActivityLike(Integer memberId, Integer activityId) {
-		Optional<MemberBean> member = memberRepository.findById(memberId);
+		Optional<Member> member = memberRepository.findById(memberId);
 		Optional<VendorActivity> vendorActivity = vendorActivityRepository.findById(activityId);
 		ActivityLike activityLike = activityLikeRepository.findByMemberIdAndVendorActivityId(memberId, activityId);
 
@@ -58,7 +58,7 @@ public class ActivityLikeService {
 	}
 
 	/* 將Member和ActivityLike轉換成DTO */
-	public ActivityLikeDto ConvertActivityLikeToDto(MemberBean member, ActivityLike like) {
+	public ActivityLikeDto ConvertActivityLikeToDto(Member member, ActivityLike like) {
 		ActivityLikeDto dto = new ActivityLikeDto();
 		dto.setId(like.getId());
 		dto.setVendorId(like.getVendorActivity().getVendor().getId());
@@ -76,7 +76,7 @@ public class ActivityLikeService {
 		List<ActivityLike> likeList = activityLikeRepository.findByVendorActivity(activity);
 
 		List<ActivityLikeDto> dtoList = likeList.stream().map(like -> {
-			MemberBean member = memberRepository.findById(like.getMember().getId()).get();
+			Member member = memberRepository.findById(like.getMember().getId()).get();
 			return ConvertActivityLikeToDto(member, like);
 		}).collect(Collectors.toList());
 
