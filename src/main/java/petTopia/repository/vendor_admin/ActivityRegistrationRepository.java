@@ -18,4 +18,6 @@ public interface ActivityRegistrationRepository extends JpaRepository<ActivityRe
 	public ActivityRegistration findByMemberAndVendorActivity(MemberBean member,VendorActivity activity);
 	
 	List<ActivityRegistration> findByVendorActivityIdAndStatus(Integer vendorActivityId, String status);
+	
+	public Integer countByVendorActivityId(Integer vendorActivityId);
 }

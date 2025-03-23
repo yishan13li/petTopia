@@ -99,7 +99,7 @@ public class ThymeleafVendorController {
 		Integer memberId = data.get("memberId");
 		Integer vendorId = data.get("vendorId");
 
-		boolean isLiked = vendorLikeService.addOrCancelVendorLike(memberId, vendorId);
+		boolean isLiked = vendorLikeService.toggleVendorLike(memberId, vendorId);
 
 		Map<String, Object> response = new HashMap<>();
 		response.put("action", isLiked ? true : false);

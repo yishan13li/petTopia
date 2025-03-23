@@ -40,6 +40,16 @@ public class ActivityRegistrationController {
 		return ResponseEntity.ok(confirmedList);
 	}
 
+	@GetMapping("/api/activity/{activityId}/member/{memberId}/regist/status")
+	public Map<String, Object> getRegistrationCondition(@PathVariable Integer activityId, 
+			@PathVariable Integer memberId) {
+		boolean isRegisted = activityRegistrationUserService.getRegistrationStatus(memberId, activityId);
+
+		Map<String, Object> response = new HashMap<>();
+		response.put("action", isRegisted ? true : false);
+		return response;
+	}
+	
 	@PostMapping("/api/activity/{activityId}/regist")
 	public Map<String, Object> registActivity(@PathVariable Integer activityId,
 			@RequestBody Map<String, Integer> data) {
@@ -50,4 +60,6 @@ public class ActivityRegistrationController {
 		response.put("action", isRegisted ? true : false);
 		return response;
 	}
+	
+	
 }

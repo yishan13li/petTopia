@@ -23,23 +23,17 @@ public class VendorLikeController {
 	@Autowired
 	private VendorLikeService vendorLikeService;
 	
-	@GetMapping("api/vendor/{vendorId}/like")
+	@GetMapping("/api/vendor/{vendorId}/like")
 	public ResponseEntity<List<VendorLikeDto>> getVendorLikeTest(@PathVariable Integer vendorId) {
 		List<VendorLikeDto> likeList = vendorLikeService.findMemberListByVendorId(vendorId);
 		return ResponseEntity.ok(likeList);
 	}
-	
-//	@GetMapping("api/vendor/{vendorId}/like")
-//	public ResponseEntity<List<VendorLike>> getVendorLike(@PathVariable Integer vendorId) {
-//		List<VendorLike> likeList = vendorLikeService.findMemberListByVendorId(vendorId);
-//		return ResponseEntity.ok(likeList);
-//	}
-	
+
 	@PostMapping("/api/vendor/{vendorId}/like/toggle")
 	public Map<String, Object> toggleLike(@PathVariable Integer vendorId, @RequestBody Map<String, Integer> data) {
 
 		Integer memberId = data.get("memberId");
-		boolean isLiked = vendorLikeService.addOrCancelVendorLike(memberId, vendorId);
+		boolean isLiked = vendorLikeService.toggleVendorLike(memberId, vendorId);
 
 		Map<String, Object> response = new HashMap<>();
 		response.put("action", isLiked ? true : false);

@@ -38,6 +38,9 @@ public class ActivityRegistrationUserService {
 		ActivityRegistration registration = activityRegistrationRepository.findByMemberAndVendorActivity(member,
 				activity);
 
+		// 從報名名單中找出正確的報名人數
+		Integer count = activityRegistrationRepository.countByVendorActivityId(activityId);
+
 		if (registration == null) {
 			ActivityRegistration newRegistration = new ActivityRegistration();
 			newRegistration.setMember(member);
@@ -46,7 +49,7 @@ public class ActivityRegistrationUserService {
 
 			ActivityPeopleNumber peopleNumber = activityPeopleNumberRepository.findByVendorActivityId(activityId);
 			Integer currentParticipants = peopleNumber.getCurrentParticipants();
-			currentParticipants += 1;
+			currentParticipants = count + 1;
 			peopleNumber.setCurrentParticipants(currentParticipants);
 			activityPeopleNumberRepository.save(peopleNumber);
 
@@ -57,10 +60,24 @@ public class ActivityRegistrationUserService {
 
 			ActivityPeopleNumber peopleNumber = activityPeopleNumberRepository.findByVendorActivityId(activityId);
 			Integer currentParticipants = peopleNumber.getCurrentParticipants();
-			currentParticipants -= 1;
+			currentParticipants = count - 1;
 			peopleNumber.setCurrentParticipants(currentParticipants);
 			activityPeopleNumberRepository.save(peopleNumber);
 
+			return false;
+		}
+	}
+
+	/* 獲取報名狀態(有報名或沒有報名) */
+	public boolean getRegistrationStatus(Integer memberId, Integer activityId) {
+		MemberBean member = memberRepository.findById(memberId).orElse(null);
+		VendorActivity activity = vendorActivityRepository.findById(activityId).orElse(null);
+		ActivityRegistration registration = activityRegistrationRepository.findByMemberAndVendorActivity(member,
+				activity);
+
+		if (registration != null) {
+			return true;
+		} else {
 			return false;
 		}
 	}
@@ -102,6 +119,12 @@ public class ActivityRegistrationUserService {
 	/* 取得活動當前與最大人數 */
 	public ActivityPeopleNumber getPeopleNumber(Integer activityId) {
 		ActivityPeopleNumber peopleNumber = activityPeopleNumberRepository.findById(activityId).orElse(null);
+
+		// 取得該活動當前報名人數並更新
+		Integer number = activityRegistrationRepository.countByVendorActivityId(activityId);
+		peopleNumber.setCurrentParticipants(number);
+		activityPeopleNumberRepository.save(peopleNumber);
+
 		return peopleNumber;
 	}
 

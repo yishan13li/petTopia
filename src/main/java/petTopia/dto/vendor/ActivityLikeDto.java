@@ -1,7 +1,6 @@
 package petTopia.dto.vendor;
 
 import java.util.Base64;
-import java.util.Date;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,15 +10,14 @@ import petTopia.util.ImageConverter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class ActivityReviewDto {
-    /* 評價資訊 */
-	private Integer reviewId;
-    private Integer vendorId;
-    private Integer vendorActivityId;
-    private Date reviewTime;
-    private String reviewContent;
+public class ActivityLikeDto {
 	
-    /* 會員資訊 */
+	/* 評價資訊 */
+	private Integer id;
+	private Integer vendorId;
+	private Integer activityId;
+	
+	/* 會員資訊 */
     private Integer memberId;
     private String name;
     private boolean gender;

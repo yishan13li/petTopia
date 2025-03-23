@@ -1,12 +1,15 @@
 package petTopia.controller.vendor;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import petTopia.model.vendor.ActivityType;
@@ -56,6 +59,13 @@ public class ActivityController {
 	@GetMapping("/api/activity/type/{typeId}")
 	public ResponseEntity<List<VendorActivity>> getVendorsByCategory(@PathVariable Integer typeId) {
 		List<VendorActivity> activityList = vendorActivityService.findActivityByTypeId(typeId);
+		return ResponseEntity.ok(activityList);
+	}
+
+	@PostMapping("/api/activity/find")
+	public ResponseEntity<List<VendorActivity>> getVendosrByNameOrDescription(@RequestBody Map<String, String> data) {
+		String keyword = data.get("keyword");
+		List<VendorActivity> activityList = vendorActivityService.findVendorByNameOrDescription(keyword);
 		return ResponseEntity.ok(activityList);
 	}
 

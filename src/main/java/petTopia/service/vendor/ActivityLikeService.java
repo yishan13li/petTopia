@@ -1,10 +1,13 @@
 package petTopia.service.vendor;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import petTopia.dto.vendor.ActivityLikeDto;
 import petTopia.model.user.MemberBean;
 import petTopia.model.vendor.ActivityLike;
 import petTopia.model.vendor.VendorActivity;
@@ -17,15 +20,26 @@ public class ActivityLikeService {
 
 	@Autowired
 	private ActivityLikeRepository activityLikeRepository;
-	
+
 	@Autowired
 	private VendorActivityRepository vendorActivityRepository;
-	
+
 	@Autowired
 	private MemberRepository memberRepository;
-	
-	/* 新增或取消活動收藏 */	
-	public void addOrCancelActivityLike(Integer memberId, Integer activityId) {
+
+	/* 取得活動收藏狀態 */
+	public Boolean getActivityLikeStatus(Integer memberId, Integer activityId) {
+		ActivityLike activityLike = activityLikeRepository.findByMemberIdAndVendorActivityId(memberId, activityId);
+
+		if (activityLike != null) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/* 新增或取消活動收藏 */
+	public Boolean toggleActivityLike(Integer memberId, Integer activityId) {
 		Optional<MemberBean> member = memberRepository.findById(memberId);
 		Optional<VendorActivity> vendorActivity = vendorActivityRepository.findById(activityId);
 		ActivityLike activityLike = activityLikeRepository.findByMemberIdAndVendorActivityId(memberId, activityId);
@@ -35,10 +49,37 @@ public class ActivityLikeService {
 			newActivityLike.setMember(member.get());
 			newActivityLike.setVendorActivity(vendorActivity.get());
 			activityLikeRepository.save(newActivityLike);
+			return true;
 		} else {
 			Integer activityLikeId = activityLike.getId();
 			activityLikeRepository.deleteById(activityLikeId);
+			return false;
 		}
+	}
 
+	/* 將Member和ActivityLike轉換成DTO */
+	public ActivityLikeDto ConvertActivityLikeToDto(MemberBean member, ActivityLike like) {
+		ActivityLikeDto dto = new ActivityLikeDto();
+		dto.setId(like.getId());
+		dto.setVendorId(like.getVendorActivity().getVendor().getId());
+		dto.setActivityId(like.getVendorActivity().getId());
+		dto.setMemberId(member.getId());
+		dto.setName(member.getName());
+		dto.setGender(member.getGender());
+		dto.setProfilePhoto(member.getProfilePhoto());
+		return dto;
+	}
+
+	/* 查詢某個vendorId所有收藏之DTO */
+	public List<ActivityLikeDto> findMemberLikeListByActivityId(Integer activityId) {
+		VendorActivity activity = vendorActivityRepository.findById(activityId).orElse(null);
+		List<ActivityLike> likeList = activityLikeRepository.findByVendorActivity(activity);
+
+		List<ActivityLikeDto> dtoList = likeList.stream().map(like -> {
+			MemberBean member = memberRepository.findById(like.getMember().getId()).get();
+			return ConvertActivityLikeToDto(member, like);
+		}).collect(Collectors.toList());
+
+		return dtoList;
 	}
 }

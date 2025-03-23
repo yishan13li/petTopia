@@ -43,7 +43,7 @@ public class ThymeleafActivityController {
 
 	@PostMapping("/activity/give_activity_like")
 	public String giveVendorLike(Integer memberId, Integer activityId) {
-		activityLikeService.addOrCancelActivityLike(memberId, activityId);
+		activityLikeService.toggleActivityLike(memberId, activityId);
 
 		return "/vendor/activity_detail.html";
 	}
