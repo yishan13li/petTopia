@@ -18,21 +18,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.persistence.criteria.Order;
-import jakarta.servlet.http.HttpSession;
 import petTopia.dto.shop.ManageAllOrdersDto;
 import petTopia.dto.shop.OrderDetailDto;
-import petTopia.dto.shop.OrderHistoryDto;
-import petTopia.model.shop.OrderDetail;
-import petTopia.model.shop.Shipping;
-import petTopia.model.user.Member;
+import petTopia.dto.shop.UpdateOneOrderDto;
 import petTopia.repository.shop.OrderStatusRepository;
 import petTopia.repository.shop.PaymentCategoryRepository;
 import petTopia.repository.shop.PaymentStatusRepository;
 import petTopia.repository.shop.ShippingCategoryRepository;
 import petTopia.service.shop.ManageOrderService;
 import petTopia.service.shop.OrderDetailService;
-import petTopia.service.shop.OrderService;
 
 @RestController
 @RequestMapping("/manage/shop")
@@ -127,23 +121,39 @@ public class ManageOrderController {
         }
     }
     
-    //訂單詳情的修改
+    //更新單一訂單狀態/各種方式
     @PutMapping("/orders/{orderId}/update")
-    public ResponseEntity<Order> updateOrder(@PathVariable Integer orderId,
-                                             @RequestBody Map<String, Object> updateRequest) {
+    public ResponseEntity<String> updateOrder(
+            @PathVariable Integer orderId,
+            @RequestBody UpdateOneOrderDto updatedOrderRequest) {
+       
     	try {
-            // 提取並解析從請求中傳來的資料
-            List<OrderDetail> updatedOrderDetails = (List<OrderDetail>) updateRequest.get("updatedOrderDetails");
-            Shipping updatedShipping = (Shipping) updateRequest.get("updatedShipping");
-
-            // 使用服務層方法更新訂單
-            Order updatedOrder = manageOrderService.updateOrder(orderId, updatedOrderDetails, updatedShipping);
-
-            // 返回更新後的訂單資料
-            return ResponseEntity.ok(updatedOrder);
-        } catch (Exception e) {
-            // 若發生錯誤，回傳 400 錯誤
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+    		
+            manageOrderService.updateOrder(orderId, updatedOrderRequest);
+            return ResponseEntity.ok("訂單已更新");
+            
+        } catch (RuntimeException e) {
+        	
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("更新失敗: " + e.getMessage());
         }
     }
+
+    //批量更新訂單狀態 或 付款狀態
+    @PutMapping("/orders/updateBatch")
+    public ResponseEntity<String> updateBatchOrders(
+    		@RequestParam List<Integer> orderIds,
+            @RequestParam String batchStatus ) {
+    	
+        try {
+        	
+            manageOrderService.updateBatchOrders(orderIds, batchStatus);
+            return ResponseEntity.ok("批量更新成功");
+            
+        } catch (RuntimeException e) {
+        	
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("批量更新失敗: " + e.getMessage());
+        }
+    }
+
 }

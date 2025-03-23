@@ -27,13 +27,10 @@ import jakarta.persistence.criteria.Root;
 import jakarta.transaction.Transactional;
 import petTopia.dto.shop.ManageAllOrdersDto;
 import petTopia.dto.shop.ManageOrderItemDto;
-import petTopia.dto.shop.OrderHistoryDto;
-import petTopia.dto.shop.OrderItemDto;
 import petTopia.dto.shop.OrderSummaryAmoutDto;
+import petTopia.dto.shop.UpdateOneOrderDto;
 import petTopia.model.shop.Cart;
 import petTopia.model.shop.Coupon;
-import petTopia.model.shop.MemberCoupon;
-import petTopia.model.shop.MemberCouponId;
 import petTopia.model.shop.Order;
 import petTopia.model.shop.OrderDetail;
 import petTopia.model.shop.OrderStatus;
@@ -41,20 +38,18 @@ import petTopia.model.shop.Payment;
 import petTopia.model.shop.PaymentCategory;
 import petTopia.model.shop.PaymentStatus;
 import petTopia.model.shop.Product;
-import petTopia.model.shop.ProductColor;
-import petTopia.model.shop.ProductSize;
 import petTopia.model.shop.Shipping;
 import petTopia.model.shop.ShippingAddress;
 import petTopia.model.shop.ShippingCategory;
 import petTopia.model.user.Member;
 import petTopia.repository.shop.CartRepository;
 import petTopia.repository.shop.CouponRepository;
-import petTopia.repository.shop.MemberCouponRepository;
 import petTopia.repository.shop.OrderDetailRepository;
 import petTopia.repository.shop.OrderRepository;
 import petTopia.repository.shop.OrderStatusRepository;
 import petTopia.repository.shop.PaymentCategoryRepository;
 import petTopia.repository.shop.PaymentRepository;
+import petTopia.repository.shop.PaymentStatusRepository;
 import petTopia.repository.shop.ShippingCategoryRepository;
 import petTopia.repository.shop.ShippingRepository;
 
@@ -103,6 +98,9 @@ public class ManageOrderService {
 	@Autowired
 	private PaymentRepository paymentRepo;
 	
+	@Autowired
+	private PaymentStatusRepository paymentStatusRepo;
+	
 	@PersistenceContext
 	private EntityManager entityManager;
 //	================================================
@@ -116,6 +114,7 @@ public class ManageOrderService {
 	    managedOrder.setOrderStatus(order.getOrderStatus().getName());
 	    managedOrder.setOrderDate(new java.sql.Date(order.getCreatedTime().getTime()));
 	    managedOrder.setTotalAmount(order.getTotalAmount());
+	    managedOrder.setNote(order.getNote());
 
 	    // 查詢付款狀態
 	    Payment payment = paymentRepo.findByOrderId(order.getId());
@@ -233,48 +232,149 @@ public class ManageOrderService {
     	    return new PageImpl<>(orderDtos, PageRequest.of(page - 1, size), totalRecords);
     	}
 	
-    //修改訂單(數量、收件資訊)
-    public Order updateOrder(Integer orderId, List<OrderDetail> updatedOrderDetails, Shipping updatedShipping) {
-    
-        Order existOrder = orderRepo.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+    //更新單一訂單
+    public Order updateOrder(Integer orderId,UpdateOneOrderDto updatedOrderRequest) {
+        
+    	String orderStatus = updatedOrderRequest.getOrderStatus();
+        String paymentStatus = updatedOrderRequest.getPaymentStatus();
+        String paymentCategory = updatedOrderRequest.getPaymentCategory();
+        String shippingCategory = updatedOrderRequest.getShippingCategory();
+        BigDecimal totalAmount = updatedOrderRequest.getTotalAmount();
+        String note = updatedOrderRequest.getNote();
+        
+    	// 根據訂單 ID 查詢訂單
+        Order order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
 
-        // 更新訂單中的商品數量
-        if (updatedOrderDetails != null) {
-            for (OrderDetail updatedDetail : updatedOrderDetails) {
-                for (OrderDetail existDetail : existOrder.getOrderDetails()) {
-                    if (existDetail.getId().equals(updatedDetail.getId())) {
-                    	existDetail.setQuantity(updatedDetail.getQuantity());
-                        orderDetailRepo.save(existDetail); // 保存修改後的商品數量
-                    }
-                }
+        //更新訂單備註
+        if(note!=null) {
+        	order.setNote(note);
+        	order.setUpdatedDate(new Date());
+        }
+        
+        // 更新訂單狀態(order>orderStatus)
+        if (orderStatus != null) {
+            OrderStatus existOrderStatus = orderStatusRepo.findByName(orderStatus)
+                    .orElseThrow(() -> new RuntimeException("Order status not found"));
+
+            // 如果狀態是配送中就更新配送日期
+            if ("配送中".equals(orderStatus)) {
+            	Shipping shipping = shippingRepo.findByOrderId(orderId);
+                shipping.setShippingDate(new Date());  
+                shipping.setUpdatedTime(new Date());  
             }
+            
+            order.setOrderStatus(existOrderStatus);
+            order.setUpdatedDate(new Date());  
+        }
+        
+        // 更新付款狀態(payment>paymentStatus)
+        if (paymentStatus != null) {
+            PaymentStatus existPaymentStatus = paymentStatusRepo.findByName(paymentStatus)
+                    .orElseThrow(() -> new RuntimeException("Payment status not found"));
+
+            Payment payment = paymentRepo.findByOrderId(orderId);
+            if (payment == null) {
+                throw new RuntimeException("Payment not found");
+            }
+            
+            // 只有在付款狀態為 "已付款" 時，才設置付款日期
+            if ("已付款".equals(paymentStatus)) {
+                payment.setPaymentDate(new Date());  
+            }
+            
+            payment.setPaymentStatus(existPaymentStatus);
+            payment.setUpdatedDate(new Date());  
+            paymentRepo.save(payment); 
+        }
+        
+     // 更新付款方式 (payment>paymentCategory)
+        if (paymentCategory != null) {
+            PaymentCategory existPaymentCategory = paymentCategoryRepo.findByName(paymentCategory)
+                    .orElseThrow(() -> new RuntimeException("Payment category not found"));
+
+            Payment payment = paymentRepo.findByOrderId(orderId);
+            if (payment == null) {
+                throw new RuntimeException("Payment not found");
+            }
+
+            payment.setPaymentCategory(existPaymentCategory);
+            payment.setUpdatedDate(new Date());
+
+            paymentRepo.save(payment);
         }
 
-        if (updatedShipping != null) {
-            Shipping existShipping = existOrder.getShipping();
-            existShipping.setReceiverName(updatedShipping.getReceiverName());
-            existShipping.setReceiverPhone(updatedShipping.getReceiverPhone());
+        // 更新配送方式 (shipping>shippingCategory)
+        if (shippingCategory != null) {
+            ShippingCategory existShippingCategory = shippingCategoryRepo.findByName(shippingCategory)
+                    .orElseThrow(() -> new RuntimeException("Shipping category not found"));
 
-            // 使用 ShippingService 來處理地址創建或更新
-            ShippingAddress updatedShippingAddress = updatedShipping.getShippingAddress();
-            ShippingAddress existingShippingAddress = shippingService.createShippingAddress(
-            		existOrder.getMember(),
-                    updatedShippingAddress.getCity(),
-                    updatedShippingAddress.getStreet()
-            );
+            Shipping shipping = shippingRepo.findByOrderId(orderId);
+            if (shipping == null) {
+                throw new RuntimeException("Shipping not found");
+            }
 
-            // 更新 Shipping 地址
-            existShipping.setShippingAddress(existingShippingAddress);
+            shipping.setShippingCategory(existShippingCategory);
+            shipping.setUpdatedTime(new Date());  
 
-            // 保存更新後的 Shipping
-            shippingRepo.save(existShipping);
+            shippingRepo.save(shipping);
+        }
+        
+        if (totalAmount != null) {
+            order.setTotalAmount(totalAmount);
         }
 
-        // 保存更新後的訂單
-        return orderRepo.save(existOrder);
+        return orderRepo.save(order);
+    }
+    
+    //批量更新訂單狀態或是付款狀態
+    public void updateBatchOrders(List<Integer> orderIds, String batchStatus) {
+        if (orderIds == null || orderIds.isEmpty()) {
+            throw new RuntimeException("訂單 ID 清單不能為空");
+        }
+
+        List<Order> orders = orderRepo.findAllById(orderIds);
+        
+        for (Order order : orders) {
+            if ("已付款".equals(batchStatus)) {
+                // 更新付款狀態
+                Payment payment = paymentRepo.findByOrderId(order.getId());
+                if (payment != null) {
+                    PaymentStatus existPaymentStatus = paymentStatusRepo.findByName("已付款")
+                            .orElseThrow(() -> new RuntimeException("Payment status not found"));
+                    payment.setPaymentStatus(existPaymentStatus);
+                    payment.setPaymentDate(new Date());  // 設置付款日期
+                    payment.setUpdatedDate(new Date());
+                    paymentRepo.save(payment);
+                }
+
+            } else if ("配送中".equals(batchStatus)) {
+                // 更新配送中狀態
+                OrderStatus existOrderStatus = orderStatusRepo.findByName("配送中")
+                        .orElseThrow(() -> new RuntimeException("Order status not found"));
+                order.setOrderStatus(existOrderStatus);
+                order.setUpdatedDate(new Date());
+
+                Shipping shipping = shippingRepo.findByOrderId(order.getId());
+                if (shipping != null) {
+                    shipping.setShippingDate(new Date());  // 設置配送日期
+                    shipping.setUpdatedTime(new Date());
+                    shippingRepo.save(shipping);
+                }
+
+            } else if ("待收貨".equals(batchStatus)||"已完成".equals(batchStatus)||"已取消".equals(batchStatus)) {
+                OrderStatus existOrderStatus = orderStatusRepo.findByName("待收貨")
+                        .orElseThrow(() -> new RuntimeException("Status not found"));
+                order.setOrderStatus(existOrderStatus);
+                order.setUpdatedDate(new Date());
+
+            } 
+
+            orderRepo.save(order);
+        }
     }
 
+    
 	public OrderSummaryAmoutDto calculateOrderSummary(Integer memberId, Integer couponId, Integer shippingCategoryId,List<Integer> productIds) {
 
 	    // 計算商品總金額
@@ -308,8 +408,7 @@ public class ManageOrderService {
 	    // 回傳 DTO
 	    return new OrderSummaryAmoutDto(subtotal, discountAmount, shippingFee, orderTotal);
 	}
-
-    
+	
     //新增訂單
 	@Transactional
 	public Map<String, Object> createOrder(Member member, Integer memberId, 
@@ -446,5 +545,10 @@ public class ManageOrderService {
         Optional<OrderStatus> orderStatus = orderStatusRepo.findById(statusId);
         orderStatus.ifPresent(order::setOrderStatus); // 只有當 orderStatus 存在時才設置
     }
+
+	public jakarta.persistence.criteria.Order updateOrder() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 }
