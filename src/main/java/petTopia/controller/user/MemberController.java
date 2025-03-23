@@ -276,6 +276,10 @@ public class MemberController {
                 photo = getDefaultAvatar();
             }
             
+            if (photo.length == 0) {
+                return ResponseEntity.noContent().build();
+            }
+            
             return ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_JPEG)
                 .body(photo);
@@ -286,7 +290,7 @@ public class MemberController {
     }
 
     private byte[] getDefaultAvatar() throws IOException {
-        Resource resource = new ClassPathResource("static/images/default-avatar.jpg");
-        return resource.getInputStream().readAllBytes();
+        // 返回空字节数组，让前端使用自己的默认头像
+        return new byte[0];
     }
 }
