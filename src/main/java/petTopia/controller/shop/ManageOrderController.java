@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -156,4 +157,22 @@ public class ManageOrderController {
         }
     }
 
+    //刪除訂單
+    @DeleteMapping("/orders/{orderId}/delete")
+    public ResponseEntity<String> deleteOrder(@PathVariable Integer orderId) {
+    	
+        try {
+        	
+        	manageOrderService.deleteOrder(orderId);  // 呼叫服務層刪除訂單
+            return ResponseEntity.ok("訂單已成功刪除");
+            
+        } catch (IllegalArgumentException e) {
+        	
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("訂單未找到");
+            
+        } catch (Exception e) {
+        	
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("刪除訂單時發生錯誤");
+        }
+    }
 }
