@@ -93,6 +93,18 @@ public class VendorProfileController {
 		return "error"; // 返回錯誤頁面
 	}
 	
+	@GetMapping("api/vendor_admin/status/{vendorId}")
+    public ResponseEntity<Map<String, Object>> getVendorStatus(@PathVariable Integer vendorId) {
+        Optional<Boolean> statusOptional = vendorService.getVendorStatus(vendorId);
+
+        if (statusOptional.isPresent()) {
+            return ResponseEntity.ok(Collections.singletonMap("status", statusOptional.get()));
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Collections.singletonMap("error", "找不到該店家"));
+        }
+    }
+	
 	@ResponseBody
 	@GetMapping("api/vendor_admin/profile/{id}")
     public ResponseEntity<?> getVendorById(@PathVariable Integer id) {

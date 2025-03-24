@@ -54,6 +54,10 @@ public class VendorServiceAdmin {
 //		}
 //		return Optional.empty();
 //	}
+	
+	public Optional<Boolean> getVendorStatus(Integer vendorId) {
+        return vendorRepository.findStatusById(vendorId);
+    }
 
 	public String getVendorLogoBase64(Vendor vendor) {
 		if (vendor.getLogoImg() != null) {

@@ -54,5 +54,7 @@ public interface VendorRepository extends JpaRepository<Vendor, Integer> {
 	List<Vendor> findByVendorCategoryIdAndIdNot(Integer categoryId, Integer vendorId);
 
 	List<Vendor> findAllByIdNot(Integer vendorId);
+	
+	Optional<Boolean> findStatusById(Integer vendorId);
 
 }
