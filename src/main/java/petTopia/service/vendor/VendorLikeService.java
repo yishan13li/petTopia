@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import petTopia.dto.vendor.VendorLikeDto;
-import petTopia.model.user.MemberBean;
+import petTopia.model.user.Member;
 import petTopia.model.vendor.VendorLike;
 import petTopia.repository.user.MemberRepository;
 import petTopia.repository.vendor.VendorLikeRepository;
@@ -17,12 +17,12 @@ public class VendorLikeService {
 
 	@Autowired
 	private VendorLikeRepository vendorLikeRepository;
-	
+
 	@Autowired
 	private MemberRepository memberRepository;
 
 	/* 新增或取消店家收藏 */
-	public boolean addOrCancelVendorLike(Integer memberId, Integer vendorId) {
+	public boolean toggleVendorLike(Integer memberId, Integer vendorId) {
 		VendorLike vendorLike = vendorLikeRepository.findByMemberIdAndVendorId(memberId, vendorId);
 
 		if (vendorLike == null) {
@@ -38,15 +38,9 @@ public class VendorLikeService {
 		}
 
 	}
-	
-	/* 藉VendorId找出有收藏此店家的會員 */
-//	public List<VendorLike> findMemberListByVendorId(Integer vendorId) {
-//		List<VendorLike> list = vendorLikeRepository.findByVendorId(vendorId);
-//		return list;
-//	}
-	
+
 	/* 將Member和VendorLike轉換成DTO */
-	public VendorLikeDto ConvertVendorLikeToDto(MemberBean member, VendorLike like) {
+	public VendorLikeDto ConvertVendorLikeToDto(Member member, VendorLike like) {
 		VendorLikeDto dto = new VendorLikeDto();
 		dto.setId(like.getId());
 		dto.setVendorId(like.getVendorId());
@@ -56,13 +50,13 @@ public class VendorLikeService {
 		dto.setProfilePhoto(member.getProfilePhoto());
 		return dto;
 	}
-	
+
 	/* 查詢某個vendorId所有收藏之DTO */
 	public List<VendorLikeDto> findMemberListByVendorId(Integer vendorId) {
 		List<VendorLike> likeList = vendorLikeRepository.findByVendorId(vendorId);
 
 		List<VendorLikeDto> dtoList = likeList.stream().map(like -> {
-			MemberBean member = memberRepository.findById(like.getMemberId()).get();
+			Member member = memberRepository.findById(like.getMemberId()).get();
 			return ConvertVendorLikeToDto(member, like);
 		}).collect(Collectors.toList());
 

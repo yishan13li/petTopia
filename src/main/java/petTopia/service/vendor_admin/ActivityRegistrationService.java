@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import petTopia.dto.vendor_admin.MemberDTO;
-import petTopia.model.user.MemberBean;
+import petTopia.model.user.Member;
 import petTopia.model.vendor.ActivityRegistration;
 import petTopia.repository.vendor_admin.ActivityRegistrationRepository;
 
@@ -28,7 +28,7 @@ public class ActivityRegistrationService {
 		// 用 for 迴圈逐筆處理報名記錄
 		for (ActivityRegistration reg : registrations) {
 			// 取得報名的會員資訊
-			MemberBean member = reg.getMember();
+			Member member = reg.getMember();
 
 			// 創建 MemberDTO，只存會員 ID、名字、Email
 			MemberDTO dto = new MemberDTO(member.getId(), member.getName(), member.getPhone(), member.getBirthdate(),

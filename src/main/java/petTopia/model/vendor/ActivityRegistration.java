@@ -14,7 +14,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import petTopia.model.user.MemberBean;
+import petTopia.model.user.Member;
 
 @Entity
 @Table(name = "activity_registration")
@@ -34,7 +34,7 @@ public class ActivityRegistration {
 
 	@ManyToOne
 	@JoinColumn(name = "member_id", nullable = false)
-	private MemberBean member;
+	private Member member;
 
 	@Column(name = "registration_time", nullable = false, updatable = false)
 	private java.util.Date registrationTime = new Date();
