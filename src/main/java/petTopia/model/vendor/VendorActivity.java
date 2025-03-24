@@ -196,6 +196,5 @@ public class VendorActivity {
 	public void setVendorActivityImages(List<VendorActivityImages> vendorActivityImages) {
 		this.vendorActivityImages = vendorActivityImages;
 	}
-	
-	
+
 }

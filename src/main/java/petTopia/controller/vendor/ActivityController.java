@@ -87,5 +87,4 @@ public class ActivityController {
 		VendorActivity activity = vendorActivityService.increaseNumberOfVisitor(activityId);
 		return ResponseEntity.ok(activity);
 	}
-
 }

@@ -109,7 +109,8 @@ public class SecurityConfig {
                     "/shop/productDetail",
                     "/api/**",
                     "api/**",
-                    "/api/vendor/**"
+                    "/api/vendor/**",
+                    "/api/activity/**"
 
                 ).permitAll()
                 
