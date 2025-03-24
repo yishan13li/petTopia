@@ -128,7 +128,7 @@ public class ShopCartController {
         Map<String, List<Coupon>> couponsMap = couponService.getCoupons(memberId);
 
         List<Coupon> availableCoupons = couponsMap.get("available");
-        List<Coupon> expiredCoupons = couponsMap.get("expiredCoupons");
+        List<Coupon> expiredCoupons = couponsMap.get("expired");
         
         // 獲取選取的優惠券
         Coupon selectedCoupon = null;
