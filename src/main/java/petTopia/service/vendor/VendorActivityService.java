@@ -55,6 +55,18 @@ public class VendorActivityService {
 		return activityList;
 	}
 
+	public List<VendorActivity> findActivityByTypeIdExceptOne(Integer typeId, Integer activityId) {
+		ActivityType type = activityTypeRepository.findById(typeId).orElse(null);
+		List<VendorActivity> activityList = vendorActivityRepository.findByActivityType(type);
+		VendorActivity activityToRemove = vendorActivityRepository.findById(activityId).orElse(null);
+
+		if (activityToRemove != null) {
+			activityList.removeIf(activity -> activity.getId().equals(activityToRemove.getId())); // 刪除ID與activityToRemove相同ID相同之活動
+		}
+		
+		return activityList;
+	}
+
 	/* 瀏覽數增加 */
 	public VendorActivity increaseNumberOfVisitor(Integer activityId) {
 		VendorActivity activity = vendorActivityRepository.findById(activityId).orElse(null);

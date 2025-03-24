@@ -62,6 +62,13 @@ public class ActivityController {
 		return ResponseEntity.ok(activityList);
 	}
 
+	@GetMapping("/api/activity/type/{typeId}/except/activity/{activityId}")
+	public ResponseEntity<List<VendorActivity>> getVendorsByCategoryExceptOne(@PathVariable Integer typeId,
+			@PathVariable Integer activityId) {
+		List<VendorActivity> activityList = vendorActivityService.findActivityByTypeIdExceptOne(typeId, activityId);
+		return ResponseEntity.ok(activityList);
+	}
+
 	@PostMapping("/api/activity/find")
 	public ResponseEntity<List<VendorActivity>> getVendosrByNameOrDescription(@RequestBody Map<String, String> data) {
 		String keyword = data.get("keyword");
