@@ -55,7 +55,7 @@ public class VendorServiceAdmin {
 //		return Optional.empty();
 //	}
 	
-	public Optional<Boolean> getVendorStatus(Integer vendorId) {
+	public Optional<Vendor> getVendorStatus(Integer vendorId) {
         return vendorRepository.findStatusById(vendorId);
     }
 

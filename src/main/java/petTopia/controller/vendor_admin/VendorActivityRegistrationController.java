@@ -173,9 +173,9 @@ public class VendorActivityRegistrationController {
 
 
 	@ResponseBody
-	@PostMapping("/api/vendor_admin/registration/notification/{memberId}")
-	public ResponseEntity<?> sendNotification(@PathVariable Integer memberId,@RequestParam String title,@RequestParam String content) {
-		Optional<ActivityRegistration> registrationOpt = activityRegistrationRepository.findByMemberId(memberId);
+	@PostMapping("/api/vendor_admin/registration/notification/{memberId}/{activityId}")
+	public ResponseEntity<?> sendNotification(@PathVariable Integer memberId,@PathVariable Integer activityId,@RequestParam String title,@RequestParam String content) {
+		Optional<ActivityRegistration> registrationOpt = activityRegistrationRepository.findByMemberIdAndVendorActivityId(memberId,activityId);
 
 	    if (registrationOpt.isPresent()) {
 	        ActivityRegistration registration = registrationOpt.get();
