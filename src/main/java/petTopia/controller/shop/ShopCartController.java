@@ -118,10 +118,9 @@ public class ShopCartController {
 
 	// 會員購物車頁面 => 獲取會員優惠券
 	@GetMapping("/coupons")
-    public ResponseEntity<Object> getCoupons(@RequestParam Optional<Integer> selectedCouponId, HttpSession session) {
-        Member member = (Member) session.getAttribute("member");
-        Integer memberId = member.getId();
-
+    public ResponseEntity<Object> getCoupons(
+    		@RequestParam Optional<Integer> selectedCouponId, 
+    		@RequestParam Integer memberId) {
         Map<String, Object> response = new HashMap<>();
         
         // 更新優惠券使用次數
