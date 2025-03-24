@@ -8,7 +8,6 @@ import org.springframework.stereotype.Repository;
 
 import petTopia.model.user.User;
 
-
 @Repository
 public interface UserRepository extends JpaRepository<User, Integer> {
     Optional<User> findByEmailAndPassword(String email,String password);

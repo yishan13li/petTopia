@@ -287,5 +287,12 @@ public class VendorProfileController {
 
 	    return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 如果沒有找到店家，返回 404
 	}
+	
+	// 根据vendorId获取该店铺的所有标语
+	@ResponseBody
+	@GetMapping("/vendor/{vendorId}/slogans")
+	public List<String> getCertifiedSlogansByVendorId(@PathVariable Integer vendorId) {
+	    return vendorService.getSlogansByVendorId(vendorId);
+	}
 
 }

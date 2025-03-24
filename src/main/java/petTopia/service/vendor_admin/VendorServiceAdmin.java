@@ -14,6 +14,8 @@ import petTopia.model.vendor.VendorCategory;
 import petTopia.repository.vendor.VendorActivityRepository;
 import petTopia.repository.vendor.VendorCategoryRepository;
 import petTopia.repository.vendor.VendorRepository;
+import petTopia.repository.vendor_admin.VendorCertificationRepository;
+import petTopia.repository.vendor_admin.VendorCertificationTagRepository;
 
 @Service
 public class VendorServiceAdmin {
@@ -29,6 +31,12 @@ public class VendorServiceAdmin {
 
 	@Autowired
 	private VendorActivityRepository vendorActivityRepository;
+	
+	@Autowired
+    private VendorCertificationRepository vendorCertificationRepository;
+
+    @Autowired
+    private VendorCertificationTagRepository vendorCertificationTagRepository;
 
 	public Optional<Vendor> getVendorById(Integer vendorId) {
 		return vendorRepository.findById(vendorId);
@@ -74,5 +82,21 @@ public class VendorServiceAdmin {
 		List<VendorActivity> activities = vendorActivityRepository.findByVendorId(vendorId);
 		return activities.size();
 	}
+	
+	public List<String> getCertifiedVendorsSlogans() {
+        // 获取所有认证的店铺ID
+        List<Integer> certifiedVendorIds = vendorCertificationRepository.findCertifiedVendorIds();
 
+        // 根据这些ID获取标语
+        List<String> slogans = vendorCertificationTagRepository.findSlogansByVendorIds(certifiedVendorIds);
+
+        return slogans;
+    }
+	
+	public List<String> getSlogansByVendorId(Integer vendorId) {
+	    // 获取已通过认证的标语
+	    List<String> certifiedSlogans = vendorCertificationTagRepository.findCertifiedSlogansByVendorId(vendorId);
+	    
+	    return certifiedSlogans;
+	}
 }

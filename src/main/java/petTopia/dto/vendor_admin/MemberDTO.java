@@ -2,6 +2,7 @@ package petTopia.dto.vendor_admin;
 
 import java.time.LocalDate;
 
+
 public class MemberDTO {
 
 	private Integer id;

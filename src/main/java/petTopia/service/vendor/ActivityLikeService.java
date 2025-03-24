@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import petTopia.dto.vendor.ActivityLikeDto;
+
 import petTopia.model.user.Member;
 import petTopia.model.vendor.ActivityLike;
 import petTopia.model.vendor.VendorActivity;
@@ -40,6 +41,10 @@ public class ActivityLikeService {
 
 	/* 新增或取消活動收藏 */
 	public Boolean toggleActivityLike(Integer memberId, Integer activityId) {
+
+	
+	/* 新增或取消活動收藏 */	
+	public void addOrCancelActivityLike(Integer memberId, Integer activityId) {
 		Optional<Member> member = memberRepository.findById(memberId);
 		Optional<VendorActivity> vendorActivity = vendorActivityRepository.findById(activityId);
 		ActivityLike activityLike = activityLikeRepository.findByMemberIdAndVendorActivityId(memberId, activityId);
