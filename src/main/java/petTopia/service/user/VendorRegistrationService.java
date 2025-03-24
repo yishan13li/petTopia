@@ -193,6 +193,7 @@ public class VendorRegistrationService {
             // 創建新的商家資料
             Vendor vendor = new Vendor();
             vendor.setId(vendorUser.getId());  // 手動設置 ID
+            vendor.setUser(vendorUser);  // 設置用戶關聯
             vendor.setName(member.getName());
             vendor.setPhone(member.getPhone());
             vendor.setAddress(member.getAddress());

@@ -24,6 +24,7 @@ import java.util.Properties;
 import java.time.LocalDateTime;
 import java.util.Random;
 import java.util.Optional;
+import java.util.Date;
 
 import petTopia.model.user.User;
 import petTopia.model.vendor.Vendor;
@@ -262,6 +263,123 @@ public class VendorLoginService extends BaseUserService {
         result.put("category", vendor.getVendorCategory());
         result.put("status", vendor.isStatus());
         
+        return result;
+    }
+
+    /**
+     * 檢查用戶是否有未完成的商家申請
+     */
+    public boolean hasPendingVendorApplication(Integer userId) {
+        try {
+            // TODO: 實作檢查未完成申請的邏輯
+            // 這裡需要根據您的資料庫結構來實作
+            return false;
+        } catch (Exception e) {
+            logger.error("檢查未完成商家申請失敗", e);
+            return false;
+        }
+    }
+
+    /**
+     * 檢查用戶是否有被拒絕的商家申請
+     */
+    public boolean hasRejectedVendorApplication(Integer userId) {
+        try {
+            // TODO: 實作檢查被拒絕申請的邏輯
+            // 這裡需要根據您的資料庫結構來實作
+            return false;
+        } catch (Exception e) {
+            logger.error("檢查被拒絕商家申請失敗", e);
+            return false;
+        }
+    }
+
+    /**
+     * 檢查用戶是否有資格成為商家
+     */
+    public boolean isEligibleForVendor(Integer userId) {
+        try {
+            User user = usersRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("用戶不存在"));
+
+            // 檢查用戶是否已經是商家
+            if (user.getUserRole() == User.UserRole.VENDOR) {
+                return false;
+            }
+
+            // 檢查郵箱是否已驗證
+            if (!user.isEmailVerified()) {
+                return false;
+            }
+
+            // 檢查是否有未完成的申請
+            if (hasPendingVendorApplication(userId)) {
+                return false;
+            }
+
+            // 檢查是否有被拒絕的申請
+            if (hasRejectedVendorApplication(userId)) {
+                return false;
+            }
+
+            // TODO: 添加其他資格檢查邏輯
+            // 例如：檢查用戶年齡、信用評分等
+
+            return true;
+        } catch (Exception e) {
+            logger.error("檢查商家資格失敗", e);
+            return false;
+        }
+    }
+
+    /**
+     * 將用戶轉換為商家
+     */
+    @Transactional
+    public Map<String, Object> convertToVendor(Integer userId) {
+        Map<String, Object> result = new HashMap<>();
+        
+        try {
+            User user = usersRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("用戶不存在"));
+
+            // 檢查用戶是否已經是商家
+            if (user.getUserRole() == User.UserRole.VENDOR) {
+                throw new RuntimeException("用戶已經是商家身份");
+            }
+
+            // 檢查用戶是否有資格成為商家
+            if (!isEligibleForVendor(userId)) {
+                throw new RuntimeException("用戶不符合成為商家的資格");
+            }
+
+            // 創建新的商家資料
+            Vendor vendor = new Vendor();
+            vendor.setId(userId); // 使用用戶ID作為商家ID
+            vendor.setName(user.getEmail().split("@")[0]); // 預設使用郵箱前綴作為商家名稱
+            vendor.setStatus(false); // 預設狀態為未啟用
+            vendor.setRegistrationDate(new Date()); // 設置註冊時間
+            vendor.setUpdatedDate(new Date()); // 設置更新時間
+
+            // 保存商家資料
+            vendorRepository.save(vendor);
+
+            // 更新用戶角色
+            user.setUserRole(User.UserRole.VENDOR);
+            usersRepository.save(user);
+
+            result.put("success", true);
+            result.put("vendorId", vendor.getId());
+            result.put("message", "成功轉換為商家");
+
+            logger.info("用戶 {} 成功轉換為商家", userId);
+
+        } catch (Exception e) {
+            logger.error("轉換商家失敗", e);
+            result.put("success", false);
+            result.put("message", e.getMessage());
+        }
+
         return result;
     }
 }
