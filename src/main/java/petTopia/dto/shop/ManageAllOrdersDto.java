@@ -19,6 +19,7 @@ public class ManageAllOrdersDto {
     private String paymentCategory;  // 付款方式
     private String shippingCategory;  // 配送方式
     private BigDecimal totalAmount;      // 訂單總金額
+    private String note;      // 備註
     private List<ManageOrderItemDto> managedOrderItems; // 商品編號列表
 
 }
