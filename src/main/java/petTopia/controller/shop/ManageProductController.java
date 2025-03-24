@@ -34,7 +34,8 @@ public class ManageProductController {
 			@RequestParam Integer rows, 
 			@RequestParam Optional<String> keyword, 
 			@RequestParam String category, 
-			@RequestParam Optional<String> status
+			@RequestParam Optional<String> status, 
+			@RequestParam Optional<String> isProductDiscount
 			) {
 		
 		Map<String, Object> responseBody = new HashMap<>();
@@ -43,19 +44,22 @@ public class ManageProductController {
 		filterData.put("keyword", keyword.isPresent() ? keyword.get() : "");
 		filterData.put("category", category);
 		filterData.put("status", status.isPresent() ? status.get() : "");
+		filterData.put("isProductDiscount", isProductDiscount.isPresent() ? isProductDiscount.get() : "");
 		
 		filterData.put("start", start);
 		filterData.put("rows", rows);
 		System.out.println(filterData);
 		long count = productService.getProductsCount(filterData);
 		responseBody.put("count", count);
-
-//		List<Product> productList = productService.getProducts(filterData);
 		
+		List<Product> productList = productService.getProducts(filterData);
+		if (productList != null ) {
+			responseBody.put("productList", productList);
+		}
+		else {
+			responseBody.put("productList", null);
+		}
 		
-		
-//		responseBody.put("count", 0);
-//		responseBody.put("productList", productList);
 		
 		return new ResponseEntity<Map<String, Object>>(responseBody, HttpStatus.OK);
 		
