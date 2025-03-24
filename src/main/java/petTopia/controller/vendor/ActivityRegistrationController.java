@@ -61,5 +61,9 @@ public class ActivityRegistrationController {
 		return response;
 	}
 	
-	
+	@GetMapping("/api/activity/{activityId}/registration/status")
+	public ResponseEntity<Boolean> isActivityAvailable(@PathVariable Integer activityId) {
+		boolean isAvailable = activityRegistrationUserService.isActivityAvailable(activityId);
+		return ResponseEntity.ok(isAvailable);
+	}
 }
