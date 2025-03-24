@@ -18,6 +18,13 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
 import lombok.Data;
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.time.LocalDate;
+import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 
 @Entity
 @Table(name = "member")

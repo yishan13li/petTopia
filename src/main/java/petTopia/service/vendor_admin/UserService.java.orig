@@ -1,0 +1,68 @@
+package petTopia.service.vendor_admin;
+
+
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import petTopia.model.user.User;
+<<<<<<< HEAD
+import petTopia.repository.vendor_admin.UserRepository;
+=======
+import petTopia.repository.user.UserRepository;
+
+>>>>>>> f1/lai2
+
+@Service
+public class UserService {
+
+	@Autowired
+<<<<<<< HEAD
+	private UserRepository userRepository;
+=======
+	private UserRepository usersRepository;
+>>>>>>> f1/lai2
+//
+//	@Autowired
+//	private VendorService vendorService;
+//
+//	@Override
+<<<<<<< HEAD
+	public Optional<User> getUserByEmailAndPassword(String email, String password) {
+		return userRepository.findByEmailAndPassword(email, password);
+=======
+	public User getUserByEmailAndPassword(String email, String password) {
+		return usersRepository.findByEmailAndPassword(email, password);
+>>>>>>> f1/lai2
+	}
+//
+//	@Override
+//	public User updateUser(User user) {
+//		return userRepository.save(user);
+//	}
+//
+//	@Override
+//	public boolean checkLogin(User users) {
+//		Optional<User> resultBean = userRepository.findByEmailAndPassword(users.getEmail(), users.getPassword());
+//
+//		if (resultBean != null) {
+//			return true;
+//		}
+//		return false;
+//	}
+//
+//	@Override
+//	public void deleteUserById(Integer userId) {
+//
+//		// 刪除對應的 VendorDetail 資料
+//		Optional<Vendor> vendor = vendorService.getVendorByUserId(userId);
+//		if (vendor.isPresent()) {
+//			vendorService.deleteVendor(vendor.get()); // 刪除 VendorDetail
+//		}
+//
+//		// 刪除 User 資料
+//		userRepository.deleteById(userId);
+//	}
+
+}
