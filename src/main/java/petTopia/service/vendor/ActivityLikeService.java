@@ -39,12 +39,8 @@ public class ActivityLikeService {
 		}
 	}
 
-	/* 新增或取消活動收藏 */
-	public Boolean toggleActivityLike(Integer memberId, Integer activityId) {
-
-	
 	/* 新增或取消活動收藏 */	
-	public void addOrCancelActivityLike(Integer memberId, Integer activityId) {
+	public boolean toggleActivityLike(Integer memberId, Integer activityId) {
 		Optional<Member> member = memberRepository.findById(memberId);
 		Optional<VendorActivity> vendorActivity = vendorActivityRepository.findById(activityId);
 		ActivityLike activityLike = activityLikeRepository.findByMemberIdAndVendorActivityId(memberId, activityId);
@@ -61,7 +57,7 @@ public class ActivityLikeService {
 			return false;
 		}
 	}
-
+	
 	/* 將Member和ActivityLike轉換成DTO */
 	public ActivityLikeDto ConvertActivityLikeToDto(Member member, ActivityLike like) {
 		ActivityLikeDto dto = new ActivityLikeDto();
