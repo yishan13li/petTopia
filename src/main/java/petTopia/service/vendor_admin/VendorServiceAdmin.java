@@ -16,12 +16,13 @@ import petTopia.repository.vendor.VendorCategoryRepository;
 import petTopia.repository.vendor.VendorRepository;
 import petTopia.repository.vendor_admin.VendorCertificationRepository;
 import petTopia.repository.vendor_admin.VendorCertificationTagRepository;
+import petTopia.service.user.UsersService;
 
 @Service
 public class VendorServiceAdmin {
 
 	@Autowired
-	private UserService userService;
+	private UsersService userService;
 
 	@Autowired
 	private VendorRepository vendorRepository; // Vendor 查詢
@@ -42,17 +43,17 @@ public class VendorServiceAdmin {
 		return vendorRepository.findById(vendorId);
 	}
 
-	public Optional<User> getUserByEmailAndPassword(String email, String password) {
-		return userService.getUserByEmailAndPassword(email, password);
-	}
+//	public Optional<User> getUserByEmailAndPassword(String email, String password) {
+//		return userService.getUserByEmailAndPassword(email, password);
+//	}
 
-	public Optional<Vendor> getVendorProfile(String email, String password) {
-		Optional<User> user = getUserByEmailAndPassword(email, password);
-		if (user.isPresent()) {  //&& user.get().getUserRole() == UserRole.vendor
-			return vendorRepository.findById(user.get().getId());
-		}
-		return Optional.empty();
-	}
+//	public Optional<Vendor> getVendorProfile(String email, String password) {
+//		Optional<User> user = getUserByEmailAndPassword(email, password);
+//		if (user.isPresent()) {  //&& user.get().getUserRole() == UserRole.vendor
+//			return vendorRepository.findById(user.get().getId());
+//		}
+//		return Optional.empty();
+//	}
 
 	public String getVendorLogoBase64(Vendor vendor) {
 		if (vendor.getLogoImg() != null) {

@@ -54,21 +54,21 @@ public class VendorProfileController {
 	public String getVendorProfile(@RequestParam String email, @RequestParam String password, Model model) {
 //		Optional<User> user = userService.getUserByEmailAndPassword(email, password);
 
-		Optional<Vendor> vendorDetail = vendorService.getVendorProfile(email, password);
-
-		if (vendorDetail.isPresent()) {
-			Vendor vendor = vendorDetail.get();
-			String vendorLogoImgBase64 = vendorService.getVendorLogoBase64(vendor);
-			List<VendorCategory> allcategory = vendorService.getAllVendorCategories();
-
-			// 获取该店家的活动总数
-			int activityCount = vendorService.getActivityCountByVendor(vendor.getId());
-
-			model.addAttribute("allcategory", allcategory);
-			model.addAttribute("vendor", vendor);
-			model.addAttribute("vendorLogoImgBase64", vendorLogoImgBase64);
-			return "vendor_admin/vendor_admin_profile";
-		}
+//		Optional<Vendor> vendorDetail = vendorService.getVendorProfile(email, password);
+//
+//		if (vendorDetail.isPresent()) {
+//			Vendor vendor = vendorDetail.get();
+//			String vendorLogoImgBase64 = vendorService.getVendorLogoBase64(vendor);
+//			List<VendorCategory> allcategory = vendorService.getAllVendorCategories();
+//
+//			// 获取该店家的活动总数
+//			int activityCount = vendorService.getActivityCountByVendor(vendor.getId());
+//
+//			model.addAttribute("allcategory", allcategory);
+//			model.addAttribute("vendor", vendor);
+//			model.addAttribute("vendorLogoImgBase64", vendorLogoImgBase64);
+//			return "vendor_admin/vendor_admin_profile";
+//		}
 		
 		
 
@@ -97,11 +97,7 @@ public class VendorProfileController {
 	@GetMapping("api/vendor_admin/profile/{id}")
     public ResponseEntity<?> getVendorById(@PathVariable Integer id) {
         Optional<Vendor> vendor = vendorRepository.findById(id);
-        if (vendor != null) {
-            return ResponseEntity.ok(Map.of("vendor", vendor));
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Vendor not found");
-        }
+        return ResponseEntity.ok(Map.of("vendor", vendor));
     }
 	
 	@ResponseBody

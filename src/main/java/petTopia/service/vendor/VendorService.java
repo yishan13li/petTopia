@@ -14,25 +14,16 @@ import petTopia.model.vendor.Vendor;
 import petTopia.repository.vendor.VendorRepository;
 import petTopia.util.ImageConverter;
 
-<<<<<<< HEAD
-=======
-
->>>>>>> f1/lai2
 @Service
 public class VendorService {
 
 	@Autowired
 	private VendorRepository vendorRepository;
 
-<<<<<<< HEAD
 	/* 所有店家清單 */
 	public List<Vendor> findAllVendor() {
 		List<Vendor> vendorList = vendorRepository.findAll();
 
-=======
-	public List<Vendor> findAllVendor() {
-		List<Vendor> vendorList = vendorRepository.findAll();
->>>>>>> f1/lai2
 		for (Vendor v : vendorList) {
 			byte[] logoImg = v.getLogoImg();
 			if (logoImg != null) {
@@ -41,23 +32,16 @@ public class VendorService {
 				v.setLogoImgBase64(base64);
 			}
 		}
-<<<<<<< HEAD
 
 		return vendorList;
 	}
 
 	/* 單一店家 */
-=======
-		return vendorList;
-	}
-
->>>>>>> f1/lai2
 	public Vendor findVendorById(Integer vendorId) {
 		Optional<Vendor> optional = vendorRepository.findById(vendorId);
 
 		if (optional.isPresent()) {
 			Vendor vendor = optional.get();
-<<<<<<< HEAD
 
 			byte[] logoImg = vendor.getLogoImg();
 			String mimeType = ImageConverter.getMimeType(logoImg);
@@ -69,26 +53,12 @@ public class VendorService {
 				vendor.setLogoImgBase64(base64);
 			}
 
-=======
-			
-			byte[] logoImg = vendor.getLogoImg();
-			String mimeType = ImageConverter.getMimeType(logoImg);
-			
-			if(logoImg==null) {
-				vendor.setLogoImgBase64(null);
-			}else {
-				String base64 = "data:%s;base64,".formatted(mimeType) + Base64.getEncoder().encodeToString(logoImg);
-				vendor.setLogoImgBase64(base64);
-			}		
-			
->>>>>>> f1/lai2
 			return vendor;
 		}
 
 		return null;
 	}
 
-<<<<<<< HEAD
 	/* 排除特定店家之清單 */
 	public List<Vendor> findAllVendorExceptOne(Integer vendorId) {
 		List<Vendor> vendorList = vendorRepository.findAll();
@@ -130,7 +100,7 @@ public class VendorService {
 	public List<Vendor> findVendorByCategoryIdExceptOne(Integer categoryId, Integer vendorId) {
 		List<Vendor> vendorList = vendorRepository.findByVendorCategoryId(categoryId);
 		Vendor vendorToRemove = vendorRepository.findById(vendorId).orElse(null);
-		
+
 		if (vendorToRemove != null) {
 			vendorList.removeIf(v -> v.getId().equals(vendorToRemove.getId())); // 刪除ID與vendorToRemove相同ID相同之店家
 		}
@@ -163,7 +133,7 @@ public class VendorService {
 		}
 
 		for (Vendor v : list2) {
-			if (set.add(v.getId())) { 
+			if (set.add(v.getId())) {
 				finalList.add(v);
 			}
 		}
@@ -180,42 +150,4 @@ public class VendorService {
 		return finalList;
 	}
 
-=======
-	public List<Vendor> findVendorByCategoryId(Integer categoryId) {
-		List<Vendor> vendorList = vendorRepository.findByVendorCategoryId(categoryId);
-		return vendorList;
-	}
-	
-	public List<Vendor> findVendorByNameOrDescription(String keyword){
-		List<Vendor> list1 = vendorRepository.findByNameContaining(keyword);
-		List<Vendor> list2 = vendorRepository.findByDescriptionContaining(keyword);
-		
-		/* 使用set來過濾重複之資料 */
-		Set<Integer> set = new HashSet<>();
-		List<Vendor> finalList = new ArrayList<>();
-		
-	    for (Vendor v : list1) {
-	        if (set.add(v.getId())) {  // 如果id沒出現過則加入
-	        	finalList.add(v);
-	        }
-	    }
-	    
-	    for (Vendor v : list2) {
-	        if (set.add(v.getId())) {  // 如果id沒出現過則加入
-	        	finalList.add(v);
-	        }
-	    }
-		
-		return finalList;
-	}
-
-	public List<Vendor> findVendorByCategoryIdExceptOne(Integer categoryId, Integer vendorId) {
-		return vendorRepository.findByVendorCategoryIdAndIdNot(categoryId, vendorId);
-	}
-
-	public List<Vendor> findAllVendorExceptOne(Integer vendorId) {
-		return vendorRepository.findAllByIdNot(vendorId);
-	}
-
->>>>>>> f1/lai2
 }

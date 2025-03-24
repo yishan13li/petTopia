@@ -1,21 +1,14 @@
 package petTopia.repository.user;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
-<<<<<<< HEAD
-
-import petTopia.model.user.Member;
-
-public interface MemberRepository extends JpaRepository<Member, Integer> {
-
-}
-=======
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
 import petTopia.model.user.Member;
-import java.util.List;
-import java.util.Optional;
-import petTopia.model.user.User;
 
 @Repository
 public interface MemberRepository extends JpaRepository<Member, Integer> {
@@ -45,4 +38,4 @@ public interface MemberRepository extends JpaRepository<Member, Integer> {
     @Query("SELECT m FROM Member m LEFT JOIN m.user u WHERE u.email = :email")
     Member findByEmail(@Param("email") String email);
 } 
->>>>>>> f1/lai2
+

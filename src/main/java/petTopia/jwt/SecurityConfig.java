@@ -106,7 +106,8 @@ public class SecurityConfig {
                     "/api/vendor/category/show",
                     "/shop/",
                     "/shop/products",
-                    "/shop/productDetail"
+                    "/shop/productDetail",
+                    "/vendor/**"
                 ).permitAll()
                 
                 // 會員接口 只要新增新的api街口就在這裡添加
@@ -123,7 +124,8 @@ public class SecurityConfig {
                     "/activity/{activityId}/review",
                     "/shop/orderHistory",
                     "/shop/checkout",
-                    "/shop/orders"
+                    "/shop/orders",
+                    "/vendor/**"
                 ).hasRole("MEMBER")
                 
                 // 商家接口 只要新增新的api街口就在這裡添加
@@ -133,7 +135,8 @@ public class SecurityConfig {
                     "/api/vendor/{vendorId}/review/add",
                     "/api/vendor/{vendorId}/review/star/add",
                     "/api/vendor/review/{reviewId}/rewrite",
-                    "/api/vendor/review/{reviewId}/delete"
+                    "/api/vendor/review/{reviewId}/delete",
+                    "/vendor/admin/**"
                 ).hasAnyRole("MEMBER", "VENDOR")
                 
                 // 管理員接口 只要新增新的api街口就在這裡添加

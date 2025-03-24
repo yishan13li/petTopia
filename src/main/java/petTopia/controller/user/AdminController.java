@@ -184,18 +184,18 @@ public class AdminController {
     /**
      * 獲取所有商家
      */
-    @GetMapping("/vendors")
-    public ResponseEntity<?> getAllVendors() {
-        logger.info("獲取所有商家資料");
-        
-        try {
-            return ResponseEntity.ok(Map.of("vendors", adminService.getAllVendors()));
-        } catch (Exception e) {
-            logger.error("獲取商家資料失敗", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "獲取資料失敗：" + e.getMessage()));
-        }
-    }
+//    @GetMapping("/vendors")
+//    public ResponseEntity<?> getAllVendors() {
+//        logger.info("獲取所有商家資料");
+//        
+//        try {
+//            return ResponseEntity.ok(Map.of("vendors", adminService.getAllVendors()));
+//        } catch (Exception e) {
+//            logger.error("獲取商家資料失敗", e);
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                .body(Map.of("error", "獲取資料失敗：" + e.getMessage()));
+//        }
+//    }
     
     /**
      * 檢查管理員登入狀態
