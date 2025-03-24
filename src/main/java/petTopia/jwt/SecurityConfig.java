@@ -107,7 +107,10 @@ public class SecurityConfig {
                     "/shop/",
                     "/shop/products",
                     "/shop/productDetail",
-                    "/vendor/**"
+                    "/api/**",
+                    "api/**",
+                    "/api/vendor/**"
+
                 ).permitAll()
                 
                 // 會員接口 只要新增新的api街口就在這裡添加
@@ -125,7 +128,9 @@ public class SecurityConfig {
                     "/shop/orderHistory",
                     "/shop/checkout",
                     "/shop/orders",
-                    "/vendor/**"
+                    "/vendor/**",
+                    "/api/vendor/**",
+                    "/api/activity/**"
                 ).hasRole("MEMBER")
                 
                 // 商家接口 只要新增新的api街口就在這裡添加
