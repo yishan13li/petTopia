@@ -72,69 +72,21 @@ public class VendorConversionController {
                 logger.info("用戶已有商家帳號，執行切換 - 用戶ID: {}, 電子郵件: {}", 
                     userId, email);
                 
-                // 檢查是否為第三方登入用戶
-                if (existingVendor.getProvider() != User.Provider.LOCAL || 
-                    existingVendor.getPassword() == null || 
-                    existingVendor.getPassword().isEmpty()) {
-                    
-                    logger.info("第三方登入用戶，跳過密碼認證，直接生成新的JWT");
-                    
-                    // 生成新的 JWT，不需要重新認證
-                    String newToken = jwtUtil.generateToken(
-                        existingVendor.getEmail(), 
-                        existingVendor.getId(), 
-                        existingVendor.getUserRole().toString()
-                    );
-                    
-                    Map<String, Object> result = new HashMap<>();
-                    result.put("message", "已切換至商家帳號");
-                    result.put("token", newToken);
-                    result.put("vendorId", existingVendor.getId());
-                    result.put("email", existingVendor.getEmail());
-                    result.put("role", existingVendor.getUserRole().toString());
-                    
-                    return ResponseEntity.ok(result);
-                } else {
-                    // 如果是本地帳號且有密碼，嘗試正常認證
-                    try {
-                        // 創建新的認證令牌
-                        Authentication authentication = authenticationManager.authenticate(
-                            new UsernamePasswordAuthenticationToken(email, existingVendor.getPassword())
-                        );
-                        
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
-                        
-                        // 生成新的 JWT
-                        String newToken = jwtUtil.generateToken(existingVendor.getEmail(), existingVendor.getId(), existingVendor.getUserRole().toString());
-                        
-                        Map<String, Object> result = new HashMap<>();
-                        result.put("message", "已切換至商家帳號");
-                        result.put("token", newToken);
-                        result.put("vendorId", existingVendor.getId());
-                        result.put("email", existingVendor.getEmail());
-                        result.put("role", existingVendor.getUserRole().toString());
-                        
-                        return ResponseEntity.ok(result);
-                    } catch (Exception e) {
-                        logger.warn("嘗試認證失敗，可能是密碼問題，改為直接生成新JWT", e);
-                        
-                        // 認證失敗時，也直接生成新的JWT
-                        String newToken = jwtUtil.generateToken(
-                            existingVendor.getEmail(), 
-                            existingVendor.getId(), 
-                            existingVendor.getUserRole().toString()
-                        );
-                        
-                        Map<String, Object> result = new HashMap<>();
-                        result.put("message", "已切換至商家帳號");
-                        result.put("token", newToken);
-                        result.put("vendorId", existingVendor.getId());
-                        result.put("email", existingVendor.getEmail());
-                        result.put("role", existingVendor.getUserRole().toString());
-                        
-                        return ResponseEntity.ok(result);
-                    }
-                }
+                // 直接生成新的 JWT
+                String newToken = jwtUtil.generateToken(
+                    existingVendor.getEmail(), 
+                    existingVendor.getId(), 
+                    existingVendor.getUserRole().toString()
+                );
+                
+                Map<String, Object> result = new HashMap<>();
+                result.put("message", "已切換至商家帳號");
+                result.put("token", newToken);
+                result.put("vendorId", existingVendor.getId());
+                result.put("email", existingVendor.getEmail());
+                result.put("role", existingVendor.getUserRole().toString());
+                
+                return ResponseEntity.ok(result);
             }
             
             // 如果沒有商家帳號且未確認要註冊
