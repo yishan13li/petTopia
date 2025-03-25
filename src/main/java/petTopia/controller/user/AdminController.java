@@ -16,6 +16,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,6 +25,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import petTopia.jwt.JwtUtil;      
 import petTopia.model.user.User;
+import petTopia.model.user.Admin;
 import petTopia.service.user.AdminService;
 
 import org.slf4j.Logger;
@@ -87,18 +89,30 @@ public class AdminController {
         try {
             Map<String, Object> loginResult = adminService.adminLogin(email, password);
             
+            // 從 loginResult 中獲取管理員資訊
+            Admin admin = (Admin) loginResult.get("admin");
+            String token = (String) loginResult.get("token");
+            
             // 設置認證信息
             UserDetails userDetails = org.springframework.security.core.userdetails.User
                 .withUsername(email)
-                .password("")  // 密碼不需要存儲在 SecurityContext 中
-                .roles("ADMIN")
+                .password("")
+                .roles(admin.getRole().name())
                 .build();
                 
             Authentication authentication = new UsernamePasswordAuthenticationToken(
                 userDetails, null, userDetails.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authentication);
             
-            return ResponseEntity.ok(loginResult);
+            // 構建返回的資料結構
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", token);
+            response.put("email", email);
+            response.put("role", admin.getRole().name());
+            response.put("adminId", admin.getUsers().getId());
+            response.put("isAuthenticated", true);
+            
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             logger.error("管理員登入失敗", e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -249,10 +263,23 @@ public class AdminController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getCurrentAdmin(@AuthenticationPrincipal UserDetails userDetails) {
         try {
+            // 獲取當前認證的管理員資訊
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "未認證"));
+            }
+
+            // 從 UserDetails 中獲取資訊
+            String email = userDetails.getUsername();
+            Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();
+            
+            // 構建返回的資料結構
             Map<String, Object> adminInfo = new HashMap<>();
-            adminInfo.put("email", userDetails.getUsername());
-            adminInfo.put("authorities", userDetails.getAuthorities());
+            adminInfo.put("email", email);
+            adminInfo.put("authorities", authorities);
             adminInfo.put("isAuthenticated", true);
+            adminInfo.put("adminId", userDetails.getUsername()); // 使用 email 作為 ID
             
             return ResponseEntity.ok(adminInfo);
         } catch (Exception e) {
