@@ -52,7 +52,6 @@ public class VendorActivityReview {
 	@Column(name = "review_content", nullable = false, length = 255)
 	private String reviewContent;
 
-	@JsonIgnore
 	@ManyToOne
 	@JoinColumn(name = "vendor_activity_id", nullable = false)
 	private VendorActivity vendorActivity;

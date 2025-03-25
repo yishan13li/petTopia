@@ -1,8 +1,5 @@
 package petTopia.model.vendor;
 
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -15,7 +12,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import petTopia.model.user.Member;
-
 
 @Entity
 @Table(name = "activity_like")
@@ -32,11 +28,10 @@ public class ActivityLike {
 	@ManyToOne
 	@JoinColumn(name = "member_id", nullable = false)
 	private Member member;
-	
+
 //	@Column(name = "member_id")
 //	private Integer memberId;
 
-	@JsonIgnore
 	@ManyToOne
 	@JoinColumn(name = "vendor_activity_id", nullable = false)
 	private VendorActivity vendorActivity;

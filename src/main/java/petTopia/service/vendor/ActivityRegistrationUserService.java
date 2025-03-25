@@ -142,4 +142,18 @@ public class ActivityRegistrationUserService {
 
 	}
 
+	/* 查詢單一會員報名的活動 */
+	public List<ActivityRegistration> findRegistrationListByMemberId(Integer memberId) {
+		List<ActivityRegistration> list = activityRegistrationRepository.findAllByMemberId(memberId);
+		return list;
+	}
+	
+	/* 藉ID刪除報名 */
+	public boolean deleteByRegistrationId(Integer likeId) {
+		if (activityRegistrationRepository.existsById(likeId)) {
+			activityRegistrationRepository.deleteById(likeId);
+			return true;
+		}
+		return false;
+	}
 }

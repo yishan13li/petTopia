@@ -95,6 +95,8 @@ public class VendorReviewService {
 		// 設定評價資訊
 		dto.setReviewId(review.getId());
 		dto.setVendorId(review.getVendorId());
+		Vendor vendor = vendorRepository.findById(review.getVendorId()).orElse(null);
+		dto.setVendorName(vendor.getName());
 		dto.setReviewTime(review.getReviewTime());
 		dto.setReviewContent(review.getReviewContent());
 		dto.setRatingEnvironment(review.getRatingEnvironment());
@@ -154,11 +156,8 @@ public class VendorReviewService {
 
 	/* 藉由ID尋找評論 */
 	public VendorReview findReviewById(Integer reviewId) {
-		Optional<VendorReview> optional = vendorReviewRepository.findById(reviewId);
-		if (optional != null) {
-			return optional.get();
-		}
-		return null;
+		VendorReview review = vendorReviewRepository.findById(reviewId).orElse(null);
+		return review;
 	}
 
 	/* 藉由ID修改評論 */
@@ -279,5 +278,15 @@ public class VendorReviewService {
 		vendorRepository.save(vendor);
 
 		return vendor;
+	}
+
+	/* 尋找某會員是否有對某店家留下評論 */
+	public boolean getReviewIsExisted(Integer memberId, Integer vendorId) {
+		VendorReview review = vendorReviewRepository.findByMemberIdAndVendorId(memberId, vendorId);
+		if (review != null) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 }

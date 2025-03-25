@@ -18,7 +18,8 @@ public class VendorReviewDto {
     
     /* 評價資訊 */
 	private Integer reviewId;
-    private Integer vendorId;
+	private Integer vendorId;
+	private String vendorName;
     private Date reviewTime;
     private String reviewContent;
     private Integer ratingEnvironment;

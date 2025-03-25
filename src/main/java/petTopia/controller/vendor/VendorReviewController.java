@@ -107,4 +107,11 @@ public class VendorReviewController {
 		return response;
 	}
 
+	@GetMapping("/api/vendor/{vendorId}/member/{memberId}/review/exist")
+	public Map<String, Object> getReviewIsExisted(@PathVariable Integer vendorId, @PathVariable Integer memberId) {
+		boolean isExisted = vendorReviewService.getReviewIsExisted(memberId, vendorId);
+		Map<String, Object> response = new HashMap<>();
+		response.put("action", isExisted ? true : false);
+		return response;
+	}
 }

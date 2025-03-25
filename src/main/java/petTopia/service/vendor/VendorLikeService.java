@@ -21,6 +21,17 @@ public class VendorLikeService {
 	@Autowired
 	private MemberRepository memberRepository;
 
+	/* 取得店家收藏狀態 */
+	public Boolean getActivityLikeStatus(Integer memberId, Integer vendorId) {
+		VendorLike vendorLike = vendorLikeRepository.findByMemberIdAndVendorId(memberId, vendorId);
+
+		if (vendorLike != null) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	/* 新增或取消店家收藏 */
 	public boolean toggleVendorLike(Integer memberId, Integer vendorId) {
 		VendorLike vendorLike = vendorLikeRepository.findByMemberIdAndVendorId(memberId, vendorId);

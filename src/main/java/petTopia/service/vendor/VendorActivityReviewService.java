@@ -153,4 +153,10 @@ public class VendorActivityReviewService {
 			return false;
 		}
 	}
+	
+	/* 藉由member ID找到所有評論 */
+	public List<VendorActivityReview> findReviewListByMemberId(Integer memberId) {
+		List<VendorActivityReview> reviewList = vendorActivityReviewRepository.findByMemberId(memberId);
+		return reviewList;
+	}
 }

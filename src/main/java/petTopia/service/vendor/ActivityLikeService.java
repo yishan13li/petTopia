@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import petTopia.dto.vendor.ActivityLikeDto;
-
 import petTopia.model.user.Member;
 import petTopia.model.vendor.ActivityLike;
 import petTopia.model.vendor.VendorActivity;
@@ -39,7 +38,7 @@ public class ActivityLikeService {
 		}
 	}
 
-	/* 新增或取消活動收藏 */	
+	/* 新增或取消活動收藏 */
 	public boolean toggleActivityLike(Integer memberId, Integer activityId) {
 		Optional<Member> member = memberRepository.findById(memberId);
 		Optional<VendorActivity> vendorActivity = vendorActivityRepository.findById(activityId);
@@ -57,7 +56,7 @@ public class ActivityLikeService {
 			return false;
 		}
 	}
-	
+
 	/* 將Member和ActivityLike轉換成DTO */
 	public ActivityLikeDto ConvertActivityLikeToDto(Member member, ActivityLike like) {
 		ActivityLikeDto dto = new ActivityLikeDto();
@@ -83,4 +82,21 @@ public class ActivityLikeService {
 
 		return dtoList;
 	}
+
+	/* 查詢某個memberId所有收藏的活動 */
+	public List<ActivityLike> findLikeListByMemberId(Integer memberId) {
+		Member member = memberRepository.findById(memberId).orElse(null);
+		List<ActivityLike> likeList = activityLikeRepository.findByMember(member);
+		return likeList;
+	}
+
+	/* 藉ID刪除收藏 */
+	public boolean deleteByLikeId(Integer likeId) {
+		if (activityLikeRepository.existsById(likeId)) {
+			activityLikeRepository.deleteById(likeId);
+			return true;
+		}
+		return false;
+	}
+
 }

@@ -29,6 +29,15 @@ public class VendorLikeController {
 		return ResponseEntity.ok(likeList);
 	}
 
+	@GetMapping("/api/vendor/{vendorId}/member/{memberId}/like/status")
+	public Map<String, Object> getLikeStatus(@PathVariable Integer vendorId, @PathVariable Integer memberId) {
+		boolean isLiked = vendorLikeService.getActivityLikeStatus(memberId, vendorId);
+
+		Map<String, Object> response = new HashMap<>();
+		response.put("action", isLiked ? true : false);
+		return response;
+	}
+	
 	@PostMapping("/api/vendor/{vendorId}/like/toggle")
 	public Map<String, Object> toggleLike(@PathVariable Integer vendorId, @RequestBody Map<String, Integer> data) {
 
