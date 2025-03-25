@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import petTopia.model.shop.ProductReview;
 import petTopia.service.shop.ProductReviewService;
+import petTopia.service.shop.ProductReviewService.AlreadyReviewedException;
 
 @RestController
 @RequestMapping("/shop")
@@ -32,8 +33,11 @@ public class ShopProductReviewController {
         try {
             productReviewService.createReview(review,productId,memberId);
             return new ResponseEntity<>("Review successfully created", HttpStatus.CREATED);
+        } catch (AlreadyReviewedException e) {
+            // 如果已經評論過該商品，返回具體的錯誤訊息
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         } catch (RuntimeException e) {
-            // 如果已經評論過，捕獲異常並返回錯誤訊息
+            // 捕獲其他 RuntimeException 並返回錯誤訊息
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }

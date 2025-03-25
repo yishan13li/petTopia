@@ -24,6 +24,14 @@ public class ProductReviewService {
     @Autowired
     private MemberRepository memberRepository;
 
+    //判斷是否已評論過該商品的異常
+    public class AlreadyReviewedException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+
+		public AlreadyReviewedException(String message) {
+            super(message);
+        }
+    }
     // 新增評論
     public ProductReview createReview(ProductReview productReview,Integer productId,Integer memberId) {
         // 檢查會員是否已經對該商品評論過
@@ -32,7 +40,8 @@ public class ProductReviewService {
         );
         
         if (existingReview.isPresent()) {
-            throw new RuntimeException("You have already reviewed this product.");
+            // 拋出自定義的異常
+            throw new AlreadyReviewedException("您已經評論過該商品");
         }
         
         // 設定商品與會員

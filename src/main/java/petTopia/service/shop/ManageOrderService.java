@@ -361,9 +361,21 @@ public class ManageOrderService {
                     shipping.setUpdatedTime(new Date());
                     shippingRepo.save(shipping);
                 }
-
-            } else if ("待收貨".equals(batchStatus)||"已完成".equals(batchStatus)||"已取消".equals(batchStatus)) {
+                
+            } else if ("待收貨".equals(batchStatus)) {
                 OrderStatus existOrderStatus = orderStatusRepo.findByName("待收貨")
+                        .orElseThrow(() -> new RuntimeException("Status not found"));
+                order.setOrderStatus(existOrderStatus);
+                order.setUpdatedDate(new Date());
+
+            } else if ("已完成".equals(batchStatus)) {
+                OrderStatus existOrderStatus = orderStatusRepo.findByName("已完成")
+                        .orElseThrow(() -> new RuntimeException("Status not found"));
+                order.setOrderStatus(existOrderStatus);
+                order.setUpdatedDate(new Date());
+
+            } else if ("已取消".equals(batchStatus)) {
+                OrderStatus existOrderStatus = orderStatusRepo.findByName("已取消")
                         .orElseThrow(() -> new RuntimeException("Status not found"));
                 order.setOrderStatus(existOrderStatus);
                 order.setUpdatedDate(new Date());
