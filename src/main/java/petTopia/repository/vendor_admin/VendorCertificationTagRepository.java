@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import petTopia.model.vendor.VendorCertification;
 import petTopia.model.vendor.VendorCertificationTag;
 
 public interface VendorCertificationTagRepository extends JpaRepository<VendorCertificationTag, Integer> {
@@ -22,5 +23,7 @@ public interface VendorCertificationTagRepository extends JpaRepository<VendorCe
 		       "JOIN VendorCertification vc ON vct.certification.id = vc.id " +
 		       "WHERE vct.vendor.id = :vendorId AND vc.certificationStatus = '已認證'")
 		List<String> findCertifiedSlogansByVendorId(@Param("vendorId") Integer vendorId);
+
+	List<VendorCertificationTag> findByCertification(VendorCertification certification);
 
 }

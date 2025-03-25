@@ -1,5 +1,6 @@
 package petTopia.service.vendor_admin;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import petTopia.dto.vendor_admin.CertificationDTO;
 import petTopia.model.vendor.CertificationTag;
 import petTopia.model.vendor.Vendor;
 import petTopia.model.vendor.VendorCertification;
@@ -94,6 +96,40 @@ public class VendorCertificationService {
         );
 
         return matchingReviewCount >= 5; // 例如至少 10 則符合評論才算合格
+    }
+    
+    public List<CertificationDTO> getAllCertificationsWithTags() {
+        List<CertificationDTO> certificationsWithTags = new ArrayList<>();
+
+        // 获取所有认证申请
+        List<VendorCertification> certifications = vendorCertificationRepository.findAll();
+        
+        // 遍历所有认证申请
+        for (VendorCertification certification : certifications) {
+        	CertificationDTO certificationDTO = new CertificationDTO();
+            certificationDTO.setVendor(certification.getVendor());
+            certificationDTO.setCertificationId(certification.getId());
+            certificationDTO.setCertificationStatus(certification.getCertificationStatus());
+            certificationDTO.setReason(certification.getReason());
+            certificationDTO.setRequestDate(certification.getRequestDate());
+            certificationDTO.setApprovedDate(certification.getApprovedDate());
+
+            // 获取认证标签
+            List<VendorCertificationTag> certificationTags = vendorCertificationTagRepository.findByCertification(certification);
+
+            // 将认证标签封装到DTO中
+            List<CertificationDTO.CertificationTagDTO> tagDTOList = new ArrayList<>();
+            for (VendorCertificationTag certificationTag : certificationTags) {
+            	CertificationDTO.CertificationTagDTO tagDTO = new CertificationDTO.CertificationTagDTO();
+                tagDTO.setTagName(certificationTag.getTag().getTagName());
+                tagDTO.setMeetsStandard(certificationTag.isMeetsStandard());
+                tagDTOList.add(tagDTO);
+            }
+            certificationDTO.setCertificationTags(tagDTOList);
+            
+            certificationsWithTags.add(certificationDTO);
+        }
+        return certificationsWithTags;
     }
 
 }
