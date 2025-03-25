@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import petTopia.dto.shop.ProductDetailDto;
+import petTopia.dto.shop.ProductDto;
 import petTopia.model.shop.Product;
 import petTopia.model.shop.ProductDetail;
 import petTopia.service.shop.ProductService;
@@ -100,13 +101,14 @@ public class ManageProductController {
 	// 後台商品管理 => 新增商品
 	@PostMapping("/api/insertProduct")
 	public ResponseEntity<?> insertProduct(
-			@RequestBody Map<String, Object> product
+			@RequestBody ProductDto product
 			) {
 		
 		Map<String, Object> responseBody = new HashMap<>();
 		
 		System.out.println(product);
-		//TODO: 製作productDTO
+		
+//		ProductDto productDto = new ProductDto();
 		
 		return new ResponseEntity<Map<String, Object>>(responseBody, HttpStatus.OK);
 		

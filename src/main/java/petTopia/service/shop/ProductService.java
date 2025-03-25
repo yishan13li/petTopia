@@ -9,6 +9,7 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import petTopia.dto.shop.ProductDto;
 import petTopia.model.shop.Product;
 import petTopia.model.shop.ProductCategory;
 import petTopia.model.shop.ProductColor;
@@ -163,26 +164,60 @@ public class ProductService {
 	}
 	
 	// 新增商品
-	public Product insertProduct(Product product){
+	public Product insertProduct(ProductDto productDto){
 		
-		Product existingProduct = productRepository
-				.findByProductDetailIdAndProductSizeIdAndProductColorId(
-						product.getProductDetail().getId(), 
-				product.getProductSize().getId(), 
-				product.getProductColor().getId());
+//		Product existingProduct = productRepository
+//				.findByProductDetailIdAndProductSizeIdAndProductColorId(
+//						product.getProductDetail().getId(), 
+//				product.getProductSize().getId(), 
+//				product.getProductColor().getId());
+//		
+//		// 商品已存在 
+//		if (existingProduct != null) {
+//			return existingProduct;
+//		}
 		
-		// 商品已存在 
-		if (existingProduct != null) {
-			return existingProduct;
+		Product product = new Product();
+		
+		// find ProductCategory
+		String categoryName = productDto.getProductDetail().getProductCategory().getName();
+		ProductCategory productCategory = productCategoryRepository.findByName(categoryName);
+		
+		// set ProductDetail
+		ProductDetail productDetail = productDetailRepository.findByName(productDto.getProductDetail().getName());
+		if (productDetail == null) {
+			productDetail = new ProductDetail();
+	        productDetail.setName(productDto.getProductDetail().getName());
+	        productDetail.setDescription(productDto.getProductDetail().getDescription());
+	        productDetail.setProductCategory(productCategory);
+	        productDetailRepository.save(productDetail);
 		}
 		
-		// 創建商品細節 (ProductDetail)
-        ProductDetail productDetail = new ProductDetail();
-        productDetail.setName(product.getProductDetail().getName());
-        productDetail.setDescription(product.getProductDetail().getDescription());
-        productDetail.setProductCategory(product.getProductDetail().getProductCategory());
-        productDetail = productDetailRepository.save(productDetail);
+		product.setProductDetail(productDetail);
+		product.getProductDetail().setProductCategory(productCategory);
+        
+        ProductSize productSize = productSizeRepository.findByName(productDto.getProductSize().getName());
+        if (productSize == null) {
+        	productSize = new ProductSize();
+        	productSize.setName(productDto.getProductSize().getName());
+        	productSizeRepository.save(productSize);
+        }
 		
+        ProductColor productColor = productColorRepository.findByName(productDto.getProductColor().getName());
+        if (productColor == null) {
+        	productColor = new ProductColor();
+        	productColor.setName(productDto.getProductColor().getName());
+        	productColorRepository.save(productColor);
+        }
+		
+        product.setProductSize(productSize);
+        product.setProductColor(productColor);
+        product.setUnitPrice(productDto.getUnitPrice());
+        product.setDiscountPrice(productDto.getDiscountPrice());
+        product.setStockQuantity(productDto.getStockQuantity());
+        product.setStatus(productDto.getStatus() == 1 ? true : false);
+        product.setPhoto(null);
+        
 		return null;
 		
 	}
