@@ -1,6 +1,9 @@
 package petTopia.repository.shop;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.json.JSONObject;
@@ -14,7 +17,6 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.Subquery;
 import petTopia.model.shop.Product;
 import petTopia.model.shop.ProductCategory;
 import petTopia.model.shop.ProductDetail;
@@ -33,6 +35,10 @@ public class ProductRepositoryCustomImpl implements ProductRepositoryCustom {
 		String category = obj.isNull("category") ? null : obj.getString("category");
 		String status = obj.isNull("status") ? null : obj.getString("status");
 		String isProductDiscount = obj.isNull("isProductDiscount") ? null : obj.getString("isProductDiscount");
+		String stockQuantityStr = obj.optString("stockQuantityLessThan", "").trim();
+		Integer stockQuantityLessThan = stockQuantityStr.isEmpty() ? null : Integer.parseInt(stockQuantityStr);
+		String startDate = obj.isNull("startDate") ? null : obj.getString("startDate");
+		String endDate = obj.isNull("endDate") ? null : obj.getString("endDate");
 		
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Long> criteriaQuery = cb.createQuery(Long.class);
@@ -46,18 +52,20 @@ public class ProductRepositoryCustomImpl implements ProductRepositoryCustom {
 		// ProductDetail join ProductCategory 獲得分類name
 		Join<ProductDetail, ProductCategory> categoryJoin = detailJoin.join("productCategory");
 
-		// 拆分關鍵字
-		String[] keywords = keywordStr.split(" ");
 		List<Predicate> predicates = new ArrayList<>();
 
 		// sql where
-		if (keywords != null && keywords.length != 0) {
-			for (String keyword : keywords) {
-				predicates.add(cb.like(detailJoin.get("name"), "%" + keyword + "%"));
+		if (keywordStr != null && keywordStr.length() != 0) {
+			// 拆分關鍵字
+			String[] keywords = keywordStr.split(" ");
+			if (keywords != null && keywords.length != 0) {
+				for (String keyword : keywords) {
+					predicates.add(cb.like(detailJoin.get("name"), "%" + keyword + "%"));
+				}
 			}
 		}
 		
-		if (category != null && category.length() != 0 && !"所有商品".equals(category)) {
+		if (category != null && category.length() != 0) {
 			predicates.add(cb.equal(categoryJoin.get("name"), category));
 		}
 
@@ -72,6 +80,32 @@ public class ProductRepositoryCustomImpl implements ProductRepositoryCustom {
 				predicates.add(cb.isNotNull(product.get("discountPrice")));
 			else
 				predicates.add(cb.isNull(product.get("discountPrice")));
+		}
+		
+		if (stockQuantityLessThan != null && stockQuantityLessThan != 0) {
+			predicates.add(cb.lessThanOrEqualTo(product.get("stockQuantity"), stockQuantityLessThan));
+		}
+		
+		if (startDate != null && !startDate.isEmpty()) {
+		    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		    Date startDateParsed = null;
+			try {
+				startDateParsed = sdf.parse(startDate);
+			} catch (ParseException e) {
+				e.printStackTrace();
+			} // 將字串轉為 java.util.Date
+		    predicates.add(cb.greaterThanOrEqualTo(product.get("createdTime"), startDateParsed));
+		}
+
+		if (endDate != null && !endDate.isEmpty()) {
+		    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		    Date endDateParsed = null;
+			try {
+				endDateParsed = sdf.parse(endDate);
+			} catch (ParseException e) {
+				e.printStackTrace();
+			} // 將字串轉為 java.util.Date
+		    predicates.add(cb.lessThanOrEqualTo(product.get("createdTime"), endDateParsed));
 		}
 
 		// 合併 sql where
@@ -98,6 +132,10 @@ public class ProductRepositoryCustomImpl implements ProductRepositoryCustom {
 		String category = obj.isNull("category") ? null : obj.getString("category");
 		String status = obj.isNull("status") ? null : obj.getString("status");
 		String isProductDiscount = obj.isNull("isProductDiscount") ? null : obj.getString("isProductDiscount");
+		String stockQuantityStr = obj.optString("stockQuantityLessThan", "").trim();
+		Integer stockQuantityLessThan = stockQuantityStr.isEmpty() ? null : Integer.parseInt(stockQuantityStr);
+		String startDate = obj.isNull("startDate") ? null : obj.getString("startDate");
+		String endDate = obj.isNull("endDate") ? null : obj.getString("endDate");
 		
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Product> criteriaQuery = cb.createQuery(Product.class);
@@ -108,18 +146,20 @@ public class ProductRepositoryCustomImpl implements ProductRepositoryCustom {
 		// ProductDetail join ProductCategory 獲得分類name
 		Join<ProductDetail, ProductCategory> categoryJoin = detailJoin.join("productCategory");
 
-		// 拆分關鍵字
-		String[] keywords = keywordStr.split(" ");
 		List<Predicate> predicates = new ArrayList<>();
 
 		// sql where
-		if (keywords != null && keywords.length != 0) {
-			for (String keyword : keywords) {
-				predicates.add(cb.like(detailJoin.get("name"), "%" + keyword + "%"));
+		if (keywordStr != null && keywordStr.length() != 0) {
+			// 拆分關鍵字
+			String[] keywords = keywordStr.split(" ");
+			if (keywords != null && keywords.length != 0) {
+				for (String keyword : keywords) {
+					predicates.add(cb.like(detailJoin.get("name"), "%" + keyword + "%"));
+				}
 			}
 		}
 		
-		if (category != null && category.length() != 0 && !"所有商品".equals(category)) {
+		if (category != null && category.length() != 0) {
 			predicates.add(cb.equal(categoryJoin.get("name"), category));
 		}
 
@@ -134,6 +174,32 @@ public class ProductRepositoryCustomImpl implements ProductRepositoryCustom {
 				predicates.add(cb.isNotNull(product.get("discountPrice")));
 			else
 				predicates.add(cb.isNull(product.get("discountPrice")));
+		}
+		
+		if (stockQuantityLessThan != null && stockQuantityLessThan != 0) {
+			predicates.add(cb.lessThanOrEqualTo(product.get("stockQuantity"), stockQuantityLessThan));
+		}
+		
+		if (startDate != null && !startDate.isEmpty()) {
+		    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		    Date startDateParsed = null;
+			try {
+				startDateParsed = sdf.parse(startDate);
+			} catch (ParseException e) {
+				e.printStackTrace();
+			} // 將字串轉為 java.util.Date
+		    predicates.add(cb.greaterThanOrEqualTo(product.get("createdTime"), startDateParsed));
+		}
+
+		if (endDate != null && !endDate.isEmpty()) {
+		    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		    Date endDateParsed = null;
+			try {
+				endDateParsed = sdf.parse(endDate);
+			} catch (ParseException e) {
+				e.printStackTrace();
+			} // 將字串轉為 java.util.Date
+		    predicates.add(cb.lessThanOrEqualTo(product.get("createdTime"), endDateParsed));
 		}
 
 		// 合併 sql where

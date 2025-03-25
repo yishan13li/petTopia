@@ -147,6 +147,46 @@ public class ProductService {
 		return null;
 	}
 	
+	// 批量更新狀態
+	public List<Product> updateProductsStatus(List<Integer> productIds, String batchStatus){
+		List<Product> productList = productRepository.findAllByIdIn(productIds);
+		
+		for (Product product : productList) {
+			boolean setBatchStatus = "1".equals(batchStatus) ? true : false;
+			product.setStatus(setBatchStatus);
+			
+			productRepository.save(product);
+		}
+		
+		return productList;
+		
+	}
 	
+	// 新增商品
+	public Product insertProduct(Product product){
+		
+		Product existingProduct = productRepository
+				.findByProductDetailIdAndProductSizeIdAndProductColorId(
+						product.getProductDetail().getId(), 
+				product.getProductSize().getId(), 
+				product.getProductColor().getId());
+		
+		// 商品已存在 
+		if (existingProduct != null) {
+			return existingProduct;
+		}
+		
+		// 創建商品細節 (ProductDetail)
+        ProductDetail productDetail = new ProductDetail();
+        productDetail.setName(product.getProductDetail().getName());
+        productDetail.setDescription(product.getProductDetail().getDescription());
+        productDetail.setProductCategory(product.getProductDetail().getProductCategory());
+        productDetail = productDetailRepository.save(productDetail);
+		
+		return null;
+		
+	}
+		
+		
 
 }
