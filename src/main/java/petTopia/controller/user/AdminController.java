@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,6 +18,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import petTopia.jwt.JwtUtil;      
 import petTopia.model.user.User;
@@ -27,10 +31,12 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Collection;
+import java.util.Date;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/admin")
-@PreAuthorize("hasRole('ADMIN')")
+@CrossOrigin(origins = "http://localhost:5174")  // 只允許後台管理員端口訪問
 public class AdminController {
     
     private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
@@ -43,6 +49,25 @@ public class AdminController {
 
     @Autowired
     private JwtUtil jwtUtil;
+    
+    /**
+     * 初始化超級管理員帳號
+     */
+    @PostMapping("/init-sa")
+    public ResponseEntity<?> initializeSuperAdmin() {
+        try {
+            adminService.initSuperAdmin("sa@pettopia.com", "test123");
+            return ResponseEntity.ok(Map.of(
+                "message", "超級管理員帳號已初始化",
+                "email", "sa@pettopia.com",
+                "password", "test123"
+            ));
+        } catch (Exception e) {
+            logger.error("初始化超級管理員失敗", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "初始化失敗：" + e.getMessage()));
+        }
+    }
     
     /**
      * 管理員登入
@@ -60,36 +85,22 @@ public class AdminController {
         }
         
         try {
-            // 先驗證用戶身份
-            Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(email, password)
-            );
+            Map<String, Object> loginResult = adminService.adminLogin(email, password);
             
-            // 獲取用戶詳情
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            // 設置認證信息
+            UserDetails userDetails = org.springframework.security.core.userdetails.User
+                .withUsername(email)
+                .password("")  // 密碼不需要存儲在 SecurityContext 中
+                .roles("ADMIN")
+                .build();
+                
+            Authentication authentication = new UsernamePasswordAuthenticationToken(
+                userDetails, null, userDetails.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(authentication);
             
-            // 檢查是否為管理員
-            if (!userDetails.getAuthorities().stream()
-                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "無權限訪問管理後台"));
-            }
-            
-            // 生成 JWT
-            String token = jwtUtil.generateToken(email, 
-                Integer.parseInt(userDetails.getUsername()), 
-                "ADMIN");
-            
-            logger.info("管理員登入成功 - ID: {}", userDetails.getUsername());
-            return ResponseEntity.ok(Map.of(
-                "message", "登入成功",
-                "token", token,
-                "adminId", userDetails.getUsername(),
-                "email", email,
-                "role", "ADMIN"
-            ));
+            return ResponseEntity.ok(loginResult);
         } catch (Exception e) {
-            logger.error("管理員登入過程發生異常", e);
+            logger.error("管理員登入失敗", e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(Map.of("error", "登入失敗，請確認帳號密碼"));
         }
@@ -100,15 +111,46 @@ public class AdminController {
      */
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
-        logger.info("處理管理員登出請求");
-        SecurityContextHolder.clearContext();
-        return ResponseEntity.ok(Map.of("message", "登出成功"));
+        try {
+            // 獲取請求信息
+            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+            String ipAddress = request.getRemoteAddr();
+            String userAgent = request.getHeader("User-Agent");
+            
+            // 嘗試獲取當前認證信息
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String email = authentication != null ? authentication.getName() : "未知用戶";
+            
+            logger.info("管理員登出 - 電子郵件: {}, IP: {}, User-Agent: {}", 
+                email, 
+                ipAddress,
+                userAgent);
+            
+            // 清除認證信息
+            SecurityContextHolder.clearContext();
+            
+            return ResponseEntity.ok(Map.of(
+                "message", "登出成功",
+                "email", email,
+                "timestamp", new Date().getTime(),
+                "ipAddress", ipAddress
+            ));
+        } catch (Exception e) {
+            logger.error("管理員登出過程發生異常", e);
+            // 即使發生異常，也確保清除認證信息
+            SecurityContextHolder.clearContext();
+            return ResponseEntity.ok(Map.of(
+                "message", "登出成功",
+                "error", "登出過程中發生異常，但已清除認證信息"
+            ));
+        }
     }
     
     /**
      * 獲取管理後台資料
      */
     @GetMapping("/dashboard")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getDashboardData() {
         logger.info("獲取管理後台資料");
         
@@ -132,39 +174,7 @@ public class AdminController {
                 .body(Map.of("error", "獲取資料失敗：" + e.getMessage()));
         }
     }
-    
-    /**
-     * 切換用戶狀態（啟用/停用）
-     */
-    @PutMapping("/users/{userId}/status")
-    public ResponseEntity<?> toggleUserStatus(
-            @PathVariable Integer userId,
-            @RequestBody Map<String, Boolean> statusUpdate) {
-        
-        Boolean isActive = statusUpdate.get("isActive");
-        if (isActive == null) {
-            return ResponseEntity.badRequest()
-                .body(Map.of("error", "狀態參數不能為空"));
-        }
-        
-        logger.info("切換用戶狀態 - 用戶ID: {}, 狀態: {}", userId, isActive);
-        
-        try {
-            adminService.toggleUserStatus(userId, isActive);
-            
-            logger.info("用戶狀態切換成功 - 用戶ID: {}, 狀態: {}", userId, isActive);
-            return ResponseEntity.ok(Map.of(
-                "message", "用戶狀態已更新",
-                "userId", userId,
-                "isActive", isActive
-            ));
-        } catch (Exception e) {
-            logger.error("用戶狀態切換失敗", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "操作失敗：" + e.getMessage()));
-        }
-    }
-    
+
     /**
      * 獲取所有會員
      */
@@ -229,6 +239,26 @@ public class AdminController {
         } catch (Exception e) {
             logger.error("檢查管理員登入狀態失敗", e);
             return ResponseEntity.ok(Map.of("isLoggedIn", false));
+        }
+    }
+
+    /**
+     * 獲取當前登入管理員資訊
+     */
+    @GetMapping("/current-admin")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> getCurrentAdmin(@AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            Map<String, Object> adminInfo = new HashMap<>();
+            adminInfo.put("email", userDetails.getUsername());
+            adminInfo.put("authorities", userDetails.getAuthorities());
+            adminInfo.put("isAuthenticated", true);
+            
+            return ResponseEntity.ok(adminInfo);
+        } catch (Exception e) {
+            logger.error("獲取當前管理員資訊失敗", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "獲取資訊失敗：" + e.getMessage()));
         }
     }
 } 

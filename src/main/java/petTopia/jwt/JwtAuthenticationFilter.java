@@ -16,6 +16,9 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import petTopia.service.user.AdminService;
+import petTopia.service.user.CustomUserDetailsService;
+
 import java.io.IOException;
 
 /**
@@ -43,11 +46,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUtil jwtUtil;
 
-    /**
-     * 用戶服務，用於加載用戶詳細信息
-     */
     @Autowired
-    private UserDetailsService userDetailsService;
+    private AdminService adminService;
+
+    @Autowired
+    private CustomUserDetailsService customUserDetailsService;
 
     /**
      * 過濾器的核心方法，處理每個請求
@@ -62,6 +65,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         
+        // 檢查是否為登出請求
+        if (request.getRequestURI().equals("/api/admin/logout")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        
         final String authHeader = request.getHeader("Authorization");
         
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -72,9 +81,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             final String jwt = authHeader.substring(7);
             final String email = jwtUtil.extractUsername(jwt);
+            final String role = jwtUtil.extractRole(jwt);
 
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = this.userDetailsService.loadUserByUsername(email);
+                UserDetails userDetails;
+                
+                // 根據角色選擇適當的 UserDetailsService
+                if ("ADMIN".equals(role)) {
+                    userDetails = adminService.loadUserByUsername(email);
+                } else {
+                    userDetails = customUserDetailsService.loadUserByUsername(email);
+                }
                 
                 if (jwtUtil.validateToken(jwt, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(

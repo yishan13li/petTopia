@@ -107,7 +107,10 @@ public class SecurityConfig {
                     "/shop/",
                     "/shop/products",
                     "/shop/productDetail",
-                    "/vendor/**"
+                    "/vendor/**",
+                    "/api/admin/init-sa",  // 允許初始化 SA 帳號
+                    "/api/admin/login",    // 允許管理員登入
+                    "/api/admin/logout"    // 允許登出
                 ).permitAll()
                 
                 // 會員接口 只要新增新的api街口就在這裡添加
@@ -141,7 +144,6 @@ public class SecurityConfig {
                 
                 // 管理員接口 只要新增新的api街口就在這裡添加
                 .requestMatchers(
-                    "/api/admin/**",
                     "/api/admin/dashboard",
                     "/api/admin/users/**",
                     "/api/admin/members",
@@ -224,7 +226,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         // 允許的來源
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:3000"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:5174"));
         // 允許的 HTTP 方法
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         // 允許的請求頭
