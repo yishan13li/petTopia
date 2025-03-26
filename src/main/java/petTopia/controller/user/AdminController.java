@@ -17,16 +17,22 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import petTopia.jwt.JwtUtil;      
 import petTopia.model.user.User;
+import petTopia.model.user.Admin;
 import petTopia.service.user.AdminService;
+import petTopia.repository.user.UserRepository;
+import petTopia.repository.user.AdminRepository;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Collection;
+import java.time.LocalDateTime;
+import java.util.Collections;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -43,6 +49,63 @@ public class AdminController {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    @Autowired
+    private AdminRepository adminRepository;
+    
+    /**
+     * 初始化超級管理員帳號
+     */
+    @PostMapping("/init-sa")
+    public ResponseEntity<?> initSuperAdmin() {
+        logger.info("初始化超級管理員帳號");
+        
+        try {
+            // 檢查是否已存在超級管理員
+            User existingAdmin = userRepository.findByEmailAndUserRole("sa@pettopia.com", User.UserRole.ADMIN);
+            if (existingAdmin != null && existingAdmin.getIsSuperAdmin()) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "超級管理員帳號已存在"));
+            }
+            
+            // 創建超級管理員帳號
+            User superAdmin = new User();
+            superAdmin.setEmail("sa@pettopia.com");
+            superAdmin.setPassword(passwordEncoder.encode("test123"));
+            superAdmin.setUserRole(User.UserRole.ADMIN);
+            superAdmin.setEmailVerified(true);
+            superAdmin.setIsSuperAdmin(true);
+            superAdmin.setAdminLevel(1);
+            superAdmin.setProvider("LOCAL");
+            superAdmin.setLocalEnabled(true);
+            
+            // 創建並關聯 Admin 記錄
+            Admin admin = new Admin();
+            admin.setName("Super Admin");
+            admin.setRole(Admin.AdminRole.SA);
+            admin.setUsers(superAdmin);
+            admin.setRegistrationDate(LocalDateTime.now());
+            
+            // 保存超級管理員帳號和關聯的 Admin 記錄
+            adminService.createAdmin(superAdmin, true);
+            
+            logger.info("超級管理員帳號初始化成功");
+            return ResponseEntity.ok(Map.of(
+                "message", "超級管理員帳號初始化成功",
+                "email", "sa@pettopia.com"
+            ));
+        } catch (Exception e) {
+            logger.error("超級管理員帳號初始化失敗", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "初始化失敗：" + e.getMessage()));
+        }
+    }
     
     /**
      * 管理員登入
@@ -60,33 +123,25 @@ public class AdminController {
         }
         
         try {
-            // 先驗證用戶身份
-            Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(email, password)
-            );
+            // 使用 adminService 進行認證
+            User admin = adminService.adminLogin(email, password);
             
-            // 獲取用戶詳情
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            
-            // 檢查是否為管理員
-            if (!userDetails.getAuthorities().stream()
-                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "無權限訪問管理後台"));
+            if (admin == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "登入失敗，請確認帳號密碼"));
             }
             
             // 生成 JWT
-            String token = jwtUtil.generateToken(email, 
-                Integer.parseInt(userDetails.getUsername()), 
-                "ADMIN");
+            String token = jwtUtil.generateToken(email, admin.getId(), "ADMIN");
             
-            logger.info("管理員登入成功 - ID: {}", userDetails.getUsername());
+            logger.info("管理員登入成功 - ID: {}", admin.getId());
             return ResponseEntity.ok(Map.of(
                 "message", "登入成功",
                 "token", token,
-                "adminId", userDetails.getUsername(),
+                "adminId", admin.getId(),
                 "email", email,
-                "role", "ADMIN"
+                "role", "ADMIN",
+                "isAuthenticated", true
             ));
         } catch (Exception e) {
             logger.error("管理員登入過程發生異常", e);
@@ -229,6 +284,53 @@ public class AdminController {
         } catch (Exception e) {
             logger.error("檢查管理員登入狀態失敗", e);
             return ResponseEntity.ok(Map.of("isLoggedIn", false));
+        }
+    }
+    
+    /**
+     * 獲取當前管理員資訊
+     */
+    @GetMapping("/current-admin")
+    public ResponseEntity<?> getCurrentAdmin() {
+        logger.info("獲取當前管理員資訊");
+        
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "未登入"));
+            }
+            
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String email = userDetails.getUsername();
+            
+            // 獲取管理員資訊
+            User admin = userRepository.findByEmailAndUserRole(email, User.UserRole.ADMIN);
+            if (admin == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "找不到管理員資訊"));
+            }
+            
+            // 獲取關聯的 Admin 記錄
+            Admin adminRecord = adminRepository.findById(admin.getId()).orElse(null);
+            
+            return ResponseEntity.ok(Map.of(
+                "email", admin.getEmail(),
+                "adminId", admin.getId(),
+                "role", "ADMIN",
+                "isAuthenticated", true,
+                "authorities", Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN")),
+                "adminInfo", adminRecord != null ? Map.of(
+                    "name", adminRecord.getName(),
+                    "role", adminRecord.getRole(),
+                    "registrationDate", adminRecord.getRegistrationDate()
+                ) : null
+            ));
+        } catch (Exception e) {
+            logger.error("獲取當前管理員資訊失敗", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "獲取資訊失敗：" + e.getMessage()));
         }
     }
 } 
