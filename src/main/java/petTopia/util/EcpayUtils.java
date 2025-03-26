@@ -86,8 +86,8 @@ public class EcpayUtils {
                          .replaceAll("%2c", ",")   // `,`
                          .replaceAll("%7c", "|");  // `|`
 
-        // 確保替換 `&` 為 `%26`
         encoded = encoded.replace("&", "%26");
+        encoded = encoded.replace("#", "%23");
         return encoded;
     }
 

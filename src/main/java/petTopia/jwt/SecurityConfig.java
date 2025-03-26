@@ -104,13 +104,14 @@ public class SecurityConfig {
                     "/api/public/**",
                     "/api/vendor/all",
                     "/api/vendor/category/show",
-                    "/shop/",
+                    "/shop/**",
                     "/shop/products",
                     "/shop/productDetail",
                     "/api/**",
                     "api/**",
                     "/api/vendor/**",
                     "/api/activity/**"
+                    "/manage/**"
 
                 ).permitAll()
                 

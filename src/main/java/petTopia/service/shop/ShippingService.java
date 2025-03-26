@@ -74,7 +74,7 @@ public class ShippingService {
         shipping.setShippingCategory(shippingCategory);
         shipping.setReceiverName(receiverName);
         shipping.setReceiverPhone(receiverPhone);
-        shipping.setShippingDate(new Date());
+        shipping.setShippingDate(null);
         shipping.setUpdatedTime(new Date());
 
         return shippingRepo.save(shipping);

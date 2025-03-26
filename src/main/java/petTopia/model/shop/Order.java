@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -69,13 +70,13 @@ public class Order {
     @Column(name="note")
     private String note;
 
-    @OneToOne(mappedBy = "order")
+    @OneToOne(mappedBy = "order", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private Shipping shipping;
     
-    @OneToOne(mappedBy = "order")
+    @OneToOne(mappedBy = "order", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private Payment payment;
     
-    @OneToMany(mappedBy =  "order")
+    @OneToMany(mappedBy =  "order", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<OrderDetail> orderDetails;
 
 	public void setOrderStatus(Order order, int i) {

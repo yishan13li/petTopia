@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import petTopia.model.shop.Product;
 
-public interface ProductRepository extends JpaRepository<Product, Integer>{
+public interface ProductRepository extends JpaRepository<Product, Integer>, ProductRepositoryCustom{
 	
 	public List<Product> findByProductDetailId(Integer productDetailId);
 	

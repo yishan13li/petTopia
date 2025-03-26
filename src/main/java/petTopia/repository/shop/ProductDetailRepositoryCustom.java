@@ -14,7 +14,7 @@ public interface  ProductDetailRepositoryCustom{
 	// 根據條件搜尋商品
 	public List<ProductDetail> find(JSONObject obj);
 
-	// 模糊搜尋 (多個關鍵字)
+	// 模糊搜尋 (多個關鍵字) (舊版)
 	public List<ProductDetail> searchProducts(String keywords);
 
 	

@@ -131,16 +131,15 @@ public class PaymentService {
         // 創建 PaymentResponseDto 並設置值
         PaymentResponseDto paymentResponse = new PaymentResponseDto();
         paymentResponse.setMerchantId(merchantId);
-        paymentResponse.setMerchantTradeNo("petTopiaID" + order.getId());
+        paymentResponse.setMerchantTradeNo("petTopiaOrder" + order.getId());
         paymentResponse.setMerchantTradeDate(new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date()));
         paymentResponse.setPaymentType("aio");
         paymentResponse.setTotalAmount(paymentAmount);
         paymentResponse.setTradeDesc("petTopia商品付款");
         paymentResponse.setItemName(itemName);
-        paymentResponse.setReturnURL("https://63ca-59-125-142-166.ngrok-free.app/shop/payment/ecpay/callback");
+        paymentResponse.setReturnURL("https://b73a-2401-e180-8d24-6f01-2870-be6a-ac42-b5d1.ngrok-free.app/shop/payment/ecpay/callback");
         paymentResponse.setOrderResultURL("");
-        paymentResponse.setClientBackURL("https://2619-59-125-142-166.ngrok-free.app/shop/ecpay/success");
-        paymentResponse.setClientBackURL("https://685c-59-125-142-166.ngrok-free.app/shop/ecpay/success");
+        paymentResponse.setClientBackURL("https://39a9-2401-e180-8d24-6f01-2870-be6a-ac42-b5d1.ngrok-free.app/shop/ecpay/success");
 //        paymentResponse.setClientBackURL("https://localhost:5173/shop/orders/" + order.getId());
         paymentResponse.setChoosePayment("ALL");
         paymentResponse.setEncryptType("1");
@@ -168,7 +167,7 @@ public class PaymentService {
         String paymentDateStr = callbackParams.get("PaymentDate");
 
         // 3. 去除前綴，取得訂單 ID
-        String orderIdStr = merchantTradeNo.replace("petTopiaID", "");
+        String orderIdStr = merchantTradeNo.replace("petTopiaOrder", "");
         Integer orderId = Integer.valueOf(orderIdStr);
         BigDecimal paymentAmount = new BigDecimal(tradeAmt);
 

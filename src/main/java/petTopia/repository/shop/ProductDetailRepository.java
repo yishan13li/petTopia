@@ -17,4 +17,6 @@ public interface ProductDetailRepository extends JpaRepository<ProductDetail, In
 	// 模糊搜尋 不分大小寫
 	List<ProductDetail> findByNameContainingIgnoreCase(String keyword);
 
+	ProductDetail findByName(String name);
+	
 }
