@@ -303,39 +303,7 @@ select.form-control {
 	        registrationDateInput.value = formattedDate; // 将格式化后的日期填充回输入框
 	    });
 		
-// 		axios.get('http://localhost:8080/vendor/profile', {
-// 		    params: {
-// 		        email: '1234@gmail.com',
-// 		        password: '1234'
-// 		    }
-// 		})
-// 		.then(response => {
-// 		    console.log(response.data);
-// 		    if (!response.data.vendor) {
-// 		        console.error("商家資料未找到");
-// 		        return;
-// 		    }
-// 		    let vendor = response.data.vendor;
 
-// 		    document.getElementById('vendorLogoImg').src = response.data.vendorLogoImg || 'default.jpg';
-// 		    document.getElementById('userId').value = vendor.vendorId;
-// 		    document.getElementById('vendorName').value = vendor.vendorName;
-// 		    document.getElementById('category').value = vendor.category;
-// 		    document.getElementById('contactEmail').value = vendor.contactEmail;
-// 		    document.getElementById('vendorPhone').value = vendor.vendorPhone;
-// 		    document.getElementById('vendorAddress').value = vendor.vendorAddress;
-// 		    document.getElementById('vendorDescription').value = vendor.vendorDescription;
-// 		    document.getElementById('vendorTaxidNumber').value = vendor.vendorTaxidNumber;
-// 		    document.getElementById('registrationDate').value = vendor.registrationDate;
-// 		    document.getElementById('status').value = vendor.status;
-// 		})
-// 		.catch(error => {
-// 		    console.error('Error fetching vendor profile:', error);
-// 		});
-
-		// 		function confirmDelete() {
-		// 			return confirm("確定要刪除帳號嗎？這個操作無法恢復！");
-		// 		}
 		function previewImage(event) {
 			var reader = new FileReader();
 			reader.onload = function () {
@@ -381,8 +349,7 @@ select.form-control {
 					if (response.data.success) {
 						alert('商家資料更新成功');
 						window.location.reload();
-// 						var modal = new bootstrap.Modal(document.getElementById('updateSuccessModal'));
-// 						modal.show();
+
 					} else {
 						alert('更新失敗');
 					}
@@ -393,50 +360,6 @@ select.form-control {
 
 			console.log("請求的資料:", formData);  // 這裡放在表單提交事件內部
 		});
-
-		// 		document
-		// 				.querySelector("form")
-		// 				.addEventListener(
-		// 						"submit",
-		// 						function(event) {
-		// 							// 取得欄位
-		// 							var email = document.getElementById("contactEmail").value;
-		// 							var phone = document.getElementById("vendorPhone").value;
-
-		// 							// 清除舊的錯誤訊息
-		// 							document.getElementById("emailError").style.display = "none";
-		// 							document.getElementById("phoneError").style.display = "none";
-
-		// 							// 空白檢查
-		// 							if (!email.trim()
-		// 									|| !phone.trim()
-		// 									|| !document
-		// 											.querySelector("input[name='vendorName']").value
-		// 											.trim()
-		// 									|| !document
-		// 											.querySelector("textarea[name='vendorDescription']").value
-		// 											.trim()) {
-		// 								alert("所有欄位都不能為空！");
-		// 								event.preventDefault(); // 阻止表單提交
-		// 								return;
-		// 							}
-
-		// 							// Email 格式驗證
-		// 							var emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-		// 							if (!emailRegex.test(email)) {
-		// 								document.getElementById("emailError").style.display = "inline";
-		// 								event.preventDefault(); // 阻止表單提交
-		// 								return;
-		// 							}
-
-		// 							// 電話號碼格式驗證（台灣格式 09 開頭，8 位數字）
-		// 							var phoneRegex = /^09\d{8}$/;
-		// 							if (!phoneRegex.test(phone)) {
-		// 								document.getElementById("phoneError").style.display = "inline";
-		// 								event.preventDefault(); // 阻止表單提交
-		// 								return;
-		// 							}
-		// 						});
 
 		document
 			.getElementById('imageUpload')
@@ -453,13 +376,6 @@ select.form-control {
 					}
 				});
 
-// 		document.addEventListener("DOMContentLoaded", function () {
-// 		    // 移除原本的 updateSuccess 變數檢查
-// 		    // 直接刪除這段代碼，因為現在不需要它來控制模態框顯示
-// 		    document.getElementById("confirmButton").addEventListener("click", function () {
-// 		    	window.location.href = "/vendor/profile?email="+user.email+'&password='+user.password; // 跳轉到 profile 頁面
-// 		    });
-// 		});
 		console.log("請求的URL:", '/api/vendor/update/' + document.getElementById('userId').value);
 
 

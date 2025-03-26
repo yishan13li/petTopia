@@ -1,15 +1,20 @@
 package petTopia.repository.user;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
 import petTopia.model.user.Member;
-import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface MemberRepository extends JpaRepository<Member, Integer> {
+    
+    Optional<Member> findById(int id);  // 根據 id 查找 Member 資料
+
     // 根据用户ID查找会员
     Optional<Member> findByUserId(Integer userId);
     
@@ -33,3 +38,4 @@ public interface MemberRepository extends JpaRepository<Member, Integer> {
     @Query("SELECT m FROM Member m LEFT JOIN m.user u WHERE u.email = :email")
     Member findByEmail(@Param("email") String email);
 } 
+

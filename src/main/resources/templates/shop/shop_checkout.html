@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org/">
+
+<head>
+  <title>訂單確認</title>
+  <meta charset="utf-8">
+  <th:block th:replace="~{layout/all_head::head}"></th:block>
+
+  <style>
+    .table {
+      table-layout: fixed;
+      width: 100%;
+    }
+
+    td {
+      padding: 10px 15px;
+    }
+	
+  </style>
+</head>
+
+<body>
+  <header th:replace="~{layout/shop_header :: header}"></header>
+
+  <section id="checkout">
+    <div class="container">
+      <div class="row my-5 py-5 justify-content-center">
+        <div class="col-md-12">
+          <!-- 訂單內容 -->
+          <h3 class="mb-4 text-center">訂單確認</h3>
+          <div class="card card-bg">
+            <div class="card-body">
+              <table class="table align-middle text-center" style="table-layout: fixed; width: 100%;">
+                <thead>
+                  <tr class="text-center">
+                    <th style="width: 30%;" class="text-start">已選商品</th>
+                    <th style="width: 20%;" class="text-start">規格</th>
+                    <th style="width: 15%;">單價</th>
+                    <th style="width: 10%;">數量</th>
+                    <th style="width: 15%;">商品總價</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="border-bottom product" th:each="cartItem : ${cartItems}">
+                    <!-- 商品資訊 -->
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <!-- 顯示商品的照片 -->
+                        <img th:src="@{${cartItem.product.productPhoto.photo}}" alt="Product Image"
+                          class="img-thumbnail" style="width: 100px;" id=productPhoto>
+                        <div class="ms-3 text-start">
+                          <h5><a th:href="@{/product/details/{id}(id=${cartItem.product.id})}" class="text-dark"
+                              th:text="${cartItem.product.productDetail.name}" id=productName></a></h5>
+                        </div>
+                      </div>
+                    </td>
+
+                    <!-- 規格 -->
+                    <td class="text-start">
+                      <p class="mb-0" th:text="'顏色: ' + ${cartItem.product.productColor.name}" id=productColor></p>
+                      <p class="mb-0" th:text="'尺寸: ' + ${cartItem.product.productSize.name}" id=productSize></p>
+                    </td> 
+
+					<!-- 單價 -->
+					<td class="px-3">
+					  <span th:if="${cartItem.product.discountPrice != null}" style="text-decoration: line-through;color: #999;"
+					        th:text="'$' + ${#numbers.formatDecimal(cartItem.product.unitPrice, 0, '0')}" id=productPrice>
+					  </span>
+					  <span th:if="${cartItem.product.discountPrice == null}"
+					        th:text="'$' + ${#numbers.formatDecimal(cartItem.product.unitPrice, 0, '0')}" id=productPrice>
+					  </span>
+					  <span th:if="${cartItem.product.discountPrice != null}" style="color: red;"
+					        th:text="'$' + ${#numbers.formatDecimal(cartItem.product.discountPrice, 0, '0')}" id=productPrice>
+					  </span>
+					</td>
+					
+                    <!-- 數量 -->
+                    <td class="text-center px-3" th:text="${cartItem.quantity}" id=quantity></td>
+
+					<!-- 總計 -->
+					<td class="px-3">
+					  <!-- 顯示原價總計（有刪除線） -->
+					  <span th:if="${cartItem.product.discountPrice != null}" 
+					        style="text-decoration: line-through; color: #999;"
+					        th:text="'$' + ${#numbers.formatDecimal(cartItem.product.unitPrice.multiply(cartItem.quantity), 0, '0')}" id=subtotal>
+					  </span>
+					  
+					  <!-- 顯示優惠後的總計（紅字） -->
+					  <span th:if="${cartItem.product.discountPrice != null}" 
+					        style="color: red;"
+					        th:text="'$' + ${#numbers.formatDecimal(cartItem.product.discountPrice.multiply(cartItem.quantity), 0, '0')}" id=subtotal>
+					  </span>                                                                                                        
+					  
+					  <!-- 沒有折扣的時候顯示原價總計 -->
+					  <span th:if="${cartItem.product.discountPrice == null}"
+					        th:text="'$' + ${#numbers.formatDecimal(cartItem.product.unitPrice.multiply(cartItem.quantity), 0, '0')}" id=subtotal>
+					  </span>
+					</td>
+					
+                  </tr>
+
+
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+		  <div class="container">
+		    <div class="row">
+          <!-- 收件資訊同會員資訊 -->
+		  <div class="col-md-7">
+		  <h3 class="mb-3 text-center">收件資訊</h3>
+          <div class="mb-3 d-flex align-items-center">
+            <input type="checkbox" class="form-check-input" id="sameMember" onclick="fillWithMemberInfo()">
+            <label class="form-check-label ms-2" for="sameMember">同會員資訊</label>
+          </div>
+
+          <!-- 收件人姓名 -->
+          <div class="mb-3 d-flex align-items-center">
+            <label for="name" class="form-label me-3" style="min-width: 120px;">收件人姓名</label>
+            <input type="text" class="form-control" id="name" placeholder="請輸入收件人姓名" required>
+          </div>
+
+          <!-- 收件地址 -->
+          <div class="mb-2 d-flex align-items-center">
+            <label for="city" class="form-label me-3" style="min-width: 120px;">收件地址</label>
+            <select class="form-control" id="city" required style="height: 40px; width: 120px;">
+              <option value="" disabled selected>請選擇縣市</option>
+              <!-- 從會員資料填充縣市 -->
+              <option id="cityOption"></option>
+            </select>
+            <input type="text" class="form-control ms-3" id="street" placeholder="請輸入收件地址" required
+              style="height: 40px; flex-grow: 1;">
+          </div>
+
+          <!-- 同上次訂單收件地址 -->
+          <div class="mb-3 d-flex align-items-center" style="margin-left: 140px;">
+            <input type="checkbox" class="form-check-input" id="sameAddress" onclick="fillWithLastOrderAddress()">
+            <label class="form-check-label ms-2" for="sameAddress">最近一次訂單收件地址</label>
+          </div>
+
+          <!-- 收件人電話 -->
+          <div class="mb-3 d-flex align-items-center">
+            <label for="phone" class="form-label me-3" style="min-width: 120px;">收件人電話</label>
+            <input type="tel" class="form-control" id="phone" placeholder="請輸入收件人電話" required>
+          </div>
+
+          <div id="memberData" th:data-name="${member.name}" th:data-phone="${member.phone}"
+            th:data-address="${member.address}">
+          </div>
+
+
+          <!-- 傳遞最近一次訂單地址資料 -->
+          <div id="lastAddressData" th:data-city="${lastAddress.city}" th:data-street="${lastAddress.street}">
+          </div>
+
+          <!-- 運送方式 -->
+          <div class="mb-3 d-flex">
+            <label class="form-label me-3" style="min-width: 120px;">配送方式</label>
+			<div class="d-flex flex-column">
+            <!-- 使用 th:each 來遍歷 shippingCategories -->
+            <div th:each="shipping : ${shippingCategories}" class="form-check ">
+              <input class="form-check-input" type="radio" name="shipping" th:value="${shipping.id}"
+                th:id="'shipping_' + ${shipping.id}" th:data-shipping-cost="${shipping.shippingCost}">
+              <label class="form-check-label ms-2" th:for="'shipping_' + ${shipping.id}">
+                <span
+                  th:text="${shipping.name} + ' (運費: ' + ${#numbers.formatDecimal(shipping.shippingCost, 0, '0')} + ' 元), 預計送達: ' + ${shipping.shippingDay} + ' 天'"></span>
+              </label>
+			  </div>
+            </div>
+          </div>
+		  </div>
+
+		  <div class="col-md-4 offset-md-1">
+          <!--		   優惠券 -->
+          <div class="mb-5 mt-4 d-flex justify-content-center">
+            <div class="w-100 text-center">
+              <h3 for="coupon" class="form-label mb-4">使用優惠券</h3>
+              <button id="couponButton" type="button" class="btn w-100 d-flex align-items-center justify-content-center"
+                style="height:50px" data-bs-toggle="modal" data-bs-target="#couponModal">
+                選擇優惠券
+              </button>
+            </div>
+
+            <!--		       優惠券選擇模態視窗 -->
+            <div class="modal fade" id="couponModal" tabindex="-1" aria-labelledby="couponModalLabel"
+              aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="couponModalLabel">選擇優惠券</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="list-group">
+						<p class="fw-bold" style="margin-bottom: 0;">可用優惠券</p>
+						<hr style="margin-top: 5px; margin-bottom: 5px;">
+						
+						<!-- 檢查是否有可用優惠券 -->
+						<th:block th:if="${#lists.isEmpty(availableCoupons)}">
+						    <p class="text-muted">您目前沒有可用優惠券</p>
+						</th:block>
+						
+                      <!--使用 th:each 來遍歷 coupons 列表 -->
+                      <button type="button" class="list-group-item list-group-item-action coupon-btn text-dark" style="border: 1px solid rgb(192, 192, 192);  margin-bottom: 3px; border-radius: 5px;"
+                        th:each="coupon : ${availableCoupons}" th:data-coupon="${coupon.name} "  th:data-coupon-id="${coupon.id}"
+						
+						th:data-discount-type="${coupon.discountType ? 0 : 1}" 
+						th:data-discount-value="${coupon.discountValue}" 
+						
+						th:classappend="${total < coupon.minOrderValue} ? 'disabled' : ''">
+						<div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+							<span th:text="${coupon.name}"></span>
+							   
+							   <!-- 根據 discountType 顯示不同的折扣格式 -->
+							   <span th:if="${coupon.discountType == false}" 
+							         th:text="'－$' + ${#numbers.formatDecimal(coupon.discountValue, 0, '0')}"></span>
+							   
+							   <span th:if="${coupon.discountType == true}" 
+							         th:text="'－' + ${#numbers.formatDecimal(coupon.discountValue * 100, 0, '0')} + '%'"></span>
+</div>
+
+						</button>
+                    </div>
+					
+					<!-- 顯示未滿額的優惠券 -->
+					    <div class="list-group mt-3">
+							<p class="fw-bold" style="margin-bottom: 0;">未滿額優惠券</p>
+							<hr style="margin-top: 5px; margin-bottom: 5px;">
+
+					        <!-- 使用 th:each 遍歷未滿額的優惠券列表 -->
+					        <button type="button" class="list-group-item list-group-item-action coupon-btn disabled text-body-secondary " style=" margin-bottom: 3px; border-radius: 5px;"
+					                th:each="coupon : ${notMeetCoupons}" 
+					                th:data-coupon="${coupon.name}" th:data-coupon-id="${coupon.id}">
+									<!-- 讓兩個 <span> 保持在同一行 -->
+									<div style="display: flex; justify-content: space-between; align-items: center; width: 100%;color: rgb(158, 158, 158);">
+									    <span th:text="${coupon.name}"></span>
+									    <span th:text="'需滿額 $' + ${#numbers.formatDecimal(coupon.minOrderValue, 0, '0')}"></span>
+									</div>
+							</button>
+					    </div>
+					
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn coupon-close-btn" data-bs-dismiss="modal">
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+		  <!-- 付款方式 -->
+		  <div class="card mt-5 mb-4">
+		    <h3 class="mb-4 text-center">付款方式</h3>
+		    <div class="d-flex justify-content-center gap-5 align-items-center">
+		      <div th:each="paymentCategory : ${paymentCategories}" class="form-check">
+		        <input type="radio" class="form-check-input" th:id="${paymentCategory.id}" th:name="payment" th:value="${paymentCategory.id}">
+		        <label class="form-check-label" th:for="${paymentCategory.id}" th:text="${paymentCategory.name}"></label>
+		      </div>
+		    </div>
+		  </div>
+		      </div>
+		    </div>
+		  </div>
+
+		  <!-- 訂單總計區域 -->
+		  <div class="card">
+		    <div class="card-body">
+		      <h3 class="mb-4 text-center">訂單總金額</h3>
+		      <div class="d-flex justify-content-between">
+		        <p>商品總金額</p>
+				<p class="product-total" id="productTotal" th:text="'$' + ${#numbers.formatDecimal(total, 0, '0')}"></p>
+
+		      </div>
+		      <div class="d-flex justify-content-between">
+		        <p>運費</p>
+		        <p class="shipping-cost" id=ShippingCost>$0</p> <!-- 預設運費，會由 JS 動態更新 -->
+		      </div>
+		      <div class="d-flex justify-content-between">
+		        <p>優惠折扣</p>
+		        <p class="discount">-$0</p> <!-- 預設優惠折扣，會由 JS 動態更新 -->
+		      </div>
+		      <hr>
+		      <div class="d-flex justify-content-between">
+		        <h5>結帳總金額</h5>
+		        <h5 class="final-total" id=finalTotal>$0</h5> <!-- 計算出來的結帳總金額，會由 JS 動態更新 -->
+		      </div>
+		    </div>
+		  </div>
+
+          <div class="d-flex justify-content-center mt-4">
+            <button type="submit" class="btn"
+              style=" width: 50%; height: 50px; font-size: 18px; transition: background-color 0.3s;">
+              下訂單
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script th:src="@{/user_static/js/jquery-1.11.0.min.js}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe"
+    crossorigin="anonymous"></script>
+  <script th:src="@{/user_static/js/plugins.js}"></script>
+  <script th:src="@{/user_static/js/script.js}"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script th:src="@{/user_static/js/city.js}"></script>
+  <script th:src="@{/user_static/js/coupon.js}"></script>
+
+  <script>
+    // 填充會員資訊到收件欄位
+    function fillWithMemberInfo() {
+      const memberName = document.getElementById('memberData').getAttribute('data-name');
+      const memberPhone = document.getElementById('memberData').getAttribute('data-phone');
+      const memberAddress = document.getElementById('memberData').getAttribute('data-address');
+
+      let memberCity = '';
+      let memberStreet = memberAddress;
+
+      const cityKeyword = ['縣', '市', '島'];
+      let cityIndex = -1;
+
+      for (let keyword of cityKeyword) {
+        cityIndex = memberAddress.indexOf(keyword);
+        if (cityIndex !== -1) break;
+      }
+
+      if (cityIndex !== -1) {
+        memberCity = memberAddress.substring(0, cityIndex + 1);
+        memberStreet = memberAddress.substring(cityIndex + 1).trim();
+      }
+
+      document.getElementById("name").value = memberName;
+      document.getElementById("phone").value = memberPhone;
+      document.getElementById("city").value = memberCity;
+      document.getElementById("street").value = memberStreet;
+
+    }
+
+    // 填充最近一次訂單地址
+    function fillWithLastOrderAddress() {
+      const lastAddressData = document.getElementById('lastAddressData');
+      const lastCity = lastAddressData.getAttribute('data-city');
+      const lastStreet = lastAddressData.getAttribute('data-street');
+
+      if (document.getElementById("sameAddress").checked) {
+        document.getElementById("city").value = lastCity;
+        document.getElementById("street").value = lastStreet;
+      } else {
+
+      }
+
+    }
+
+    // 監控欄位是否更動，若有變更則取消勾選框
+    function monitorChanges() {
+      const nameField = document.getElementById("name");
+      const phoneField = document.getElementById("phone");
+      const cityField = document.getElementById("city");
+      const addressField = document.getElementById("street");
+      const sameMemberCheckBox = document.getElementById("sameMember");
+      const sameAddressCheckBox = document.getElementById("sameAddress");
+
+      // 檢查是否有變動，若有變動則取消 "同會員資訊" 和 "同收件地址" 勾選框
+      nameField.addEventListener('input', () => {
+        sameMemberCheckBox.checked = false;
+        document.getElementById("sameMember").checked = false;  // 取消 "同會員資訊" 勾選框
+      });
+      phoneField.addEventListener('input', () => {
+        sameMemberCheckBox.checked = false;
+        document.getElementById("sameMember").checked = false;  // 取消 "同會員資訊" 勾選框
+      });
+      cityField.addEventListener('input', () => {
+        sameMemberCheckBox.checked = false; // 取消 "同會員資訊" 勾選框
+        sameAddressCheckBox.checked = false; // 取消 "同收件地址" 勾選框
+      });
+      addressField.addEventListener('input', () => {
+        sameMemberCheckBox.checked = false; // 取消 "同會員資訊" 勾選框
+        sameAddressCheckBox.checked = false; // 取消 "同收件地址" 勾選框
+      });
+
+  	// 監控 "同會員資訊" 勾選框
+  	sameMemberCheckBox.addEventListener('change', () => {
+  	  if (!sameMemberCheckBox.checked) {
+  	    // 當取消選取 "同會員資訊" 時
+  	    if (document.getElementById("sameAddress").checked) {
+  	      // 如果 "同收件地址" 被勾選，則保持地址為訂單地址
+  	      fillWithLastOrderAddress(); // 呼叫函式來填充最近的訂單地址
+  	    } else {
+  	      // 如果 "同收件地址" 沒有勾選，則清空地址欄位
+  	      document.getElementById("city").value = "";
+  	      document.getElementById("street").value = "";
+  	    }
+  	} else {
+  	   // 當 "同會員資訊" 被勾選時，檢查會員地址和訂單地址是否相同
+  	   const memberCity = document.getElementById("city").value;
+  	   const memberStreet = document.getElementById("street").value;
+  	   const lastCity = document.getElementById('lastAddressData').getAttribute('data-city');
+  	   const lastStreet = document.getElementById('lastAddressData').getAttribute('data-street');
+  	   
+  	   // 如果會員地址和最近的訂單地址不同，取消 "同收件地址" 勾選框
+  	   if (memberCity !== lastCity || memberStreet !== lastStreet) {
+  	     document.getElementById("sameAddress").checked = false;
+  	   }
+  	 }
+  	});
+
+
+  	// 監控 "同收件地址" 勾選框
+  	sameAddressCheckBox.addEventListener('change', () => {
+  	  if (!sameAddressCheckBox.checked) {
+  	    // 當取消選取 "同收件地址" 時
+  	    if (document.getElementById("sameMember").checked) {
+  	      // 如果 "同會員資訊" 被勾選，則填充會員資訊到地址欄位
+  	      const memberName = document.getElementById('memberData').getAttribute('data-name');
+  	      const memberPhone = document.getElementById('memberData').getAttribute('data-phone');
+  	      const memberAddress = document.getElementById('memberData').getAttribute('data-address');
+
+  	      let memberCity = '';
+  	      let memberStreet = memberAddress;
+
+  	      const cityKeyword = ['縣', '市', '島'];
+  	      let cityIndex = -1;
+
+  	      for (let keyword of cityKeyword) {
+  	        cityIndex = memberAddress.indexOf(keyword);
+  	        if (cityIndex !== -1) break;
+  	      }
+
+  	      if (cityIndex !== -1) {
+  	        memberCity = memberAddress.substring(0, cityIndex + 1);
+  	        memberStreet = memberAddress.substring(cityIndex + 1).trim();
+  	      }
+
+  	      // 填充會員資訊到地址欄位
+  	      document.getElementById("city").value = memberCity;
+  	      document.getElementById("street").value = memberStreet;
+  	    } else {
+  	      // 如果 "同會員資訊" 沒有勾選，則清空地址欄位
+  	      document.getElementById("city").value = "";
+  	      document.getElementById("street").value = "";
+  	    }
+  	  }
+  	});
+
+    }
+
+    // 初始化監控
+    window.onload = function() {
+      monitorChanges();
+    };
+
+  </script>
+  
+</body>
+
+</html>

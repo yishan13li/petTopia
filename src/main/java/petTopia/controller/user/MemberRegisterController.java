@@ -1,31 +1,29 @@
 package petTopia.controller.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 
-import petTopia.model.user.Users;
+import petTopia.model.user.User;       
 import petTopia.service.user.EmailService;
 import petTopia.service.user.RegistrationService;
-import petTopia.service.user.MemberLoginService;
-import petTopia.model.user.Member;
 
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import java.time.LocalDateTime;
-import java.net.URLEncoder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-@Controller
+
+@RestController
+@RequestMapping("/api/auth")
 public class MemberRegisterController {
-
+    
     private static final Logger logger = LoggerFactory.getLogger(MemberRegisterController.class);
 
     @Autowired
@@ -34,107 +32,83 @@ public class MemberRegisterController {
     @Autowired
     private EmailService emailService;
 
-    @Autowired
-    private MemberLoginService memberService;
+
 
     private Map<String, Map<String, Object>> verificationCodes = new HashMap<>();
 
-    @GetMapping("/register")
-    public String showRegisterForm(Model model) {
-        model.addAttribute("errors", new HashMap<String, String>());
-        return "register";
-    }
-
     @PostMapping("/register")
-    public String processRegister(
-            @RequestParam(required = false) String email,
-            @RequestParam(required = false) String password,
-            Model model) {
-
-        Map<String, String> errors = new HashMap<>();
-        model.addAttribute("errors", errors);
+    public ResponseEntity<?> register(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String password = request.get("password");
+        String confirmPassword = request.get("confirmPassword");
+        
+        logger.info("處理會員註冊請求 - 電子郵件: {}", email);
+        
+        // 基本驗證
+        if (email == null || email.trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "電子郵件不能為空"));
+        }
+        
+        if (password == null || password.trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "密碼不能為空"));
+        }
+        
+        if (!password.equals(confirmPassword)) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "密碼與確認密碼不符"));
+        }
 
         try {
-            // 检查是否已存在相同email的会员账号
-            Users existingUser = memberService.findByEmail(email);
-            if (existingUser != null && existingUser.getUserRole() == Users.UserRole.MEMBER) {
-                errors.put("registerFailed", "此 email 已註冊為會員");
-                return "register";
+            // 檢查是否已存在相同email的會員帳號
+            User existingUser = registrationService.findByEmail(email);
+            if (existingUser != null) {
+                logger.warn("註冊失敗 - 電子郵件已存在: {}", email);
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", "此 email 已註冊為會員"));
             }
 
-            // 1. 創建用戶基本信息
-            Users newUser = new Users();
+            // 創建用戶基本信息
+            User newUser = new User();
             newUser.setEmail(email);
             newUser.setPassword(password);
-            newUser.setUserRole(Users.UserRole.MEMBER);
+            newUser.setUserRole(User.UserRole.MEMBER);
+            newUser.setProvider(User.Provider.LOCAL);
 
-            // 2. 創建會員信息
-            Member newMember = new Member();
-            newMember.setUpdatedDate(LocalDateTime.now());
-
-            // 3. 使用 MemberLoginService 處理註冊
-            Map<String, Object> result = memberService.registerMember(newUser, newMember);
+            // 使用註冊服務處理註冊
+            Map<String, Object> result = registrationService.register(newUser);
 
             if ((Boolean) result.get("success")) {
-                return "redirect:/login?registered=true&message=" + URLEncoder.encode("註冊成功，請登入", "UTF-8");
+                logger.info("會員註冊成功 - 電子郵件: {}", email);
+                return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(Map.of(
+                        "message", "註冊成功，請查收驗證郵件後登入",
+                        "email", email
+                    ));
             } else {
-                errors.put("registerFailed", (String) result.get("message"));
-                return "register";
+                logger.warn("註冊失敗 - {}", result.get("message"));
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", result.get("message")));
             }
 
         } catch (Exception e) {
-            errors.put("registerFailed", "註冊失敗：" + e.getMessage());
-            return "register";
+            logger.error("註冊過程發生異常 - 電子郵件: {}", email, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "註冊失敗：" + e.getMessage()));
         }
     }
 
-    @PostMapping("/api/register")
-    @ResponseBody
-    public Map<String, Object> apiRegister(@RequestBody Map<String, String> request) {
-        Map<String, Object> response = new HashMap<>();
-
-        try {
-            // 基本驗證
-            if (!request.get("password").equals(request.get("confirmPassword"))) {
-                response.put("success", false);
-                response.put("message", "密碼與確認密碼不符");
-                return response;
-            }
-
-            Users newUser = new Users();
-            newUser.setEmail(request.get("email"));
-            newUser.setPassword(request.get("password"));
-            newUser.setUserRole(Users.UserRole.MEMBER);
-
-            registrationService.register(newUser);
-
-            response.put("success", true);
-            response.put("message", "註冊成功");
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("message", e.getMessage());
-        }
-
-        return response;
-    }
-
-    @PostMapping("/api/send-verification")
-    @ResponseBody
-    public Map<String, Object> apiSendVerificationCode(@RequestBody Map<String, String> request) {
-        return sendVerificationCode(request.get("email"));
-    }
-
-    @PostMapping("/api/verify-code")
-    @ResponseBody
-    public Map<String, Object> apiVerifyCode(@RequestBody Map<String, String> request) {
-        return verifyCode(request.get("email"), request.get("code"));
-    }
-
-    // 發送驗證碼
     @PostMapping("/send-verification")
-    @ResponseBody
-    public Map<String, Object> sendVerificationCode(@RequestParam String email) {
-        Map<String, Object> response = new HashMap<>();
+    public ResponseEntity<?> sendVerificationCode(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        
+        if (email == null || email.trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "電子郵件不能為空"));
+        }
+        
+        logger.info("發送驗證碼 - 電子郵件: {}", email);
 
         try {
             // 生成6位數驗證碼
@@ -149,68 +123,90 @@ public class MemberRegisterController {
             // 發送驗證碼到郵箱
             emailService.sendVerificationCode(email, code);
 
-            response.put("success", true);
-            response.put("message", "驗證碼已發送");
+            logger.info("驗證碼發送成功 - 電子郵件: {}", email);
+            return ResponseEntity.ok(Map.of(
+                "message", "驗證碼已發送",
+                "email", email
+            ));
         } catch (Exception e) {
-            response.put("success", false);
-            response.put("message", "驗證碼發送失敗");
+            logger.error("驗證碼發送失敗 - 電子郵件: {}", email, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "驗證碼發送失敗：" + e.getMessage()));
         }
-
-        return response;
     }
 
-    // 驗證驗證碼
     @PostMapping("/verify-code")
-    @ResponseBody
-    public Map<String, Object> verifyCode(
-            @RequestParam String email,
-            @RequestParam String code) {
-        Map<String, Object> response = new HashMap<>();
+    public ResponseEntity<?> verifyCode(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String code = request.get("code");
         
+        if (email == null || code == null) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "電子郵件和驗證碼不能為空"));
+        }
+        
+        logger.info("驗證驗證碼 - 電子郵件: {}", email);
+
+        // 第一步：檢查內存中是否有驗證碼
         Map<String, Object> codeData = verificationCodes.get(email);
-        if (codeData == null) {
-            response.put("success", false);
-            response.put("message", "驗證碼已過期");
-            return response;
-        }
-        
-        String storedCode = (String) codeData.get("code");
-        long timestamp = (long) codeData.get("timestamp");
-        
-        // 檢查驗證碼是否過期（5分鐘）
-        if (System.currentTimeMillis() - timestamp > 5 * 60 * 1000) {
-            verificationCodes.remove(email);
-            response.put("success", false);
-            response.put("message", "驗證碼已過期");
-            return response;
-        }
-        
-        if (!code.equals(storedCode)) {
-            response.put("success", false);
-            response.put("message", "驗證碼錯誤");
-            return response;
+        if (codeData != null) {
+            String storedCode = (String) codeData.get("code");
+            long timestamp = (long) codeData.get("timestamp");
+
+            // 檢查驗證碼是否過期（5分鐘）
+            if (System.currentTimeMillis() - timestamp > 5 * 60 * 1000) {
+                verificationCodes.remove(email);
+                logger.warn("驗證失敗 - 內存中驗證碼已過期 - 電子郵件: {}", email);
+                // 不立即返回錯誤，繼續檢查數據庫中的驗證碼
+            } else if (code.equals(storedCode)) {
+                // 如果內存中的驗證碼匹配，則嘗試同時更新數據庫中的驗證狀態
+                try {
+                    // 嘗試在數據庫中查找用戶並更新驗證狀態
+                    User user = registrationService.findByEmail(email);
+                    if (user != null) {
+                        // 更新數據庫中的驗證狀態
+                        user.setEmailVerified(true);
+                        registrationService.updateUser(user);
+                        logger.info("驗證成功(內存驗證碼) - 已更新數據庫狀態 - 電子郵件: {}", email);
+                    }
+                } catch (Exception e) {
+                    logger.warn("內存驗證成功但更新數據庫失敗 - 電子郵件: {}", email, e);
+                    // 即使數據庫更新失敗，仍然可以繼續，因為內存驗證已成功
+                }
+                
+                // 清除內存中的驗證碼
+                verificationCodes.remove(email);
+                
+                logger.info("驗證成功(內存驗證碼) - 電子郵件: {}", email);
+                return ResponseEntity.ok(Map.of(
+                    "message", "驗證成功",
+                    "email", email,
+                    "verified", true
+                ));
+            }
         }
 
+        // 第二步：如果內存中沒有驗證碼或驗證失敗，則檢查數據庫
         try {
-            // 驗證成功，更新用戶的郵箱驗證狀態
-            Users user = memberService.findByEmail(email);
-            if (user != null && user.getUserRole() == Users.UserRole.MEMBER) {
-                user.setEmailVerified(true);
-                memberService.updateUser(user);
-                verificationCodes.remove(email); // 清除已使用的驗證碼
-                
-                response.put("success", true);
-                response.put("message", "驗證成功");
+            logger.info("嘗試從數據庫驗證 - 電子郵件: {}, 驗證碼: {}", email, code);
+            boolean verified = registrationService.verifyEmail(code);
+            
+            if (verified) {
+                logger.info("驗證成功(數據庫驗證碼) - 電子郵件: {}", email);
+                return ResponseEntity.ok(Map.of(
+                    "message", "驗證成功",
+                    "email", email,
+                    "verified", true
+                ));
             } else {
-                response.put("success", false);
-                response.put("message", "找不到對應的會員帳號");
+                logger.warn("驗證失敗(數據庫驗證碼) - 電子郵件: {}", email);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "驗證碼錯誤或已過期"));
             }
         } catch (Exception e) {
-            logger.error("更新郵箱驗證狀態失敗", e);
-            response.put("success", false);
-            response.put("message", "驗證失敗：" + e.getMessage());
+            logger.error("驗證過程發生數據庫錯誤 - 電子郵件: {}", email, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "驗證過程發生錯誤: " + e.getMessage()));
         }
-        
-        return response;
     }
 }

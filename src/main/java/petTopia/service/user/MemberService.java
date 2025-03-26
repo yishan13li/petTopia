@@ -4,11 +4,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Optional;
 import petTopia.model.user.Member;
-import petTopia.model.user.Users;
+import petTopia.model.user.User;
 import petTopia.repository.user.MemberRepository;
-import petTopia.repository.user.UsersRepository;
+import petTopia.repository.user.UserRepository;
 
 @Service
 @Transactional
@@ -17,7 +18,7 @@ public class MemberService {
     private MemberRepository memberRepository;
 
     @Autowired
-    private UsersRepository usersRepository;
+    private UserRepository usersRepository;
 
     @Transactional
     public Member createOrUpdateMember(Member member) {
@@ -25,13 +26,14 @@ public class MemberService {
             validateMemberInput(member);
     
             // 確保用戶已存在於 `users` 表
-            Users user = usersRepository.findById(member.getId())
+            User user = usersRepository.findById(member.getId())
                 .orElseThrow(() -> new RuntimeException("用戶不存在"));
             member.setUser(user);  // 關聯 `Users`
     
             // 查詢 `member` 是否已存在
             Optional<Member> existingMemberOpt = memberRepository.findById(member.getId());
     
+            Member savedMember;
             if (existingMemberOpt.isPresent()) {
                 // 更新已存在的 `Member`
                 Member existingMember = existingMemberOpt.get();
@@ -47,13 +49,15 @@ public class MemberService {
                     existingMember.setProfilePhoto(member.getProfilePhoto());
                 }
     
-                return memberRepository.save(existingMember);
+                savedMember = memberRepository.save(existingMember);
             } else {
-                // **如果 `member` 不存在，則新增**
+                // 如果 `member` 不存在，則新增
                 member.setStatus(false);
                 member.setUpdatedDate(LocalDateTime.now());
-                return memberRepository.save(member);
+                savedMember = memberRepository.save(member);
             }
+            
+            return savedMember;
         } catch (Exception e) {
             e.printStackTrace();  // 添加錯誤日誌
             throw new RuntimeException("保存會員資料失敗: " + e.getMessage());
@@ -77,11 +81,14 @@ public class MemberService {
         return memberRepository.save(member);
     }
 
+    @Transactional
     public void updateProfilePhoto(Integer memberId, byte[] photoData) {
         Member member = getMemberById(memberId);
-        member.setProfilePhoto(photoData);
-        member.setUpdatedDate(LocalDateTime.now());
-        memberRepository.save(member);
+        if (member != null) {
+            member.setProfilePhoto(photoData);
+            member.setUpdatedDate(LocalDateTime.now());
+            memberRepository.save(member);
+        }
     }
 
     public void deleteMember(Integer id) {
@@ -98,10 +105,6 @@ public class MemberService {
         if (!member.getId().equals(member.getUser().getId())) {
             throw new IllegalArgumentException("用戶ID不匹配");
         }
-        
-        if (member.getName() == null || member.getName().trim().isEmpty()) {
-            throw new IllegalArgumentException("姓名不能為空");
-        }
     }
 
     public boolean verifyMember(Integer userId) {
@@ -113,4 +116,9 @@ public class MemberService {
         }
         return false;
     }
+
+    public Optional<Member> findById(int userId) {
+        return memberRepository.findById(userId);  // 根據 userId 查找 Member 資料
+    }
+
 } 

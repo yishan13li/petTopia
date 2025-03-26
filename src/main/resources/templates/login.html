@@ -1,431 +1,270 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org/">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>會員登入 - Waggy</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@300;400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" type="text/css" href="/user_static/css/vendor.css">
-  <link rel="stylesheet" type="text/css" href="/user_static/style.css">
-
-  <!-- 選項 1：使用最新的 Font Awesome CDN -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-  <!-- 或者選項 2：使用 Font Awesome 5 CDN -->
-  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
-  <style>
-    body {
-      font-family: 'Comic Neue', cursive;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      background: url('/user_static/images/background-img.png') no-repeat center center/cover;
-    }
-
-    /* Header Styles */
-    header {
-      background-color: #ffffff;
-      padding: 1rem 0;
-      text-align: center;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    header h1 {
-      font-size: 24px;
-      font-weight: bold;
-      margin: 0;
-    }
-
-    .login-container {
-      width: 25%;
-      background: rgba(255, 255, 255, 0.95);
-      padding: 2rem;
-      border-radius: 10px;
-      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-      margin: 2rem auto;
-      flex-grow: 1;
-      margin-left: 65%;
-      margin-right: 0;
-    }
-
-    .social-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      background-color: white;
-      font-weight: 600;
-      margin-bottom: 15px;
-      text-decoration: none;
-      color: #333;
-      transition: all 0.3s ease;
-    }
-
-    .social-btn:hover {
-      background-color: #f8f9fa;
-      border-color: #ccc;
-      text-decoration: none;
-      color: #333;
-    }
-
-    .social-btn img {
-      width: 24px;
-      height: 24px;
-      margin-right: 12px;
-      object-fit: contain;
-    }
-
-    /* 调整登录按钮的样式 */
-    .btn-primary.btn-block {
-      padding: 12px;
-      font-weight: 600;
-      font-size: 16px;
-    }
-
-    .divider {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      position: relative;
-    }
-
-    .divider::before,
-    .divider::after {
-      content: "";
-      flex-grow: 1;
-      height: 1px;
-      background-color: #ccc;
-    }
-
-    .divider span {
-      color: #ccc;
-      font-size: 0.75rem;
-      padding: 0 16px;
-      text-transform: uppercase;
-      font-weight: bold;
-      white-space: nowrap;
-      background: white;
-      z-index: 1;
-    }
-
-    /* Footer Styles */
-    footer {
-      background-color: #ffffff;
-      padding: 1rem 0;
-      text-align: center;
-      box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    footer p {
-      font-size: 14px;
-      margin: 0;
-    }
-
-    footer .social-links {
-      margin-top: 20px;
-    }
-
-    footer .search-bar {
-      margin-top: 20px;
-    }
-  </style>
+  <title>PetTopia-登入</title>
+  <meta charset="utf-8">
+  <th:block th:replace="~{layout/all_head::head}"></th:block>
 </head>
 
 <body>
-  <!-- Header Section -->
+
+  <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+    <defs>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="link" viewBox="0 0 24 24">
+        <path fill="currentColor"
+          d="M12 19a1 1 0 1 0-1-1a1 1 0 0 0 1 1Zm5 0a1 1 0 1 0-1-1a1 1 0 0 0 1 1Zm0-4a1 1 0 1 0-1-1a1 1 0 0 0 1 1Zm-5 0a1 1 0 1 0-1-1a1 1 0 0 0 1 1Zm7-12h-1V2a1 1 0 0 0-2 0v1H8V2a1 1 0 0 0-2 0v1H5a3 3 0 0 0-3 3v14a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3Zm1 17a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9h16Zm0-11H4V6a1 1 0 0 1 1-1h1v1a1 1 0 0 0 2 0V5h8v1a1 1 0 0 0 2 0V5h1a1 1 0 0 1 1 1ZM7 15a1 1 0 1 0-1-1a1 1 0 0 0 1 1Zm0 4a1 1 0 1 0-1-1a1 1 0 0 0 1 1Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="arrow-right" viewBox="0 0 24 24">
+        <path fill="currentColor"
+          d="M17.92 11.62a1 1 0 0 0-.21-.33l-5-5a1 1 0 0 0-1.42 1.42l3.3 3.29H7a1 1 0 0 0 0 2h7.59l-3.3 3.29a1 1 0 0 0 0 1.42a1 1 0 0 0 1.42 0l5-5a1 1 0 0 0 .21-.33a1 1 0 0 0 0-.76Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="category" viewBox="0 0 24 24">
+        <path fill="currentColor"
+          d="M19 5.5h-6.28l-.32-1a3 3 0 0 0-2.84-2H5a3 3 0 0 0-3 3v13a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-10a3 3 0 0 0-3-3Zm1 13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-13a1 1 0 0 1 1-1h4.56a1 1 0 0 1 .95.68l.54 1.64a1 1 0 0 0 .95.68h7a1 1 0 0 1 1 1Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="calendar" viewBox="0 0 24 24">
+        <path fill="currentColor"
+          d="M19 4h-2V3a1 1 0 0 0-2 0v1H9V3a1 1 0 0 0-2 0v1H5a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3Zm1 15a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-7h16Zm0-9H4V7a1 1 0 0 1 1-1h2v1a1 1 0 0 0 2 0V6h6v1a1 1 0 0 0 2 0V6h2a1 1 0 0 1 1 1Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="heart" viewBox="0 0 24 24">
+        <path fill="currentColor"
+          d="M20.16 4.61A6.27 6.27 0 0 0 12 4a6.27 6.27 0 0 0-8.16 9.48l7.45 7.45a1 1 0 0 0 1.42 0l7.45-7.45a6.27 6.27 0 0 0 0-8.87Zm-1.41 7.46L12 18.81l-6.75-6.74a4.28 4.28 0 0 1 3-7.3a4.25 4.25 0 0 1 3 1.25a1 1 0 0 0 1.42 0a4.27 4.27 0 0 1 6 6.05Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="plus" viewBox="0 0 24 24">
+        <path fill="currentColor"
+          d="M19 11h-6V5a1 1 0 0 0-2 0v6H5a1 1 0 0 0 0 2h6v6a1 1 0 0 0 2 0v-6h6a1 1 0 0 0 0-2Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="minus" viewBox="0 0 24 24">
+        <path fill="currentColor" d="M19 11H5a1 1 0 0 0 0 2h14a1 1 0 0 0 0-2Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="cart" viewBox="0 0 24 24">
+        <path fill="currentColor"
+          d="M8.5 19a1.5 1.5 0 1 0 1.5 1.5A1.5 1.5 0 0 0 8.5 19ZM19 16H7a1 1 0 0 1 0-2h8.491a3.013 3.013 0 0 0 2.885-2.176l1.585-5.55A1 1 0 0 0 19 5H6.74a3.007 3.007 0 0 0-2.82-2H3a1 1 0 0 0 0 2h.921a1.005 1.005 0 0 1 .962.725l.155.545v.005l1.641 5.742A3 3 0 0 0 7 18h12a1 1 0 0 0 0-2Zm-1.326-9l-1.22 4.274a1.005 1.005 0 0 1-.963.726H8.754l-.255-.892L7.326 7ZM16.5 19a1.5 1.5 0 1 0 1.5 1.5a1.5 1.5 0 0 0-1.5-1.5Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="check" viewBox="0 0 24 24">
+        <path fill="currentColor"
+          d="M18.71 7.21a1 1 0 0 0-1.42 0l-7.45 7.46l-3.13-3.14A1 1 0 1 0 5.29 13l3.84 3.84a1 1 0 0 0 1.42 0l8.16-8.16a1 1 0 0 0 0-1.47Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="trash" viewBox="0 0 24 24">
+        <path fill="currentColor"
+          d="M10 18a1 1 0 0 0 1-1v-6a1 1 0 0 0-2 0v6a1 1 0 0 0 1 1ZM20 6h-4V5a3 3 0 0 0-3-3h-2a3 3 0 0 0-3 3v1H4a1 1 0 0 0 0 2h1v11a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3V8h1a1 1 0 0 0 0-2ZM10 5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1h-4Zm7 14a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V8h10Zm-3-1a1 1 0 0 0 1-1v-6a1 1 0 0 0-2 0v6a1 1 0 0 0 1 1Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="star-outline" viewBox="0 0 15 15">
+        <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+          d="M7.5 9.804L5.337 11l.413-2.533L4 6.674l2.418-.37L7.5 4l1.082 2.304l2.418.37l-1.75 1.793L9.663 11L7.5 9.804Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="star-solid" viewBox="0 0 15 15">
+        <path fill="currentColor"
+          d="M7.953 3.788a.5.5 0 0 0-.906 0L6.08 5.85l-2.154.33a.5.5 0 0 0-.283.843l1.574 1.613l-.373 2.284a.5.5 0 0 0 .736.518l1.92-1.063l1.921 1.063a.5.5 0 0 0 .736-.519l-.373-2.283l1.574-1.613a.5.5 0 0 0-.283-.844L8.921 5.85l-.968-2.062Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="search" viewBox="0 0 24 24">
+        <path fill="currentColor"
+          d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0a1 1 0 0 0 0-1.39ZM11 18a7 7 0 1 1 7-7a7 7 0 0 1-7 7Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="user" viewBox="0 0 24 24">
+        <path fill="currentColor"
+          d="M15.71 12.71a6 6 0 1 0-7.42 0a10 10 0 0 0-6.22 8.18a1 1 0 0 0 2 .22a8 8 0 0 1 15.9 0a1 1 0 0 0 1 .89h.11a1 1 0 0 0 .88-1.1a10 10 0 0 0-6.25-8.19ZM12 12a4 4 0 1 1 4-4a4 4 0 0 1-4 4Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="close" viewBox="0 0 15 15">
+        <path fill="currentColor"
+          d="M7.953 3.788a.5.5 0 0 0-.906 0L6.08 5.85l-2.154.33a.5.5 0 0 0-.283.843l1.574 1.613l-.373 2.284a.5.5 0 0 0 .736.518l1.92-1.063l1.921 1.063a.5.5 0 0 0 .736-.519l-.373-2.283l1.574-1.613a.5.5 0 0 0-.283-.844L8.921 5.85l-.968-2.062Z" />
+      </symbol>
+
+    </defs>
+  </svg>
+
+  <div class="preloader-wrapper">
+    <div class="preloader">
+    </div>
+  </div>
+
+  <div class="offcanvas offcanvas-end" data-bs-scroll="true" tabindex="-1" id="offcanvasCart" aria-labelledby="My Cart">
+    <div class="offcanvas-header justify-content-center">
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+      <div class="order-md-last">
+        <h4 class="d-flex justify-content-between align-items-center mb-3">
+          <span class="text-primary">Your cart</span>
+          <span class="badge bg-primary rounded-circle pt-2">3</span>
+        </h4>
+        <ul class="list-group mb-3">
+          <li class="list-group-item d-flex justify-content-between lh-sm">
+            <div>
+              <h6 class="my-0">Grey Hoodie</h6>
+              <small class="text-body-secondary">Brief description</small>
+            </div>
+            <span class="text-body-secondary">$12</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between lh-sm">
+            <div>
+              <h6 class="my-0">Dog Food</h6>
+              <small class="text-body-secondary">Brief description</small>
+            </div>
+            <span class="text-body-secondary">$8</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between lh-sm">
+            <div>
+              <h6 class="my-0">Soft Toy</h6>
+              <small class="text-body-secondary">Brief description</small>
+            </div>
+            <span class="text-body-secondary">$5</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            <span class="fw-bold">Total (USD)</span>
+            <strong>$20</strong>
+          </li>
+        </ul>
+
+        <button class="w-100 btn btn-primary btn-lg" type="submit">Continue to checkout</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="offcanvas offcanvas-end" data-bs-scroll="true" tabindex="-1" id="offcanvasSearch"
+    aria-labelledby="Search">
+    <div class="offcanvas-header justify-content-center">
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+
+      <div class="order-md-last">
+        <h4 class="text-primary text-uppercase mb-3">
+          Search
+        </h4>
+        <div class="search-bar border rounded-2 border-dark-subtle">
+          <form id="search-form" class="text-center d-flex align-items-center" action="" method="">
+            <input type="text" class="form-control border-0 bg-transparent" placeholder="Search Here" />
+            <iconify-icon icon="tabler:search" class="fs-4 me-3"></iconify-icon>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <header>
     <div class="container py-2">
-      <div class="row py-4 pb-0 pb-sm-4 align-items-center">
+      <div class="row py-4 pb-0 pb-sm-4 align-items-center ">
+
         <div class="col-sm-4 col-lg-3 text-center text-sm-start">
-          <div class="main-logo d-flex align-items-center justify-content-center justify-content-sm-start">
-            <a href="/" class="d-flex align-items-center text-decoration-none">
-              <img src="/user_static/images/logo.png" alt="logo" class="img-fluid">
-              <h1 class="mb-0" style="font-size: 32px; margin-left: 15px; color: #2B4F76; font-family: 'Noto Sans TC', sans-serif; white-space: nowrap; writing-mode: horizontal-tb;">會員登入</h1>
+          <div class="main-logo">
+            <a href="index.html">
+              <img th:src="@{/user_static/images/logo.png}" alt="logo" class="img-fluid">
             </a>
           </div>
         </div>
+
+        <div class="col-sm-6 offset-sm-2 offset-md-0 col-lg-5 d-none d-lg-block">
+          <div class="search-bar border rounded-2 px-3 border-dark-subtle">
+            <form id="search-form" class="text-center d-flex align-items-center" action="" method="">
+              <input type="text" class="form-control border-0 bg-transparent"
+                placeholder="Search for more than 10,000 products" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                <path fill="currentColor"
+                  d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0a1 1 0 0 0 0-1.39ZM11 18a7 7 0 1 1 7-7a7 7 0 0 1-7 7Z" />
+              </svg>
+            </form>
+          </div>
+        </div>
+
+        <div
+          class="col-sm-8 col-lg-4 d-flex justify-content-end align-items-center gap-3 mt-4 mt-sm-0 justify-content-center justify-content-sm-end">
+          <div class="d-none d-xl-block">
+            <ul class="d-flex list-unstyled m-0 gap-3">
+              <li>
+                <a href="account.html" class="mx-3">
+                  <iconify-icon icon="mdi:login" class="fs-5"></iconify-icon> <span class="fs-5">登入</span>
+                </a>
+              </li>
+              <li>
+                <a href="account.html" class="mx-3">
+                  <iconify-icon icon="mdi:user-plus" class="fs-5"></iconify-icon> <span class="fs-5">註冊</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
       </div>
     </div>
+
     <div class="container-fluid">
       <hr class="m-0">
     </div>
+
+    <div class="container">
+      <nav class="main-menu d-flex navbar navbar-expand-lg ">
+
+        <div class="d-flex d-lg-none align-items-end mt-3">
+          <ul class="d-flex justify-content-end list-unstyled m-0">
+            <li>
+              <a href="account.html" class="mx-3">
+                <iconify-icon icon="mdi:login" class="fs-4"></iconify-icon>登入
+              </a>
+            </li>
+
+            <li>
+              <a href="account.html" class="mx-3">
+                <iconify-icon icon="mdi:user-plus" class="fs-4"></iconify-icon>註冊
+              </a>
+            </li>
+
+            <li>
+              <a href="#" class="mx-3" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSearch"
+                aria-controls="offcanvasSearch">
+                <iconify-icon icon="tabler:search" class="fs-4"></iconify-icon>搜尋
+                </span>
+              </a>
+            </li>
+
+          </ul>
+
+        </div>
+
+      </nav>
+
+    </div>
   </header>
 
-  <!-- Main Content -->
-  <div class="login-container">
-    <h2 class="mb-4">會員登入</h2>
-    <!-- 成功消息显示 -->
-    <div th:if="${messages != null}">
-      <div th:each="message : ${messages.values()}" class="alert alert-success">
-        <span th:text="${message}"></span>
-      </div>
-    </div>
-    <!-- 错误消息显示 -->
-    <div th:if="${errors != null}">
-      <div th:each="error : ${errors.values()}" class="alert alert-danger">
-        <span th:text="${error}"></span>
-        <!-- 如果是Google账号错误,显示Google登录按钮 -->
-        <div th:if="${error.contains('Google')}" class="mt-2">
-          <a href="/oauth2/authorization/google" class="btn btn-danger btn-sm">
-            <img src="/user_static/icon/Google_icon.png" alt="Google" style="width: 20px; height: 20px; margin-right: 5px;"> 
-            使用 Google 登入
-          </a>
-        </div>
-        <!-- 如果是Facebook账号错误,显示Facebook登录按钮 -->
-        <div th:if="${error.contains('Facebook')}" class="mt-2">
-          <a href="/oauth2/authorization/facebook" class="btn btn-primary btn-sm">
-            <img src="/user_static/icon/Facebook_icon.png" alt="Facebook" style="width: 20px; height: 20px; margin-right: 5px;"> 
-            使用 Facebook 登入
-          </a>
-        </div>
-      </div>
-    </div>
-    <div th:if="${param.oauth2Success}" class="alert alert-success">
-      <span>OAuth2 登入成功</span>
-    </div>
-
-    <form th:action="@{/login}" method="POST">
-      <div class="mb-3">
-        <label for="email" class="form-label">電子郵件</label>
-        <input type="email" class="form-control" id="email" name="email" required>
-      </div>
-      <div class="mb-3">
-        <label for="password" class="form-label">密碼</label>
-        <input type="password" class="form-control" id="password" name="password" required>
-      </div>
-      <div class="form-group">
-        <button type="submit" class="btn btn-primary btn-block w-100 mb-3">登入</button>
-      </div>
-
-      <div class="divider"><span>或</span></div>
-      
-      <a href="/oauth2/authorization/google" class="social-btn">
-        <img src="/user_static/icon/Google_icon.png" alt="Google"> 使用 Google 登入
-      </a>
-      
-      <a href="/oauth2/authorization/facebook" class="social-btn">
-        <img src="/user_static/icon/Facebook_icon.png" alt="Facebook"> 使用 Facebook 登入
-      </a>
-    </form>
-    <p class="text-center mt-3">還沒有帳號？ <a th:href="@{/register}">註冊</a></p>
-  </div>
-
-  <!-- Footer Section -->
-  <footer id="footer" class="my-5">
-    <div class="container py-5 my-5">
-      <div class="row">
-        <div class="col-md-3">
-          <div class="footer-menu">
-            <img src="/user_static/images/logo.png" alt="logo">
-            <p class="blog-paragraph fs-6 mt-3">Subscribe to our newsletter to get updates about our grand offers.</p>
-            <div class="social-links">
-              <ul class="d-flex list-unstyled gap-2">
-                <li class="social">
-                  <a href="#">
-                    <iconify-icon class="social-icon" icon="ri:facebook-fill"></iconify-icon>
-                  </a>
-                </li>
-                <li class="social">
-                  <a href="#">
-                    <iconify-icon class="social-icon" icon="ri:twitter-fill"></iconify-icon>
-                  </a>
-                </li>
-                <li class="social">
-                  <a href="#">
-                    <iconify-icon class="social-icon" icon="ri:pinterest-fill"></iconify-icon>
-                  </a>
-                </li>
-                <li class="social">
-                  <a href="#">
-                    <iconify-icon class="social-icon" icon="ri:instagram-fill"></iconify-icon>
-                  </a>
-                </li>
-                <li class="social">
-                  <a href="#">
-                    <iconify-icon class="social-icon" icon="ri:youtube-fill"></iconify-icon>
-                  </a>
-                </li>
-              </ul>
-            </div>
+  <section id="login" style="background: url('images/background-img.png') no-repeat; background-size: cover;">
+      <div class="container">
+		<div class="row my-3 py-3"> <!-- 減少了 my-5 和 py-5 -->
+		            <div class="offset-md-2 col-md-8 my-3"> <!-- 調整 offset-md 和 col-md -->
+                  <h2 class="display-3 fw-normal text-center">
+                      Welcome Back! <span class="text-primary">Login to your account</span>
+                  </h2>
+                  <form th:action="@{/login}" method="post">
+                      <div class="mb-3">
+                          <label for="email" class="form-label">Email Address</label>
+                          <input type="email" class="form-control form-control-lg" name="email" id="email" 
+                                 th:value="${email}" placeholder="Enter Your Email Address" required>
+                      </div>
+                      <div class="mb-3">
+                          <label for="password" class="form-label">Password</label>
+                          <input type="password" class="form-control form-control-lg" name="password" id="password" 
+                                 th:value="${password}" placeholder="Enter Your Password" required>
+                      </div>
+                      <div class="d-grid gap-2">
+                          <button type="submit" class="btn btn-dark btn-lg rounded-1">Login Now</button>
+                      </div>
+                  </form>
+              </div>
           </div>
-        </div>
-        <div class="col-md-3">
-          <div class="footer-menu">
-            <h3>Quick Links</h3>
-            <ul class="menu-list list-unstyled">
-              <li class="menu-item">
-                <a href="#" class="nav-link">Home</a>
-              </li>
-              <li class="menu-item">
-                <a href="#" class="nav-link">About us</a>
-              </li>
-              <li class="menu-item">
-                <a href="#" class="nav-link">Offer </a>
-              </li>
-              <li class="menu-item">
-                <a href="#" class="nav-link">Services</a>
-              </li>
-              <li class="menu-item">
-                <a href="#" class="nav-link">Contact Us</a>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="footer-menu">
-            <h3>Help Center</h3>
-            <ul class="menu-list list-unstyled">
-              <li class="menu-item">
-                <a href="#" class="nav-link">FAQs</a>
-              </li>
-              <li class="menu-item">
-                <a href="#" class="nav-link">Payment</a>
-              </li>
-              <li class="menu-item">
-                <a href="#" class="nav-link">Returns & Refunds</a>
-              </li>
-              <li class="menu-item">
-                <a href="#" class="nav-link">Checkout</a>
-              </li>
-              <li class="menu-item">
-                <a href="#" class="nav-link">Delivery Information</a>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div>
-            <h3>Our Newsletter</h3>
-            <p class="blog-paragraph fs-6">Subscribe to our newsletter to get updates about our grand offers.</p>
-            <div class="search-bar border rounded-pill border-dark-subtle px-2">
-              <form class="text-center d-flex align-items-center" action="" method="">
-                <input type="text" class="form-control border-0 bg-transparent" placeholder="Enter your email here" />
-                <iconify-icon class="send-icon" icon="tabler:location-filled"></iconify-icon>
-              </form>
-            </div>
-          </div>
-        </div>
       </div>
-    </div>
-  </footer>
+  </section>
 
-  <div id="footer-bottom">
-    <div class="container">
-      <hr class="m-0">
-      <div class="row mt-3">
-        <div class="col-md-6 copyright">
-          <p class="secondary-font">© 2023 Waggy. All rights reserved.</p>
-        </div>
-        <div class="col-md-6 text-md-end">
-          <p class="secondary-font">Free HTML Template by <a href="https://templatesjungle.com/" target="_blank" class="text-decoration-underline fw-bold text-black-50">TemplatesJungle</a> Distributed by <a href="https://themewagon.com/" target="_blank" class="text-decoration-underline fw-bold text-black-50">ThemeWagon</a></p>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <script src="/user_static/js/jquery-1.11.0.min.js"></script>
+  <script th:src="@{/user_static/js/jquery-1.11.0.min.js}"></script>
   <script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="/user_static/js/plugins.js"></script>
-  <script src="/user_static/js/script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe"
+    crossorigin="anonymous"></script>
+  <script th:src="@{/user_static/js/plugins.js}"></script>
+  <script th:src="@{/user_static/js/script.js}"></script>
   <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
 
-  <script>
-    // 確保 DOM 完全加載
-    document.addEventListener('DOMContentLoaded', function () {
-      var urlParams = new URLSearchParams(window.location.search);
-      
-      // 處理註冊成功消息
-      if (urlParams.has('registered') && urlParams.get('registered') === 'true') {
-        var message = decodeURIComponent(urlParams.get('message') || '註冊成功，請登入');
-        showSuccessMessage(message);
-        setTimeout(function() {
-          hideMessage();
-        }, 2000);
-      }
-      
-      // 處理登出成功消息
-      if (urlParams.has('logout') && urlParams.get('logout') === 'true') {
-        showSuccessMessage('登出成功');
-        setTimeout(function() {
-          hideMessage();
-        }, 2000);
-      }
 
-      // 處理登入失敗消息
-      if (urlParams.has('error')) {
-        var errorMessage = decodeURIComponent(urlParams.get('message') || '登入失敗');
-        // 檢查是否是社交媒體帳號錯誤
-        if (errorMessage.includes('Google')) {
-          showSocialLoginError(errorMessage, 'google');
-        } else if (errorMessage.includes('Facebook')) {
-          showSocialLoginError(errorMessage, 'facebook');
-        } else {
-          showErrorMessage(errorMessage);
-        }
-      }
-    });
-
-    function showSuccessMessage(message) {
-      var alertDiv = document.createElement('div');
-      alertDiv.className = 'alert alert-success alert-dismissible fade show text-center position-fixed top-0 start-50 translate-middle-x mt-3';
-      alertDiv.setAttribute('role', 'alert');
-      alertDiv.innerHTML = message;
-      document.body.appendChild(alertDiv);
-    }
-
-    function showErrorMessage(message) {
-      var alertDiv = document.createElement('div');
-      alertDiv.className = 'alert alert-danger alert-dismissible fade show text-center position-fixed top-0 start-50 translate-middle-x mt-3';
-      alertDiv.setAttribute('role', 'alert');
-      alertDiv.innerHTML = message;
-      document.body.appendChild(alertDiv);
-    }
-
-    function showSocialLoginError(message, provider) {
-      var alertDiv = document.createElement('div');
-      alertDiv.className = 'alert alert-danger alert-dismissible fade show text-center position-fixed top-0 start-50 translate-middle-x mt-3';
-      alertDiv.setAttribute('role', 'alert');
-      
-      // 創建錯誤消息文本
-      var messageText = document.createElement('div');
-      messageText.textContent = message;
-      
-      // 創建社交媒體登入按鈕
-      var socialButton = document.createElement('a');
-      if (provider === 'google') {
-        socialButton.href = '/oauth2/authorization/google';
-        socialButton.className = 'btn btn-danger btn-sm mt-2';
-        socialButton.innerHTML = '<img src="/user_static/icon/Google_icon.png" alt="Google" style="width: 20px; height: 20px; margin-right: 5px;"> 使用 Google 登入';
-      } else if (provider === 'facebook') {
-        socialButton.href = '/oauth2/authorization/facebook';
-        socialButton.className = 'btn btn-primary btn-sm mt-2';
-        socialButton.innerHTML = '<img src="/user_static/icon/Facebook_icon.png" alt="Facebook" style="width: 20px; height: 20px; margin-right: 5px;"> 使用 Facebook 登入';
-      }
-      
-      // 將文本和按鈕添加到提示框中
-      alertDiv.appendChild(messageText);
-      alertDiv.appendChild(socialButton);
-      
-      document.body.appendChild(alertDiv);
-    }
-
-    function hideMessage() {
-      var alerts = document.getElementsByClassName('alert');
-      for(var i = 0; i < alerts.length; i++) {
-        alerts[i].remove();
-      }
-    }
-  </script>
 </body>
 
 </html>
