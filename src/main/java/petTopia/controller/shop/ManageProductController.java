@@ -101,12 +101,12 @@ public class ManageProductController {
 	// 後台商品管理 => 新增商品
 	@PostMapping("/api/insertProduct")
 	public ResponseEntity<?> insertProduct(
-			@RequestBody ProductDto product
+			@RequestBody ProductDto productDto
 			) {
 		
 		Map<String, Object> responseBody = new HashMap<>();
 		
-		System.out.println(product);
+		System.out.println(productDto);
 		
 //		ProductDto productDto = new ProductDto();
 		

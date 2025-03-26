@@ -166,17 +166,6 @@ public class ProductService {
 	// 新增商品
 	public Product insertProduct(ProductDto productDto){
 		
-//		Product existingProduct = productRepository
-//				.findByProductDetailIdAndProductSizeIdAndProductColorId(
-//						product.getProductDetail().getId(), 
-//				product.getProductSize().getId(), 
-//				product.getProductColor().getId());
-//		
-//		// 商品已存在 
-//		if (existingProduct != null) {
-//			return existingProduct;
-//		}
-		
 		Product product = new Product();
 		
 		// find ProductCategory
@@ -192,10 +181,8 @@ public class ProductService {
 	        productDetail.setProductCategory(productCategory);
 	        productDetailRepository.save(productDetail);
 		}
-		
-		product.setProductDetail(productDetail);
-		product.getProductDetail().setProductCategory(productCategory);
         
+		// set ProductSize
         ProductSize productSize = productSizeRepository.findByName(productDto.getProductSize().getName());
         if (productSize == null) {
         	productSize = new ProductSize();
@@ -203,22 +190,40 @@ public class ProductService {
         	productSizeRepository.save(productSize);
         }
 		
+        // set ProductColor
         ProductColor productColor = productColorRepository.findByName(productDto.getProductColor().getName());
         if (productColor == null) {
         	productColor = new ProductColor();
         	productColor.setName(productDto.getProductColor().getName());
         	productColorRepository.save(productColor);
         }
-		
+        
+        product.setProductDetail(productDetail);
+		product.getProductDetail().setProductCategory(productCategory);
         product.setProductSize(productSize);
         product.setProductColor(productColor);
+        
+        // 檢查同個商品是否存在 
+        Product existingProduct = productRepository
+				.findByProductDetailIdAndProductSizeIdAndProductColorId(
+						product.getProductDetail().getId(), 
+				product.getProductSize().getId(), 
+				product.getProductColor().getId());
+		
+		// 商品已存在 
+		if (existingProduct != null) {
+			return existingProduct;
+		}
+		
         product.setUnitPrice(productDto.getUnitPrice());
         product.setDiscountPrice(productDto.getDiscountPrice());
         product.setStockQuantity(productDto.getStockQuantity());
         product.setStatus(productDto.getStatus() == 1 ? true : false);
         product.setPhoto(null);
         
-		return null;
+        productRepository.save(product);
+        
+		return product;
 		
 	}
 		
