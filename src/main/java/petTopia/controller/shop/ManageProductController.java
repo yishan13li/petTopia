@@ -1,5 +1,6 @@
 package petTopia.controller.shop;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -8,7 +9,9 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,12 +19,16 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import petTopia.dto.shop.ProductDetailDto;
 import petTopia.dto.shop.ProductDto;
+import petTopia.dto.shop.ProductDto2;
 import petTopia.model.shop.Product;
 import petTopia.model.shop.ProductDetail;
+import petTopia.service.shop.ProductDetailService;
 import petTopia.service.shop.ProductService;
 
 @RestController
@@ -30,6 +37,8 @@ public class ManageProductController {
 	
 	@Autowired
 	private ProductService productService;
+	@Autowired
+	private ProductDetailService productDetailService;
 	
     // 後台商品管理 => 查詢所有商品
 	@GetMapping
@@ -101,17 +110,118 @@ public class ManageProductController {
 	// 後台商品管理 => 新增商品
 	@PostMapping("/api/insertProduct")
 	public ResponseEntity<?> insertProduct(
-			@RequestBody ProductDto productDto
+			@RequestPart ProductDto product, 
+			@RequestPart MultipartFile photo
 			) {
 		
 		Map<String, Object> responseBody = new HashMap<>();
 		
+		ProductDto productDto = product;
+		
+		try {
+			productDto.setPhoto(photo.getBytes());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 		System.out.println(productDto);
 		
-//		ProductDto productDto = new ProductDto();
+		if (productService.insertProduct(productDto))
+			responseBody.put("messages", "新增商品成功");
+		else
+			responseBody.put("messages", "同樣商品已存在");
 		
 		return new ResponseEntity<Map<String, Object>>(responseBody, HttpStatus.OK);
 		
 	}
+	
+	// 後台商品管理 => 修改商品
+	@PostMapping("/api/modifyProduct")
+	public ResponseEntity<?> modifyProduct(
+			@RequestPart ProductDto2 product, 
+			@RequestPart(required = false) MultipartFile photo
+			) {
+		
+		Map<String, Object> responseBody = new HashMap<>();
+		
+		ProductDto2 productDto = product;
+		
+		if (photo != null && !photo.isEmpty()) {
+			try {
+				productDto.setPhoto(photo.getBytes());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		else {
+			Product p = productService.findById(productDto.getId());
+			productDto.setPhoto(p.getPhoto());
+		}
+			
+		
+		
+		System.out.println(productDto);
+		
+		if (productService.modifyProduct(productDto))
+			responseBody.put("messages", "修改商品成功");
+		else
+			responseBody.put("messages", "修改商品失敗");
+		
+		return new ResponseEntity<Map<String, Object>>(responseBody, HttpStatus.OK);
+		
+	}
+	
+	// 後台商品管理 => 新增商品 => 如果有同名商品直接獲取Description
+	@GetMapping("/api/insertProduct/getDescription")
+	public ResponseEntity<?> getProductDetailDescription(
+			@RequestParam String productDetailName
+			) {
+		
+		Map<String, Object> responseBody = new HashMap<>();
+		
+		ProductDetail productDetail = productDetailService.findByProductDetailName(productDetailName);
+		if (productDetail != null)
+			responseBody.put("description", productDetail.getDescription());
+		else
+			responseBody.put("description", "");
+		
+		
+		return new ResponseEntity<Map<String, Object>>(responseBody, HttpStatus.OK);
+		
+	}
+	
+	// 後台商品管理 => 修改商品 => 獲取商品
+	@GetMapping("/api/modifyProduct/getProduct")
+	public ResponseEntity<?> getProduct(
+			@RequestParam Integer productId
+			) {
+
+		Product product = productService.findById(productId);
+		
+		return new ResponseEntity<Product>(product, HttpStatus.OK);
+		
+	}
+		
+	// 後台商品管理 => 修改商品 => 獲取商品照片
+	@GetMapping("/api/modifyProduct/getProductPhoto")
+	public ResponseEntity<?> getProductPhoto(
+			@RequestParam Integer productId
+			) {
+		System.out.println("aaa");
+		Product product = productService.findById(productId);
+		
+		byte[] photo = product.getPhoto();
+		
+		if (photo != null && photo.length != 0) {
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.IMAGE_JPEG);
+			
+			return new ResponseEntity<byte[]>(photo, headers, HttpStatus.OK);
+		}
+		
+		return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		
+	}
+			
 			
 }

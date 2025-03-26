@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import petTopia.dto.shop.ProductDto;
+import petTopia.dto.shop.ProductDto2;
 import petTopia.model.shop.Product;
 import petTopia.model.shop.ProductCategory;
 import petTopia.model.shop.ProductColor;
@@ -164,7 +165,13 @@ public class ProductService {
 	}
 	
 	// 新增商品
-	public Product insertProduct(ProductDto productDto){
+	public boolean insertProduct(ProductDto productDto){
+		
+		if (productDto.getProductSize().getName() == null || "".equals(productDto.getProductSize().getName()))
+			productDto.getProductSize().setName(null);
+		if (productDto.getProductColor().getName() == null || "".equals(productDto.getProductColor().getName()))
+			productDto.getProductColor().setName(null);
+		
 		
 		Product product = new Product();
 		
@@ -181,22 +188,32 @@ public class ProductService {
 	        productDetail.setProductCategory(productCategory);
 	        productDetailRepository.save(productDetail);
 		}
+		else {
+			productDetail.setDescription(productDto.getProductDetail().getDescription());
+			productDetailRepository.save(productDetail);
+		}
         
 		// set ProductSize
-        ProductSize productSize = productSizeRepository.findByName(productDto.getProductSize().getName());
-        if (productSize == null) {
-        	productSize = new ProductSize();
-        	productSize.setName(productDto.getProductSize().getName());
-        	productSizeRepository.save(productSize);
-        }
+		ProductSize productSize = null;
+	    if (productDto.getProductSize().getName() != null) {
+	        productSize = productSizeRepository.findByName(productDto.getProductSize().getName());
+	    }
+	    if (productSize == null && productDto.getProductSize().getName() != null) {
+	        productSize = new ProductSize();
+	        productSize.setName(productDto.getProductSize().getName());
+	        productSizeRepository.save(productSize);
+	    }
 		
         // set ProductColor
-        ProductColor productColor = productColorRepository.findByName(productDto.getProductColor().getName());
-        if (productColor == null) {
-        	productColor = new ProductColor();
-        	productColor.setName(productDto.getProductColor().getName());
-        	productColorRepository.save(productColor);
-        }
+	    ProductColor productColor = null;
+	    if (productDto.getProductColor().getName() != null) {
+	        productColor = productColorRepository.findByName(productDto.getProductColor().getName());
+	    }
+	    if (productColor == null && productDto.getProductColor().getName() != null) {
+	        productColor = new ProductColor();
+	        productColor.setName(productDto.getProductColor().getName());
+	        productColorRepository.save(productColor);
+	    }
         
         product.setProductDetail(productDetail);
 		product.getProductDetail().setProductCategory(productCategory);
@@ -205,28 +222,74 @@ public class ProductService {
         
         // 檢查同個商品是否存在 
         Product existingProduct = productRepository
-				.findByProductDetailIdAndProductSizeIdAndProductColorId(
-						product.getProductDetail().getId(), 
-				product.getProductSize().getId(), 
-				product.getProductColor().getId());
-		
-		// 商品已存在 
-		if (existingProduct != null) {
-			return existingProduct;
-		}
+                .findByProductDetailIdAndProductSizeIdAndProductColorId(
+                        product.getProductDetail().getId(), 
+                        product.getProductSize() != null ? product.getProductSize().getId() : null, 
+                        product.getProductColor() != null ? product.getProductColor().getId() : null);
+        
+        // 商品已存在
+        if (existingProduct != null) {
+            return false;
+        }
 		
         product.setUnitPrice(productDto.getUnitPrice());
         product.setDiscountPrice(productDto.getDiscountPrice());
         product.setStockQuantity(productDto.getStockQuantity());
         product.setStatus(productDto.getStatus() == 1 ? true : false);
-        product.setPhoto(null);
+        product.setPhoto(productDto.getPhoto());
         
         productRepository.save(product);
         
-		return product;
+		return true;
 		
 	}
+
+	// 修改商品
+	public boolean modifyProduct(ProductDto2 productDto){
+		
+		if (productDto.getProductSize().getName() == null || "".equals(productDto.getProductSize().getName()))
+			productDto.getProductSize().setName(null);
+		if (productDto.getProductColor().getName() == null || "".equals(productDto.getProductColor().getName()))
+			productDto.getProductColor().setName(null);
+		
+		Optional<Product> proudctOpt = productRepository.findById(productDto.getId());
+		Product product = proudctOpt.get();
+		
+		// find ProductCategory
+		String categoryName = productDto.getProductDetail().getProductCategory().getName();
+		ProductCategory productCategory = productCategoryRepository.findByName(categoryName);
+		
+		// set ProductDetail
+		ProductDetail productDetail = product.getProductDetail();
+		
+        productDetail.setDescription(productDto.getProductDetail().getDescription());
+        productDetail.setProductCategory(productCategory);
+        
+        product.setProductDetail(productDetail);
+		product.getProductDetail().setProductCategory(productCategory);
+        
+        product.setUnitPrice(productDto.getUnitPrice());
+        product.setDiscountPrice(productDto.getDiscountPrice());
+        product.setStockQuantity(productDto.getStockQuantity());
+        product.setStatus(productDto.getStatus() == 1 ? true : false);
+        product.setPhoto(productDto.getPhoto());
+        
+        productRepository.save(product);
+        
+		return true;
+		
+	}
+	
+	// 獲取ProductDetail
+	public ProductDetail getProductDetailByProductId(Integer productId)	{
+		
+		ProductDetail productDetail = productRepository.findByProductDetailId(productId);
+		if (productDetail != null)
+			return productDetail;
+		
+		return null;
 		
 		
+	}
 
 }
