@@ -157,15 +157,19 @@ public class ManageProductController {
 			Product p = productService.findById(productDto.getId());
 			productDto.setPhoto(p.getPhoto());
 		}
-			
 		
+//		System.out.println(productDto);
 		
-		System.out.println(productDto);
+		Product modifyProduct = productService.modifyProduct(productDto);
 		
-		if (productService.modifyProduct(productDto))
+		if (modifyProduct != null) {
+			responseBody.put("modifyProduct", modifyProduct);
 			responseBody.put("messages", "修改商品成功");
-		else
+		}
+		else {
+			responseBody.put("modifyProduct", null);
 			responseBody.put("messages", "修改商品失敗");
+		}
 		
 		return new ResponseEntity<Map<String, Object>>(responseBody, HttpStatus.OK);
 		
@@ -207,7 +211,6 @@ public class ManageProductController {
 	public ResponseEntity<?> getProductPhoto(
 			@RequestParam Integer productId
 			) {
-		System.out.println("aaa");
 		Product product = productService.findById(productId);
 		
 		byte[] photo = product.getPhoto();
@@ -223,5 +226,23 @@ public class ManageProductController {
 		
 	}
 			
-			
+	// 後台商品管理 => 刪除商品
+	@GetMapping("/api/deleteProduct")
+	public ResponseEntity<?> deleteProduct(
+			@RequestParam Integer productId
+			) {
+		Map<String, Object> responseBody = new HashMap<>();
+		
+		if (productService.deleteProduct(productId)) {
+			responseBody.put("messages", "刪除商品成功");
+		}
+		else {
+			responseBody.put("messages", "刪除商品失敗");
+		}
+		
+		return new ResponseEntity<Map<String, Object>>(responseBody, HttpStatus.OK);
+		
+	}	
+	
+	
 }

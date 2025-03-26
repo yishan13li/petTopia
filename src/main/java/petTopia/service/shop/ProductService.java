@@ -245,7 +245,7 @@ public class ProductService {
 	}
 
 	// 修改商品
-	public boolean modifyProduct(ProductDto2 productDto){
+	public Product modifyProduct(ProductDto2 productDto){
 		
 		if (productDto.getProductSize().getName() == null || "".equals(productDto.getProductSize().getName()))
 			productDto.getProductSize().setName(null);
@@ -266,7 +266,6 @@ public class ProductService {
         productDetail.setProductCategory(productCategory);
         
         product.setProductDetail(productDetail);
-		product.getProductDetail().setProductCategory(productCategory);
         
         product.setUnitPrice(productDto.getUnitPrice());
         product.setDiscountPrice(productDto.getDiscountPrice());
@@ -274,9 +273,9 @@ public class ProductService {
         product.setStatus(productDto.getStatus() == 1 ? true : false);
         product.setPhoto(productDto.getPhoto());
         
-        productRepository.save(product);
+        Product save = productRepository.save(product);
         
-		return true;
+		return save;
 		
 	}
 	
@@ -292,4 +291,17 @@ public class ProductService {
 		
 	}
 
+	// 刪除商品
+	public boolean deleteProduct(Integer productId) {
+		Optional<Product> productOpt = productRepository.findById(productId);
+		if (productOpt.isPresent()) {
+			Product product = productOpt.get();
+			productRepository.delete(product);
+			return true;
+		}
+		
+		return false;
+	}
+	
+	
 }
