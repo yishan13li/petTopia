@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -112,6 +113,39 @@ public class VendorReviewController {
 		boolean isExisted = vendorReviewService.getReviewIsExisted(memberId, vendorId);
 		Map<String, Object> response = new HashMap<>();
 		response.put("action", isExisted ? true : false);
+		return response;
+	}
+
+	@PostMapping(value = "/api/vendor/{vendorId}/review/add/final", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public Map<String, Object> addReview(@PathVariable Integer vendorId, @RequestParam Integer memberId,
+			@RequestParam String content, Integer ratingEnv, Integer ratingPrice, Integer ratingService,
+			@RequestPart(required = false) List<MultipartFile> reviewPhotos) throws IOException {
+		VendorReview review = new VendorReview();
+		if (reviewPhotos != null) {
+			review = vendorReviewService.addNewReview(memberId, vendorId, content, ratingEnv, ratingPrice,
+					ratingService, reviewPhotos);
+		} else {
+			List<MultipartFile> nullList = new ArrayList<MultipartFile>();
+			review = vendorReviewService.addNewReview(memberId, vendorId, content, ratingEnv, ratingPrice,
+					ratingService, nullList);
+		}
+
+		Map<String, Object> response = new HashMap<>();
+		response.put("success", true);
+		response.put("review", review);
+		return response;
+	}
+
+	@PutMapping(value = "/api/vendor/review/{reviewId}/rewrite/final", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public Map<String, Object> modifyReview(@PathVariable Integer reviewId, @RequestParam String content,
+			Integer ratingEnv, Integer ratingPrice, Integer ratingService,
+			@RequestPart(required = false) List<MultipartFile> reviewPhotos) throws IOException {
+		VendorReview review = vendorReviewService.modifyReview(reviewId, content, ratingEnv, ratingPrice, ratingService,
+				reviewPhotos);
+
+		Map<String, Object> response = new HashMap<>();
+		response.put("success", true);
+		response.put("review", review);
 		return response;
 	}
 }
