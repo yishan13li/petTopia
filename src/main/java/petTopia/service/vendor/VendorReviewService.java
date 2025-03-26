@@ -289,4 +289,16 @@ public class VendorReviewService {
 			return false;
 		}
 	}
+
+	/* 查詢某個member所有評價之DTO */
+	public List<VendorReviewDto> findReviewListByMemberId(Integer memberId) {
+		List<VendorReview> reviewList = vendorReviewRepository.findByMemberId(memberId);
+
+		List<VendorReviewDto> dtoList = reviewList.stream().map(review -> {
+			Member member = memberRepository.findById(review.getMemberId()).get();
+			return ConvertVendorReviewToDto(member, review);
+		}).collect(Collectors.toList());
+
+		return dtoList;
+	}
 }

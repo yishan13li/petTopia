@@ -15,6 +15,9 @@ public class VendorLikeDto {
 	/* 評價資訊 */
 	private Integer id;
 	private Integer vendorId;
+	private String vendorName;
+	private String vendorDescription;
+	private String vendorCategory;
 	
 	/* 會員資訊 */
     private Integer memberId;

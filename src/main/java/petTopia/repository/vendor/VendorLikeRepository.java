@@ -13,4 +13,7 @@ public interface VendorLikeRepository extends JpaRepository<VendorLike, Integer>
 	
 	/* 尋找單一店家被哪些會員收藏 */
 	public List<VendorLike> findByVendorId(Integer vendorId);
+	
+	/* 尋找單一店家被哪些會員收藏 */
+	public List<VendorLike> findByMemberId(Integer memberId);
 }
