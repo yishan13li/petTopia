@@ -301,4 +301,23 @@ public class VendorReviewService {
 
 		return dtoList;
 	}
+
+	/* 新增評論(完整版) */
+	public VendorReview addNewReview(Integer memberId, Integer vendorId, String content, Integer ratingEnv,
+			Integer ratingPrice, Integer ratingService, List<MultipartFile> reviewPhotos) throws IOException {
+		VendorReview review = new VendorReview();
+		review.setMemberId(memberId);
+		review.setVendorId(vendorId);
+		review.setReviewContent(content);
+		review.setRatingEnvironment(ratingEnv);
+		review.setRatingPrice(ratingPrice);
+		review.setRatingService(ratingService);
+		review.setReviewTime(new Date());
+		vendorReviewRepository.save(review);
+
+		Integer reviewId = review.getId();
+		addReviewPhotos(reviewId, reviewPhotos);
+
+		return review;
+	}
 }
