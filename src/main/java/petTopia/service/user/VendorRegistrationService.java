@@ -186,13 +186,11 @@ public class VendorRegistrationService {
             vendorUser.setProvider(memberUser.getProvider());
             vendorUser.setEmailVerified(true); // 因為會員已驗證過 email
             
-            // 先保存商家用戶並立即刷新
-            vendorUser = usersRepository.saveAndFlush(vendorUser);
-            entityManager.refresh(vendorUser);
+            // 先保存商家用戶
+            vendorUser = usersRepository.save(vendorUser);
             
             // 創建新的商家資料
             Vendor vendor = new Vendor();
-            vendor.setId(vendorUser.getId());  // 手動設置 ID
             vendor.setUser(vendorUser);  // 設置用戶關聯
             vendor.setName(member.getName());
             vendor.setPhone(member.getPhone());
@@ -203,7 +201,7 @@ public class VendorRegistrationService {
             vendor.setVendorCategory(vendorCategoryRepository.findById(1).orElse(null)); // 預設分類
             
             // 保存商家資料
-            vendor = vendorRepository.save(vendor);
+            Vendor savedVendor = vendorRepository.save(vendor);
             
             // 重新獲取完整的商家用戶資訊
             User newVendorUser = usersRepository.findById(vendorUser.getId())
@@ -212,7 +210,7 @@ public class VendorRegistrationService {
             result.put("success", true);
             result.put("message", "商家帳號創建成功");
             result.put("vendorUser", newVendorUser);
-            result.put("vendorId", vendor.getId());
+            result.put("vendorId", savedVendor.getId());
             result.put("vendorEmail", newVendorUser.getEmail());
             result.put("rawPassword", memberUser.getPassword()); // 返回已加密的密碼供認證使用
             

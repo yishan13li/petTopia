@@ -26,5 +26,8 @@ public class CertificationTag {
 
 	@Column(name = "tag_name", nullable = false, unique = true)
 	private String tagName;
+	
+	@Column(name = "keywords")
+    private String keywords;
 
 }

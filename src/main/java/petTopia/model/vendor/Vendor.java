@@ -38,10 +38,13 @@ public class Vendor {
 
 	@Id
 	@Column(name = "id")
+	@MapsId
 	private Integer id;
 
 	@OneToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "id", insertable = false, updatable = false)
+	@MapsId
+	@JoinColumn(name = "id")
+	@JsonIgnore
 	private User user;
 
 	@Column(name = "name")

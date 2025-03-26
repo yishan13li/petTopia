@@ -13,7 +13,7 @@ public interface ActivityRegistrationRepository extends JpaRepository<ActivityRe
 
 	List<ActivityRegistration> findByVendorActivityId(Integer vendorActivityId);
 	
-	public Optional<ActivityRegistration> findByMemberId(Integer memberId);
+	public Optional<ActivityRegistration> findByMemberIdAndVendorActivityId(Integer memberId,Integer vendorActivityId);
 
 	public ActivityRegistration findByMemberAndVendorActivity(Member member,VendorActivity activity);
 	
