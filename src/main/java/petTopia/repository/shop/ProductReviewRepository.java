@@ -13,6 +13,8 @@ public interface ProductReviewRepository extends JpaRepository<ProductReview, In
     List<ProductReview> findByProductId(Integer productId);
 
     Optional<ProductReview> findByProductIdAndMemberId(Integer productId, Integer memberId);
+    
+    Optional<ProductReview> findById(Integer reviewId);
 
     List<ProductReview> findByMemberId(Integer memberId);
 }

@@ -4,17 +4,20 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import petTopia.dto.shop.ProductReviewResponseDto;
 import petTopia.model.shop.ProductReview;
 import petTopia.model.shop.ProductReviewPhoto;
 import petTopia.repository.shop.ProductRepository;
 import petTopia.repository.shop.ProductReviewPhotoRepository;
 import petTopia.repository.shop.ProductReviewRepository;
 import petTopia.repository.user.MemberRepository;
+import petTopia.util.ImageConverter;
 
 @Service
 public class ProductReviewService {
@@ -77,18 +80,80 @@ public class ProductReviewService {
         return savedReview;
     }
     
- // 根據 memberId 查找所有評論，並確保載入評論的圖片
-    public List<ProductReview> getReviewsByMemberId(Integer memberId) {
+    // 根據 memberId 查找所有評論，並確保載入評論的圖片
+    public List<ProductReviewResponseDto> getReviewsByMemberId(Integer memberId) {
         List<ProductReview> reviews = productReviewRepository.findByMemberId(memberId);
 
         // 確保每條評論的圖片都被載入
         for (ProductReview review : reviews) {
             review.getReviewPhotos().size(); // 強制 Hibernate 載入評論的圖片
         }
-        return reviews;
+
+        // 將 ProductReview 轉換為 ProductReviewDTO
+        return reviews.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
+    // 將 ProductReview 轉換為 ProductReviewDTO
+    private ProductReviewResponseDto convertToDTO(ProductReview review) {
+    	ProductReviewResponseDto reviewDTO = new ProductReviewResponseDto();
+        
+        // 設定基本欄位
+        reviewDTO.setReviewId(review.getId());
+        reviewDTO.setMemberId(review.getMember().getId());
+        reviewDTO.setMemberName(review.getMember().getName());
+        reviewDTO.setProductId(review.getProduct().getId());
+        reviewDTO.setProductDetailId(review.getProduct().getProductDetail().getId());
+        reviewDTO.setProductName(review.getProduct().getProductDetail().getName());
+        reviewDTO.setProductColor(review.getProduct().getProductColor() != null ? review.getProduct().getProductColor().getName() : "無");
+        reviewDTO.setProductSize(review.getProduct().getProductSize() != null ? review.getProduct().getProductSize().getName() : "無");
+        reviewDTO.setRating(review.getRating());
+        reviewDTO.setReviewDescription(review.getReviewDescription());
+        reviewDTO.setReviewTime(review.getReviewTime());
 
+        // 處理圖片為 Base64 格式
+        List<String> imageBase64 = ImageConverter.byteListToBase64(review.getReviewPhotos().stream()
+                .map(photo -> photo.getReviewPhoto()) 
+                .collect(Collectors.toList()));
+
+        reviewDTO.setImageBase64(imageBase64);
+
+        return reviewDTO;
+    }
+
+    // 修改單一評論
+    public boolean updateReview(Integer reviewId, ProductReviewResponseDto reviewDto, List<MultipartFile> newPhotos) throws IOException {
+        Optional<ProductReview> optionalReview = productReviewRepository.findById(reviewId);
+        
+        if (optionalReview.isPresent()) {
+            ProductReview review = optionalReview.get();
+            
+            // 更新評論內容
+            review.setRating(reviewDto.getRating());
+            review.setReviewDescription(reviewDto.getReviewDescription());
+
+            // **刪除舊圖片**
+            productReviewPhotoRepository.deleteByProductReview(review);
+            
+            // **新增新圖片**
+            if (newPhotos != null && !newPhotos.isEmpty()) {
+                for (int i = 0; i < newPhotos.size() && i < 5; i++) {  // 限制最多5張圖片
+                    ProductReviewPhoto reviewPhoto = new ProductReviewPhoto();
+                    reviewPhoto.setProductReview(review);
+                    reviewPhoto.setReviewPhoto(newPhotos.get(i).getBytes());
+                    productReviewPhotoRepository.save(reviewPhoto);
+                }
+            }
+
+            // 儲存更新
+            productReviewRepository.save(review);
+            return true;
+        }
+        
+        return false;
+    }
+    
     // 根據評論ID找單個評論
     public ProductReview getReviewById(Integer reviewId) {
         return productReviewRepository.findById(reviewId)
@@ -98,23 +163,6 @@ public class ProductReviewService {
     // 讀取所有評論（根據商品ID查詢）
     public List<ProductReview> getReviewsByProductId(Integer productId) {
         return productReviewRepository.findByProductId(productId);
-    }
-
-    // 修改評論
-    public ProductReview updateReview(Integer reviewId, ProductReview productReview) {
-        ProductReview existingReview = productReviewRepository.findById(reviewId)
-                .orElseThrow(() -> new RuntimeException("Review not found"));
-
-        // 更新商品與會員（如果有需要）
-        existingReview.setProduct(productReview.getProduct());
-        existingReview.setMember(productReview.getMember());
-
-        // 更新評分與評論描述
-        existingReview.setRating(productReview.getRating());
-        existingReview.setReviewDescription(productReview.getReviewDescription());
-
-        // 儲存修改後的評論
-        return productReviewRepository.save(existingReview);
     }
 
     // 刪除評論

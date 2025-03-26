@@ -289,9 +289,11 @@ public class OrderService {
 
                     // 如果 productSize 不為 null，則設置其名稱
                     orderItemDto.setProductSize(productSize != null ? productSize.getName() : null);
-
                     // 如果 productColor 不為 null，則設置其名稱
                     orderItemDto.setProductColor(productColor != null ? productColor.getName() : null);
+                    
+                    orderItemDto.setProductDetailId(orderDetail.getProduct().getProductDetail().getId());
+                    
                 }
 
                 return orderItemDto;

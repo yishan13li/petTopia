@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import petTopia.dto.shop.ProductReviewResponseDto;
 import petTopia.model.shop.ProductReview;
 import petTopia.service.shop.ProductReviewService;
 import petTopia.service.shop.ProductReviewService.AlreadyReviewedException;
@@ -57,34 +59,34 @@ public class ShopProductReviewController {
     @GetMapping("/reviews/member/{memberId}")
     public ResponseEntity<?> getReviewsByMemberId(@PathVariable Integer memberId) {
         try {
-            List<ProductReview> reviews = productReviewService.getReviewsByMemberId(memberId);
+        	
+            List<ProductReviewResponseDto> reviews = productReviewService.getReviewsByMemberId(memberId);
 
             if (reviews.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No reviews found for this member");
             }
 
-            // 轉換評論列表，包含 Base64 照片
-            List<Map<String, Object>> reviewList = reviews.stream().map(review -> {
-                Map<String, Object> reviewMap = new HashMap<>();
-                reviewMap.put("id", review.getId());
-                reviewMap.put("rating", review.getRating());
-                reviewMap.put("reviewDescription", review.getReviewDescription());
-                reviewMap.put("reviewTime", review.getReviewTime());
-                reviewMap.put("productId", review.getProduct().getId());
-
-                // 處理圖片
-                List<String> photosBase64 = review.getReviewPhotos().stream()
-                    .map(photo -> Base64.getEncoder().encodeToString(photo.getReviewPhoto()))
-                    .collect(Collectors.toList());
-                reviewMap.put("photos", photosBase64);
-
-                return reviewMap;
-            }).collect(Collectors.toList());
-
-            return ResponseEntity.ok(reviewList);
+            return ResponseEntity.ok(reviews);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error fetching reviews: " + e.getMessage());
         }
     }
 
+    @PutMapping("/reviews/{reviewId}/update")
+    public ResponseEntity<?> updateReview(@PathVariable Integer reviewId, 
+            @RequestParam List<MultipartFile> newPhotos, 
+            @RequestBody ProductReviewResponseDto reviewDto) {
+	try {
+		boolean updated = productReviewService.updateReview(reviewId, reviewDto, newPhotos);
+	
+		if (updated) {
+			return ResponseEntity.ok("評論更新成功");
+		}
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("評論未找到，更新失敗");
+		} catch (IOException e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("圖片處理出錯");
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("更新評論出錯");
+		}
+    }
 }
