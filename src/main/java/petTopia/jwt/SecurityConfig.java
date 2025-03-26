@@ -104,9 +104,9 @@ public class SecurityConfig {
                     "/api/public/**",
                     "/api/vendor/all",
                     "/api/vendor/category/show",
-                    "/shop/**",
+                    "/shop/",
                     "/shop/products",
-                    "/shop/productDetail",
+                    "/shop/productDetail", 
                     "/manage/**"
                 ).permitAll()
                 
@@ -124,8 +124,7 @@ public class SecurityConfig {
                     "/activity/{activityId}/review",
                     "/shop/orderHistory",
                     "/shop/checkout",
-                    "/shop/orders",
-                    "/shop/**"
+                    "/shop/orders"
                 ).hasRole("MEMBER")
                 
                 // 商家接口 只要新增新的api街口就在這裡添加
@@ -223,7 +222,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         // 允許的來源
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:3000","http://localhost:5174"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:5174", "http://localhost:3000"));
         // 允許的 HTTP 方法
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         // 允許的請求頭
