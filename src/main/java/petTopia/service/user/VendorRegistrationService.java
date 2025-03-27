@@ -154,6 +154,10 @@ public class VendorRegistrationService {
         return usersRepository.findByEmailAndUserRole(email, User.UserRole.VENDOR);
     }
 
+    public User findMemberByEmail(String email) {
+        return usersRepository.findByEmailAndUserRole(email, User.UserRole.MEMBER);
+    }
+
     @Transactional
     public Map<String, Object> convertMemberToVendor(Integer memberId) {
         Map<String, Object> result = new HashMap<>();

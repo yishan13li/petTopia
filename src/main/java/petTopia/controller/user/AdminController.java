@@ -63,6 +63,7 @@ public class AdminController {
      * 初始化超級管理員帳號
      */
     @PostMapping("/init-sa")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<?> initSuperAdmin() {
         logger.info("初始化超級管理員帳號");
         

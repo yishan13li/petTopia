@@ -195,4 +195,60 @@ public class VendorConversionController {
                 .body(Map.of("error", "檢查失敗：" + e.getMessage()));
         }
     }
+
+    /**
+     * 商家切換回會員
+     */
+    @PostMapping("/switch-back")
+    public ResponseEntity<?> switchBackToMember(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        logger.info("處理商家切換回會員請求");
+        
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", "請先登入"));
+        }
+
+        String token = authHeader.substring(7);
+        try {
+            String email = jwtUtil.extractUsername(token);
+            if (!jwtUtil.validateToken(token, email)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "無效的令牌"));
+            }
+
+            String role = jwtUtil.extractUserRole(token);
+            if (!"VENDOR".equals(role)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "只有商家可以切換回會員"));
+            }
+
+            // 查找對應的會員帳號
+            User memberUser = vendorRegistrationService.findMemberByEmail(email);
+            if (memberUser == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "找不到對應的會員帳號"));
+            }
+
+            // 生成新的會員 JWT
+            String newToken = jwtUtil.generateToken(
+                memberUser.getEmail(),
+                memberUser.getId(),
+                memberUser.getUserRole().toString()
+            );
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "已切換回會員帳號");
+            response.put("token", newToken);
+            response.put("userId", memberUser.getId());
+            response.put("email", memberUser.getEmail());
+            response.put("role", memberUser.getUserRole().toString());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("切換回會員過程發生異常", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "切換回會員失敗：" + e.getMessage()));
+        }
+    }
 } 
