@@ -74,13 +74,15 @@ public class ShopProductReviewController {
 
     @PutMapping("/reviews/{reviewId}/update")
     public ResponseEntity<?> updateReview(@PathVariable Integer reviewId, 
-            @RequestParam List<MultipartFile> newPhotos, 
-            @RequestBody ProductReviewResponseDto reviewDto) {
+    	    @RequestParam(value = "rating", required = false) Integer rating,
+    	    @RequestParam(value = "reviewDescription", required = false) String reviewDescription,
+    	    @RequestPart(value = "newPhotos", required = false) List<MultipartFile> newPhotos,
+    	    @RequestParam(value = "deletePhotoIds", required = false) List<Integer> deletePhotoIds) throws IOException {
 	try {
-		boolean updated = productReviewService.updateReview(reviewId, reviewDto, newPhotos);
+		boolean updated = productReviewService.updateReview(reviewId, rating,reviewDescription, newPhotos,deletePhotoIds);
 	
 		if (updated) {
-			return ResponseEntity.ok("評論更新成功");
+			return new ResponseEntity<>("Review successfully updated", HttpStatus.OK);
 		}
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("評論未找到，更新失敗");
 		} catch (IOException e) {

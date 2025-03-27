@@ -23,6 +23,6 @@ public class ProductReviewResponseDto {
     private String productPhoto;
     private Integer rating;
     private String reviewDescription;
-    private List<String> imageBase64; // 存 Base64 格式的圖片
+    private List<ProductReviewPhotoDto> productReviewPhoto; // 存 Base64 格式的圖片
     private Date reviewTime;
 }

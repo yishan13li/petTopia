@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import petTopia.dto.shop.ProductReviewPhotoDto;
 import petTopia.dto.shop.ProductReviewResponseDto;
 import petTopia.model.shop.ProductReview;
 import petTopia.model.shop.ProductReviewPhoto;
@@ -82,7 +83,7 @@ public class ProductReviewService {
     
     // 根據 memberId 查找所有評論，並確保載入評論的圖片
     public List<ProductReviewResponseDto> getReviewsByMemberId(Integer memberId) {
-        List<ProductReview> reviews = productReviewRepository.findByMemberId(memberId);
+        List<ProductReview> reviews = productReviewRepository.findByMemberIdOrderByReviewTimeDesc(memberId);
 
         // 確保每條評論的圖片都被載入
         for (ProductReview review : reviews) {
@@ -113,28 +114,45 @@ public class ProductReviewService {
         reviewDTO.setReviewTime(review.getReviewTime());
 
         // 處理圖片為 Base64 格式
-        List<String> imageBase64 = ImageConverter.byteListToBase64(review.getReviewPhotos().stream()
-                .map(photo -> photo.getReviewPhoto()) 
-                .collect(Collectors.toList()));
+        List<ProductReviewPhotoDto> productReviewPhotoList = review.getReviewPhotos().stream()
+                .map(photo -> {
+                    ProductReviewPhotoDto reviewPhotoDto = new ProductReviewPhotoDto();
+                    reviewPhotoDto.setReviewPhotoId(photo.getId());
 
-        reviewDTO.setImageBase64(imageBase64);
+                    // 轉換每個圖片為 Base64 字符串
+                    String base64Image = ImageConverter.byteToBase64(photo.getReviewPhoto()); // 假设 ImageConverter.byteToBase64 处理的是单张图片
 
+                    // 将 Base64 图片设置到 DTO 中
+                    reviewPhotoDto.setReviewPhotos(base64Image); // 直接设置为字符串，而不是列表
+
+                    return reviewPhotoDto;
+                })
+                .collect(Collectors.toList());
+
+        reviewDTO.setProductReviewPhoto(productReviewPhotoList);
+        
         return reviewDTO;
     }
 
     // 修改單一評論
-    public boolean updateReview(Integer reviewId, ProductReviewResponseDto reviewDto, List<MultipartFile> newPhotos) throws IOException {
+    public boolean updateReview(Integer reviewId, Integer rating, String reviewDescription, List<MultipartFile> newPhotos,List<Integer> deletePhotoIds) throws IOException {
         Optional<ProductReview> optionalReview = productReviewRepository.findById(reviewId);
         
         if (optionalReview.isPresent()) {
             ProductReview review = optionalReview.get();
             
-            // 更新評論內容
-            review.setRating(reviewDto.getRating());
-            review.setReviewDescription(reviewDto.getReviewDescription());
+            if(rating!=null) {
+            	review.setRating(rating);
+            }
+            
+            if(reviewDescription!=null) {
+            	review.setReviewDescription(reviewDescription);
+            }
 
             // **刪除舊圖片**
-            productReviewPhotoRepository.deleteByProductReview(review);
+            if(deletePhotoIds != null && !deletePhotoIds.isEmpty()) {
+            	productReviewPhotoRepository.deleteByIdIn(deletePhotoIds);
+            }
             
             // **新增新圖片**
             if (newPhotos != null && !newPhotos.isEmpty()) {
