@@ -3,6 +3,9 @@ package petTopia.repository.user;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -49,4 +52,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 	// 根據會員ID查找對應的商家帳號
 	@Query(value = "SELECT u.* FROM [users] u WHERE u.email = (SELECT u2.email FROM [users] u2 WHERE u2.id = :memberId) AND u.user_role = 'VENDOR'", nativeQuery = true)
 	Optional<User> findVendorByMemberId(Integer memberId);
+
+	// 添加分頁和規格查詢支援
+	Page<User> findAll(Specification<User> spec, Pageable pageable);
 }

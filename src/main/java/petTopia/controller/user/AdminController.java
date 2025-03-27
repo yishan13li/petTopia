@@ -22,9 +22,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import petTopia.jwt.JwtUtil;      
 import petTopia.model.user.User;
 import petTopia.model.user.Admin;
+import petTopia.model.user.Member;
 import petTopia.service.user.AdminService;
 import petTopia.repository.user.UserRepository;
 import petTopia.repository.user.AdminRepository;
+import petTopia.repository.user.MemberRepository;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +35,12 @@ import java.util.Map;
 import java.util.Collection;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.List;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -58,6 +66,9 @@ public class AdminController {
     
     @Autowired
     private AdminRepository adminRepository;
+    
+    @Autowired
+    private MemberRepository memberRepository;
     
     /**
      * 初始化超級管理員帳號
@@ -222,18 +233,91 @@ public class AdminController {
     }
     
     /**
-     * 獲取所有會員
+     * 獲取所有會員（支援分頁、搜尋和篩選）
      */
     @GetMapping("/members")
-    public ResponseEntity<?> getAllMembers() {
-        logger.info("獲取所有會員資料");
+    public ResponseEntity<?> getAllMembers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String email) {
+        
+        logger.info("獲取會員列表 - 頁碼: {}, 每頁數量: {}", page, size);
         
         try {
-            return ResponseEntity.ok(Map.of("members", adminService.getAllMembers()));
+            Map<String, Object> response = adminService.getAllMembersWithFilters(
+                page, size, keyword, status, null, null, null, email
+            );
+            
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            logger.error("獲取會員資料失敗", e);
+            logger.error("獲取會員列表失敗", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "獲取資料失敗：" + e.getMessage()));
+        }
+    }
+    
+    /**
+     * 新增會員
+     */
+    @PostMapping("/members")
+    public ResponseEntity<?> createMember(@RequestBody Map<String, Object> memberData) {
+        logger.info("新增會員");
+        
+        try {
+            // 驗證必要欄位
+            if (!memberData.containsKey("email") || !memberData.containsKey("password")) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "電子郵件和密碼為必填欄位"));
+            }
+            
+            User newMember = adminService.createMember(memberData);
+            return ResponseEntity.ok(Map.of(
+                "message", "會員新增成功",
+                "memberId", newMember.getId()
+            ));
+        } catch (Exception e) {
+            logger.error("新增會員失敗", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "新增失敗：" + e.getMessage()));
+        }
+    }
+    
+    /**
+     * 刪除會員
+     */
+    @DeleteMapping("/members/{memberId}")
+    public ResponseEntity<?> deleteMember(@PathVariable Integer memberId) {
+        logger.info("刪除會員 - ID: {}", memberId);
+        
+        try {
+            adminService.deleteMember(memberId);
+            return ResponseEntity.ok(Map.of("message", "會員刪除成功"));
+        } catch (Exception e) {
+            logger.error("刪除會員失敗", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "刪除失敗：" + e.getMessage()));
+        }
+    }
+    
+    /**
+     * 批量更新會員狀態
+     */
+    @PostMapping("/members/batch-update")
+    public ResponseEntity<?> batchUpdateMembers(@RequestBody Map<String, Object> updateData) {
+        logger.info("批量更新會員狀態");
+        
+        try {
+            List<Integer> memberIds = (List<Integer>) updateData.get("memberIds");
+            String action = (String) updateData.get("action");
+            
+            adminService.batchUpdateMemberStatus(memberIds, action);
+            return ResponseEntity.ok(Map.of("message", "會員狀態更新成功"));
+        } catch (Exception e) {
+            logger.error("批量更新會員狀態失敗", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "更新失敗：" + e.getMessage()));
         }
     }
     
@@ -332,6 +416,93 @@ public class AdminController {
             logger.error("獲取當前管理員資訊失敗", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "獲取資訊失敗：" + e.getMessage()));
+        }
+    }
+    
+    @GetMapping("/members/{memberId}")
+    public ResponseEntity<?> getMember(@PathVariable Integer memberId) {
+        logger.info("獲取會員資料 - ID: {}", memberId);
+        
+        try {
+            User user = userRepository.findById(memberId)
+                .orElseThrow(() -> new RuntimeException("找不到該會員"));
+                
+            if (user.getUserRole() != User.UserRole.MEMBER) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "該用戶不是會員"));
+            }
+            
+            Member member = memberRepository.findByUserId(memberId)
+                .orElseThrow(() -> new RuntimeException("找不到會員資料"));
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", user.getId());
+            response.put("email", user.getEmail());
+            response.put("emailVerified", user.isEmailVerified());
+            response.put("name", member.getName());
+            response.put("phone", member.getPhone());
+            response.put("birthdate", member.getBirthdate());
+            response.put("address", member.getAddress());
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("獲取會員資料失敗", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "獲取資料失敗：" + e.getMessage()));
+        }
+    }
+    
+    @PutMapping("/members/{memberId}")
+    public ResponseEntity<?> updateMember(@PathVariable Integer memberId, @RequestBody Map<String, Object> request) {
+        try {
+            User user = userRepository.findById(memberId)
+                    .orElseThrow(() -> new RuntimeException("找不到該會員"));
+            
+            if (user.getUserRole() != User.UserRole.MEMBER) {
+                return ResponseEntity.badRequest().body("該用戶不是會員");
+            }
+
+            // 更新會員資料
+            Member member = memberRepository.findByUserId(memberId)
+                    .orElseThrow(() -> new RuntimeException("找不到該會員資料"));
+
+            // 更新會員基本資料
+            if (request.containsKey("name")) {
+                member.setName((String) request.get("name"));
+            }
+            if (request.containsKey("phone")) {
+                member.setPhone((String) request.get("phone"));
+            }
+            if (request.containsKey("address")) {
+                member.setAddress((String) request.get("address"));
+            }
+            
+            // 處理生日日期
+            if (request.containsKey("birthdate")) {
+                String birthdateStr = (String) request.get("birthdate");
+                if (birthdateStr != null && !birthdateStr.trim().isEmpty()) {
+                    try {
+                        LocalDate birthdate = LocalDate.parse(birthdateStr);
+                        member.setBirthdate(birthdate);
+                    } catch (DateTimeParseException e) {
+                        return ResponseEntity.badRequest().body("生日日期格式不正確");
+                    }
+                }
+            }
+
+            // 更新用戶狀態
+            if (request.containsKey("emailVerified")) {
+                user.setEmailVerified((Boolean) request.get("emailVerified"));
+            }
+
+            // 保存更新
+            memberRepository.save(member);
+            userRepository.save(user);
+
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            logger.error("更新會員資料失敗", e);
+            return ResponseEntity.badRequest().body("更新會員資料失敗: " + e.getMessage());
         }
     }
 } 
