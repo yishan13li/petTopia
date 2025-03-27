@@ -35,7 +35,6 @@ public class VendorActivity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
 
-	@JsonIgnore
 	@ManyToOne
 	@JoinColumn(name = "vendor_id", nullable = false)
 	private Vendor vendor;

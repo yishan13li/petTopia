@@ -1,9 +1,9 @@
 package petTopia.service.vendor;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +13,7 @@ import petTopia.model.vendor.ActivityType;
 import petTopia.model.vendor.VendorActivity;
 import petTopia.repository.vendor.VendorActivityRepository;
 import petTopia.repository.vendor_admin.ActivityTypeRepository;
+import petTopia.util.ImageConverter;
 
 @Service
 public class VendorActivityService {
@@ -24,18 +25,21 @@ public class VendorActivityService {
 	private ActivityTypeRepository activityTypeRepository;
 
 	public List<VendorActivity> findAllActivity() {
-		List<VendorActivity> vendorList = vendorActivityRepository.findAll();
-		return vendorList;
+		List<VendorActivity> activityList = vendorActivityRepository.findAll();
+		return activityList;
 	}
 
 	public VendorActivity findActivityById(Integer id) {
-		Optional<VendorActivity> optional = vendorActivityRepository.findById(id);
+		VendorActivity activity = vendorActivityRepository.findById(id).orElse(null);
 
-		if (optional.isPresent()) {
-			return optional.get();
+		byte[] logoImg = activity.getVendor().getLogoImg();
+		if (logoImg != null) {
+			String mimeType = ImageConverter.getMimeType(logoImg);
+			String base64 = "data:%s;base64,".formatted(mimeType) + Base64.getEncoder().encodeToString(logoImg);
+			activity.getVendor().setLogoImgBase64(base64);
 		}
 
-		return null;
+		return activity;
 	}
 
 	public List<VendorActivity> findAllActivityExceptOne(Integer activityId) {
@@ -63,7 +67,7 @@ public class VendorActivityService {
 		if (activityToRemove != null) {
 			activityList.removeIf(activity -> activity.getId().equals(activityToRemove.getId())); // 刪除ID與activityToRemove相同ID相同之活動
 		}
-		
+
 		return activityList;
 	}
 
@@ -111,4 +115,9 @@ public class VendorActivityService {
 		return finalList;
 	}
 
+	/* 用店家ID搜尋活動 */
+	public List<VendorActivity> findActivityListByVendorId(Integer vendorId) {
+		List<VendorActivity> activityList = vendorActivityRepository.findByVendorId(vendorId);
+		return activityList;
+	}
 }
