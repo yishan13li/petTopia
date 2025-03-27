@@ -132,4 +132,15 @@ public class VendorCertificationService {
         return certificationsWithTags;
     }
 
+ // 更新认证状态
+    public VendorCertification updateCertificationStatus(Integer certificationId, String status,String reason) {
+    	VendorCertification certification = vendorCertificationRepository.findById(certificationId)
+                .orElseThrow(() -> new RuntimeException("Certification not found with id: " + certificationId));
+
+        // 更新状态
+        certification.setCertificationStatus(status);
+        certification.setReason(reason);
+        certification.setApprovedDate(new Date());
+        return vendorCertificationRepository.save(certification); // 保存更新后的认证记录
+    }
 }
