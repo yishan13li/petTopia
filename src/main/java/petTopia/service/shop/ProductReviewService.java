@@ -149,10 +149,10 @@ public class ProductReviewService {
             	review.setReviewDescription(reviewDescription);
             }
 
-            // **刪除舊圖片**
-            if(deletePhotoIds != null && !deletePhotoIds.isEmpty()) {
-            	productReviewPhotoRepository.deleteByIdIn(deletePhotoIds);
+            if (deletePhotoIds != null && !deletePhotoIds.isEmpty()) {
+                productReviewPhotoRepository.deleteByIdIn(deletePhotoIds);
             }
+
             
             // **新增新圖片**
             if (newPhotos != null && !newPhotos.isEmpty()) {
