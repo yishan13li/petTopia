@@ -81,6 +81,14 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
                     attributes.put("vendorId", vendorAccount.get().getId());
                 }
                 
+                // 使用預設頭像
+                attributes.put("avatar", "/user_static/images/default-avatar.png");
+                
+                // 添加所有原始属性
+                attributes.putAll(oauth2User.getAttributes());
+                
+                logger.info("最終的用戶屬性: {}", attributes);
+                
                 return new DefaultOAuth2User(
                     oauth2User.getAuthorities(),
                     attributes,
@@ -132,12 +140,8 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
                     attributes.put("vendorId", vendorAccount.get().getId());
                 }
                 
-                // 添加第三方头像URL
-                String pictureUrl = oauth2User.getAttribute("picture");
-                if (pictureUrl != null) {
-                    logger.info("添加第三方頭像URL: {}", pictureUrl);
-                    attributes.put("avatar", pictureUrl);
-                }
+                // 使用預設頭像
+                attributes.put("avatar", "/user_static/images/default-avatar.png");
                 
                 // 添加所有原始属性
                 attributes.putAll(oauth2User.getAttributes());
@@ -176,6 +180,15 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
                 member.setGender(false);
                 member.setUpdatedDate(LocalDateTime.now());
                 
+                // 設置預設頭像
+                try {
+                    String defaultAvatarPath = "/static/user_static/images/default-avatar.png";
+                    byte[] defaultAvatarBytes = getClass().getResourceAsStream(defaultAvatarPath).readAllBytes();
+                    member.setProfilePhoto(defaultAvatarBytes);
+                } catch (Exception e) {
+                    logger.error("設置預設頭像失敗", e);
+                }
+                
                 // 使用 memberRepository 保存会员资料
                 member = memberRepository.saveAndFlush(member);
                 
@@ -189,11 +202,8 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
                 attributes.put("provider", existingUser.getProvider());
                 attributes.put("hasVendorAccount", false);
                 
-                // 添加第三方头像URL
-                String pictureUrl = oauth2User.getAttribute("picture");
-                if (pictureUrl != null) {
-                    attributes.put("avatar", pictureUrl);
-                }
+                // 使用預設頭像
+                attributes.put("avatar", "/user_static/images/default-avatar.png");
                 
                 // 添加所有原始属性
                 attributes.putAll(oauth2User.getAttributes());

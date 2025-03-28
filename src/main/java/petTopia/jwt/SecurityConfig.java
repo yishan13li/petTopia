@@ -110,8 +110,10 @@ public class SecurityConfig {
                     "/api/**",
                     "api/**",
                     "/api/vendor/**",
+
                     "/api/activity/**",
                     "/manage/**"
+
 
                 ).permitAll()
                 

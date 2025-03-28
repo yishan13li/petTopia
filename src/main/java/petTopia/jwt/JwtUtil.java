@@ -119,11 +119,11 @@ public class JwtUtil {
     }
 
     /**
-     * 為用戶生成新的 JWT 令牌
-     * @param email 用戶電子郵件
-     * @param userId 用戶 ID
+     * 生成 JWT 令牌
+     * @param email 用戶郵箱
+     * @param userId 用戶ID
      * @param role 用戶角色
-     * @return 生成的 JWT 令牌
+     * @return JWT 令牌
      */
     public String generateToken(String email, Integer userId, String role) {
         Map<String, Object> claims = new HashMap<>();
@@ -184,6 +184,36 @@ public class JwtUtil {
             return userInfo;
         } catch (Exception e) {
             return new HashMap<>();
+        }
+    }
+
+    /**
+     * 從令牌中獲取所有聲明
+     * @param token JWT 令牌
+     * @return Claims 對象
+     */
+    public Claims getAllClaimsFromToken(String token) {
+        return Jwts.parserBuilder()
+            .setSigningKey(getSigningKey())
+            .build()
+            .parseClaimsJws(token)
+            .getBody();
+    }
+
+    /**
+     * 驗證 JWT 令牌
+     * @param token JWT 令牌
+     * @return 如果令牌有效返回 true，否則返回 false
+     */
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token);
+            return true;
+        } catch (Exception e) {
+            return false;
         }
     }
 } 
