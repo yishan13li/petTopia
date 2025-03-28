@@ -298,7 +298,7 @@ public class VendorProfileController {
 	
 	// 根据vendorId获取该店铺的所有标语
 	@ResponseBody
-	@GetMapping("/vendor/{vendorId}/slogans")
+	@GetMapping("/api/vendor/{vendorId}/slogans")
 	public List<String> getCertifiedSlogansByVendorId(@PathVariable Integer vendorId) {
 	    return vendorService.getSlogansByVendorId(vendorId);
 	}
