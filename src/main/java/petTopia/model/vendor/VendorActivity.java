@@ -35,7 +35,6 @@ public class VendorActivity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
 
-	@JsonIgnore
 	@ManyToOne
 	@JoinColumn(name = "vendor_id", nullable = false)
 	private Vendor vendor;
@@ -47,11 +46,11 @@ public class VendorActivity {
 	private String description;
 
 	@Column(name = "start_time", nullable = false)
-
+	@Temporal(TemporalType.TIMESTAMP)
 	private java.util.Date startTime;
 
 	@Column(name = "end_time", nullable = false)
-
+	@Temporal(TemporalType.TIMESTAMP)
 	private java.util.Date endTime;
 
 	@Column(name = "is_registration_required", nullable = false)

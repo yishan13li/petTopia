@@ -320,4 +320,26 @@ public class VendorReviewService {
 
 		return review;
 	}
+
+	/* 修改評論(完整版) */
+	public VendorReview modifyReview(Integer reviewId, String content, Integer ratingEnv, Integer ratingPrice,
+			Integer ratingService, List<MultipartFile> reviewPhotos, List<Integer> deletePhotoIds) throws IOException {
+		VendorReview review = vendorReviewRepository.findById(reviewId).orElse(null);
+		review.setReviewContent(content);
+		review.setRatingEnvironment(ratingEnv);
+		review.setRatingPrice(ratingPrice);
+		review.setRatingPrice(ratingPrice);
+		review.setRatingService(ratingService);
+		review.setReviewTime(new Date());
+
+		addReviewPhotos(reviewId, reviewPhotos);
+
+		if (deletePhotoIds != null && !deletePhotoIds.isEmpty()) {
+			for (Integer photoId : deletePhotoIds) {
+				reviewPhotoRepository.deleteById(photoId);
+			}
+		}
+
+		return review;
+	}
 }

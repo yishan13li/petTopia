@@ -114,6 +114,7 @@ public class VendorCertificationController {
 	        certMap.put("id", cert.getId());
 	        certMap.put("vendor", cert.getVendor());
 	        certMap.put("certificationStatus", cert.getCertificationStatus());
+	        certMap.put("reason", cert.getReason());
 	        certMap.put("requestDate", cert.getRequestDate());
 	        certMap.put("approvedDate", cert.getApprovedDate());
 	        

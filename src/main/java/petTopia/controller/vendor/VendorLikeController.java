@@ -24,7 +24,7 @@ public class VendorLikeController {
 	private VendorLikeService vendorLikeService;
 	
 	@GetMapping("/api/vendor/{vendorId}/like")
-	public ResponseEntity<List<VendorLikeDto>> getVendorLikeTest(@PathVariable Integer vendorId) {
+	public ResponseEntity<List<VendorLikeDto>> getVendorLikeList(@PathVariable Integer vendorId) {
 		List<VendorLikeDto> likeList = vendorLikeService.findMemberListByVendorId(vendorId);
 		return ResponseEntity.ok(likeList);
 	}

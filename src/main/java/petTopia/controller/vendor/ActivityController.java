@@ -57,20 +57,20 @@ public class ActivityController {
 	}
 
 	@GetMapping("/api/activity/type/{typeId}")
-	public ResponseEntity<List<VendorActivity>> getVendorsByCategory(@PathVariable Integer typeId) {
+	public ResponseEntity<List<VendorActivity>> getActivitiesByType(@PathVariable Integer typeId) {
 		List<VendorActivity> activityList = vendorActivityService.findActivityByTypeId(typeId);
 		return ResponseEntity.ok(activityList);
 	}
 
 	@GetMapping("/api/activity/type/{typeId}/except/activity/{activityId}")
-	public ResponseEntity<List<VendorActivity>> getVendorsByCategoryExceptOne(@PathVariable Integer typeId,
+	public ResponseEntity<List<VendorActivity>> getActivitiesByCategoryExceptOne(@PathVariable Integer typeId,
 			@PathVariable Integer activityId) {
 		List<VendorActivity> activityList = vendorActivityService.findActivityByTypeIdExceptOne(typeId, activityId);
 		return ResponseEntity.ok(activityList);
 	}
 
 	@PostMapping("/api/activity/find")
-	public ResponseEntity<List<VendorActivity>> getVendosrByNameOrDescription(@RequestBody Map<String, String> data) {
+	public ResponseEntity<List<VendorActivity>> getActivitiesByKeyword(@RequestBody Map<String, String> data) {
 		String keyword = data.get("keyword");
 		List<VendorActivity> activityList = vendorActivityService.findVendorByNameOrDescription(keyword);
 		return ResponseEntity.ok(activityList);
@@ -86,5 +86,11 @@ public class ActivityController {
 	public ResponseEntity<VendorActivity> increaseNumberOfVisitor(@PathVariable Integer activityId) {
 		VendorActivity activity = vendorActivityService.increaseNumberOfVisitor(activityId);
 		return ResponseEntity.ok(activity);
+	}
+
+	@GetMapping("/api/activity/vendor/{vendorId}")
+	public ResponseEntity<List<VendorActivity>> getActivitiesByVendorId(@PathVariable Integer vendorId) {
+		List<VendorActivity> activityList = vendorActivityService.findActivityListByVendorId(vendorId);
+		return ResponseEntity.ok(activityList);
 	}
 }
