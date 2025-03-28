@@ -12,6 +12,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class OrderItemDto {
 	private Integer productId;
+	private Integer productDetailId;
 	private byte[] productPhoto;
 	private String productSize;
 	private String productColor;

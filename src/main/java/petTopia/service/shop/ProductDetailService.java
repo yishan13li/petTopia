@@ -72,4 +72,12 @@ public class ProductDetailService {
 		return null;
 	}
 		
+	public ProductDetail findByProductDetailName(String productDetailName) {
+		
+		ProductDetail productDetail = productDetailRepository.findByName(productDetailName);
+		if (productDetail != null)
+			return productDetail;
+		
+		return null;
+	}
 }
