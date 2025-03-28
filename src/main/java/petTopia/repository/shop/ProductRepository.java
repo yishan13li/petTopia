@@ -7,10 +7,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import petTopia.model.shop.Product;
+import petTopia.model.shop.ProductDetail;
 
 public interface ProductRepository extends JpaRepository<Product, Integer>, ProductRepositoryCustom{
-	
-	public List<Product> findByProductDetailId(Integer productDetailId);
 	
 	public Product findFirstByProductDetailIdOrderByUnitPriceAsc(Integer productDetailId);
 	public Product findFirstByProductDetailIdOrderByUnitPriceDesc(Integer productDetailId);
@@ -33,5 +32,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, Prod
 	
 	// 獲取有上架的商品
 	public List<Product> findByProductDetailIdAndStatus(Integer productDetailId, Boolean status);
+	
+	public ProductDetail findByProductDetailId(Integer productDetailId);
+	
 	
 }

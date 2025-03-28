@@ -9,8 +9,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductDto {
+public class ProductDto2 {
 
+	private Integer id;
 	private BigDecimal unitPrice;
 	private BigDecimal discountPrice;
 	private Integer stockQuantity;
