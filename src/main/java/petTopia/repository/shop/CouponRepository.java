@@ -2,6 +2,8 @@ package petTopia.repository.shop;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -27,4 +29,7 @@ public interface CouponRepository extends JpaRepository<Coupon, Integer> {
     @Query("UPDATE MemberCoupon c SET c.usageCount = c.usageCount - 1 " +
     	       "WHERE c.member.id = :memberId AND c.coupon.id = :couponId")
     void decreaseCouponUsageCount(Integer memberId, Integer couponId);
+
+    // 按名稱搜尋優惠券（分頁）
+    Page<Coupon> findByNameContaining(String name, Pageable pageable);
 }
