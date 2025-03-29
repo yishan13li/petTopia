@@ -38,7 +38,7 @@ public class FriendlyShopController {
 		String keyword = data.get("keyword");
 		List<FriendlyShop> friendlyShopList = friendlyShopService.findByKeyword(keyword);
 		Map<String, Object> resopnse = new HashMap<>();
-		resopnse.put("resnse", friendlyShopList);
+		resopnse.put("response", friendlyShopList);
 		return ResponseEntity.ok(resopnse);
 	}
 
