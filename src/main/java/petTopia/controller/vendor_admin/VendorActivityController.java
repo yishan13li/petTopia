@@ -66,11 +66,11 @@ public class VendorActivityController {
 		vendor.setEventCount(activityCount);
 		
 		// **根据活动数量更新 level**
-	    if (activityCount >15) {
+	    if (activityCount >8) {
 	        vendor.setVendorLevel("頂級"); // 例如：50场以上是白金等级
-	    } else if (activityCount >10) {
-	        vendor.setVendorLevel("資深"); // 20-49场是黄金等级
 	    } else if (activityCount >5) {
+	        vendor.setVendorLevel("資深"); // 20-49场是黄金等级
+	    } else if (activityCount >2) {
 	        vendor.setVendorLevel("進階"); // 10-19场是白银等级
 	    } else {
 	        vendor.setVendorLevel("普通"); // 10场以下是青铜等级

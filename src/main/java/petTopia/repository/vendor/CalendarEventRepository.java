@@ -26,5 +26,7 @@ public interface CalendarEventRepository extends JpaRepository<CalendarEvent, In
 	Optional<CalendarEvent> findByColor(String color);
 
 	Optional<CalendarEvent> findByEventId(Integer id);
+
+	void deleteByVendorActivityId(Integer id);
 	
 }

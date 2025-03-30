@@ -95,7 +95,7 @@ public class VendorCertificationService {
                 keywords.get(3), keywords.get(4)
         );
 
-        return matchingReviewCount >= 5; // 例如至少 10 則符合評論才算合格
+        return matchingReviewCount >= 3; // 例如至少 10 則符合評論才算合格
     }
     
     public List<CertificationDTO> getAllCertificationsWithTags() {

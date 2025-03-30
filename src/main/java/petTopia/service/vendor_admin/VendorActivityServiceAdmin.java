@@ -6,7 +6,9 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import jakarta.transaction.Transactional;
 import petTopia.model.vendor.VendorActivity;
+import petTopia.repository.vendor.CalendarEventRepository;
 import petTopia.repository.vendor.VendorActivityRepository;
 import petTopia.repository.vendor_admin.VendorActivityImagesRepository;
 
@@ -15,9 +17,12 @@ public class VendorActivityServiceAdmin {
 
 	@Autowired
 	private VendorActivityRepository vendorActivityRepository;
-	
+
 	@Autowired
 	private VendorActivityImagesRepository vendorActivityImagesRepository;
+
+	@Autowired
+	private CalendarEventRepository calendarEventRepository;
 
 	public VendorActivity saveVendorActivity(VendorActivity vendorActivity) {
 		return vendorActivityRepository.save(vendorActivity);
@@ -31,7 +36,9 @@ public class VendorActivityServiceAdmin {
 		return vendorActivityRepository.findByVendorId(vendorId);
 	}
 
+	@Transactional
 	public void deleteVendorActivity(Integer id) {
+		calendarEventRepository.deleteByVendorActivityId(id);
 		vendorActivityRepository.deleteById(id);
 
 	}
@@ -45,9 +52,9 @@ public class VendorActivityServiceAdmin {
 //		return vendorActivityImagesRepository.findFirstByVendorActivityId(vendorActivityId)
 //				.map(VendorActivityImages::getId);
 //	}
-	
+
 	public Optional<VendorActivity> getVendorActivityById(Integer id) {
 		return vendorActivityRepository.findById(id);
 	}
-	
+
 }
