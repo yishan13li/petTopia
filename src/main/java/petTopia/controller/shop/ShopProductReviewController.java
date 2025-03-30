@@ -112,10 +112,18 @@ public class ShopProductReviewController {
     	}
     }
     
-    // 查詢某個商品的評論總數
+ // 查詢某個商品的評論總數
     @GetMapping("/products/{productDetailId}/reviews/count")
-    public Integer getReviewsCount(@PathVariable Integer productDetailId) {
-        return productReviewService.getReviewsCountByProductDetailId(productDetailId);
+    public ResponseEntity<?> getReviewsCount(@PathVariable Integer productDetailId) {
+        try {
+            Integer count = productReviewService.getReviewsCountByProductDetailId(productDetailId);
+            if (count == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No reviews found for this product.");
+            }
+            return ResponseEntity.ok(count);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error fetching review count: " + e.getMessage());
+        }
     }
     
     //該商品的所有評論
