@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import petTopia.model.vendor.FriendlyShop;
@@ -42,15 +43,24 @@ public class FriendlyShopController {
 		return ResponseEntity.ok(resopnse);
 	}
 
-	@GetMapping("/api/vendor/coordinate/vendor/{vendorId}")
+	@GetMapping("/api/vendor/coordinate/find/vendor/{vendorId}")
 	public ResponseEntity<List<FriendlyShop>> findByVendorId(@PathVariable Integer vendorId) {
 		List<FriendlyShop> friendlyShop = friendlyShopService.findByVendorId(vendorId);
 		return ResponseEntity.ok(friendlyShop);
 	}
 
-	@GetMapping("/api/vendor/coordinate/category/{categoryId}")
+	@GetMapping("/api/vendor/coordinate/find/category/{categoryId}")
 	public ResponseEntity<List<FriendlyShop>> findByVendorCategory(@PathVariable Integer categoryId) {
 		List<FriendlyShop> friendlyShop = friendlyShopService.findByVendorCategoryId(categoryId);
 		return ResponseEntity.ok(friendlyShop);
+	}
+
+	@PostMapping("/api/vendor/coordinate")
+	public ResponseEntity<?> findByAddress(@RequestParam String address) {
+		double[] coordinate = friendlyShopService.getLatLng(address);
+
+		Map<String, Object> resopnse = new HashMap<>();
+		resopnse.put("response", coordinate);
+		return ResponseEntity.ok(resopnse);
 	}
 }

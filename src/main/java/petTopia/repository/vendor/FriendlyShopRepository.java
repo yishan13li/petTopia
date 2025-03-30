@@ -10,7 +10,7 @@ import petTopia.model.vendor.VendorCategory;
 
 public interface FriendlyShopRepository extends JpaRepository<FriendlyShop, Integer> {
 
-	public FriendlyShop findFirstByVendorId(Integer vendorId);
+	public FriendlyShop findFirstByVendor(Vendor vendor);
 
 	public List<FriendlyShop> findByNameContaining(String name);
 
