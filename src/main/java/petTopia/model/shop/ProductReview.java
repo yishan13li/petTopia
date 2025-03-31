@@ -48,9 +48,9 @@ public class ProductReview {
     @Column(name = "review_time", insertable=false, updatable=false)
     private Date reviewTime;
     
-    @OneToMany(mappedBy = "productReview", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "productReview", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<ProductReviewPhoto> reviewPhotos;
-    
+ 
     public ProductReview(Integer rating, String reviewDescription) {
         this.rating = rating;
         this.reviewDescription = reviewDescription;
