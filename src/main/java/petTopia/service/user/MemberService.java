@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import petTopia.model.user.Member;
 import petTopia.model.user.User;
@@ -119,6 +120,10 @@ public class MemberService {
 
     public Optional<Member> findById(int userId) {
         return memberRepository.findById(userId);  // 根據 userId 查找 Member 資料
+    }
+
+    public List<Member> findAllById(List<Integer> memberIds) {
+        return memberRepository.findAllById(memberIds);
     }
 
 } 

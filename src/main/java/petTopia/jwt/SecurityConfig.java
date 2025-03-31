@@ -112,9 +112,11 @@ public class SecurityConfig {
                     "/api/vendor/**",
 
                     "/api/activity/**",
-                    "/manage/**"
+                    "/manage/**", 
 
-
+                    "/chat/**", 
+                    "/chatRoom/**"
+                    
                 ).permitAll()
                 
                 // 會員接口 只要新增新的api街口就在這裡添加
