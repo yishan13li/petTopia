@@ -121,7 +121,13 @@ public class FriendlyShopService {
 		double[] latLng = getLatLng(vendor.getAddress());
 		BigDecimal lat = BigDecimal.valueOf(latLng[0]);
 		BigDecimal lng = BigDecimal.valueOf(latLng[1]);
-		friendlyShop.setName(vendor.getName());
+
+		if (vendor.getName() != null) {
+			friendlyShop.setName(vendor.getName());
+		} else {
+			friendlyShop.setName("( 無店家名稱 )");
+		}
+
 		friendlyShop.setVendorCategory(vendor.getVendorCategory());
 		friendlyShop.setLatitude(lat);
 		friendlyShop.setLongitude(lng);
