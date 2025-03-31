@@ -26,7 +26,19 @@ public class VendorActivityService {
 
 	public List<VendorActivity> findAllActivity() {
 		List<VendorActivity> activityList = vendorActivityRepository.findAll();
+
+		for (VendorActivity activity : activityList) {
+			byte[] logoImg = activity.getVendor().getLogoImg();
+			if (logoImg != null) {
+				String mimeType = ImageConverter.getMimeType(logoImg);
+				String base64 = "data:%s;base64,".formatted(mimeType) + Base64.getEncoder().encodeToString(logoImg);
+				activity.getVendor().setLogoImgBase64(base64);
+			}
+
+		}
+
 		return activityList;
+
 	}
 
 	public VendorActivity findActivityById(Integer id) {

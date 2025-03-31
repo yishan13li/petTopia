@@ -6,11 +6,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import petTopia.dto.vendor.ActivityDto;
+import petTopia.dto.vendor.VendorDto;
 import petTopia.model.vendor.Vendor;
+import petTopia.model.vendor.VendorActivity;
 import petTopia.repository.vendor.VendorRepository;
 import petTopia.util.ImageConverter;
 
@@ -19,6 +23,9 @@ public class VendorService {
 
 	@Autowired
 	private VendorRepository vendorRepository;
+	
+	@Autowired
+	private VendorReviewService vendorReviewService;
 
 	/* 所有店家清單 */
 	public List<Vendor> findAllVendor() {
@@ -150,4 +157,51 @@ public class VendorService {
 		return finalList;
 	}
 
+	/* Activity DTO */
+	public ActivityDto convertActivityToDto(VendorActivity activity) {
+		ActivityDto activityDto = new ActivityDto();
+		activityDto.setActivityId(activity.getId());
+		activityDto.setActivityName(activity.getName());
+		activityDto.setActivityDescription(activity.getDescription());
+		return activityDto;
+	}
+
+	/* Vendor DTO */
+	public VendorDto convertVendorToDto(Vendor vendor) {
+		VendorDto vendorDto = new VendorDto();
+		vendorDto.setId(vendor.getId());
+		vendorDto.setName(vendor.getName());
+		vendorDto.setDescription(vendor.getDescription());
+		
+		/* 確保載入時有最新評分 */
+		Vendor vendorForAvgRating = vendorReviewService.setAverageRating(vendor.getId());
+		vendorDto.setTotalRating(vendorForAvgRating.getTotalRating());
+
+		byte[] logoImg = vendor.getLogoImg();
+		if (logoImg != null) {
+			String mimeType = ImageConverter.getMimeType(logoImg);
+			String base64 = "data:%s;base64,".formatted(mimeType) + Base64.getEncoder().encodeToString(logoImg);
+			vendorDto.setLogoImgBase64(base64);
+		}
+
+		List<ActivityDto> activityDtoList = vendor.getActivities().stream().map(this::convertActivityToDto)
+				.collect(Collectors.toList());
+
+		vendorDto.setActivityDtoList(activityDtoList);
+
+		return vendorDto;
+	}
+	
+	/* 取得所有 Vendor DTO */
+	public List<VendorDto> getAllVendorDto() {
+	    List<Vendor> vendorList = vendorRepository.findAll();
+	    List<VendorDto> vendorDtoList = new ArrayList<>();
+
+	    for (Vendor vendor : vendorList) {
+	    	VendorDto dto = convertVendorToDto(vendor);
+	    	vendorDtoList.add(dto);
+	    }
+
+	    return vendorDtoList;
+	}
 }
