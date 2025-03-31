@@ -33,6 +33,7 @@ import petTopia.repository.vendor.CalendarEventRepository;
 import petTopia.repository.vendor.VendorActivityRepository;
 import petTopia.repository.vendor.VendorRepository;
 import petTopia.repository.vendor_admin.ActivityPeopleNumberRepository;
+import petTopia.repository.vendor_admin.ActivityRegistrationRepository;
 import petTopia.repository.vendor_admin.VendorActivityImagesRepository;
 import petTopia.service.vendor_admin.ActivityTypeService;
 import petTopia.service.vendor_admin.VendorActivityServiceAdmin;
@@ -61,6 +62,9 @@ public class VendorActivityController {
 	@Autowired
 	private CalendarEventRepository calendarEventRepository;
 
+	@Autowired
+	private ActivityRegistrationRepository activityRegistrationRepository;
+	
 	public void updateActivityCount(Vendor vendor) {
 		int activityCount = vendorActivityRepository.countByVendor(vendor);
 		vendor.setEventCount(activityCount);
@@ -275,6 +279,8 @@ public class VendorActivityController {
 
 			Boolean isRegistrationRequired = Boolean.parseBoolean(is_registration_required);
 			vendorActivity.setIsRegistrationRequired(isRegistrationRequired); // 設置布林值
+			
+			
 			// 3. 刪除指定的圖片
 			if (deletedImageIds != null && !deletedImageIds.isEmpty()) {
 				vendorActivityImagesRepository.deleteAllById(deletedImageIds);
@@ -302,6 +308,14 @@ public class VendorActivityController {
 			activityPeopleNumber.setMaxParticipants(max_participants);
 
 			activityPeopleNumberRepository.save(activityPeopleNumber);
+			
+			if (!isRegistrationRequired) {
+			    activityRegistrationRepository.deleteByVendorActivityId(activityId);
+			    
+			    activityPeopleNumber.setCurrentParticipants(0);
+
+				activityPeopleNumberRepository.save(activityPeopleNumber);
+			}
 
 			// 6. 儲存變更
 			vendorActivityRepository.save(vendorActivity);
