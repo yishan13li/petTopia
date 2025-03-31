@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,7 +35,7 @@ public class ShopProductReviewController {
 	@Autowired
     private ProductReviewService productReviewService;
 
-    // 新增評論
+    // 新增會員評論
     @PostMapping("/product/{productId}/review/create")
     public ResponseEntity<String> createReview(@PathVariable Integer productId,
     	    @RequestParam Integer memberId,
@@ -58,21 +59,25 @@ public class ShopProductReviewController {
     
     // 根據 memberId 找該會員的所有評論
     @GetMapping("/reviews/member/{memberId}")
-    public ResponseEntity<?> getReviewsByMemberId(@PathVariable Integer memberId) {
+    public ResponseEntity<?> getReviewsByMemberId(
+            @PathVariable Integer memberId,
+            @RequestParam(defaultValue = "1", required = false) int page,  // 默認第1頁
+            @RequestParam(defaultValue = "10", required = false) int size) {  // 默認每頁10條評論
         try {
-        	
-            List<ProductReviewResponseDto> reviews = productReviewService.getReviewsByMemberId(memberId);
+            // 獲取分頁結果
+            Page<ProductReviewResponseDto> reviews = productReviewService.getReviewsByMemberId(memberId, page, size);
 
             if (reviews.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No reviews found for this member");
             }
 
-            return ResponseEntity.ok(reviews);
+            return ResponseEntity.ok(reviews);  // 返回 Page 格式的評論資料
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error fetching reviews: " + e.getMessage());
         }
     }
-
+    
+    //修改會員評論
     @PutMapping("/reviews/{reviewId}/update")
     public ResponseEntity<?> updateReview(@PathVariable Integer reviewId, 
     	    @RequestParam(value = "rating", required = false) Integer rating,
@@ -92,4 +97,52 @@ public class ShopProductReviewController {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("更新評論出錯");
 		}
     }
+    
+    // 根據 productDetailId 查找商品的平均評分
+    @GetMapping("/products/{productDetailId}/reviews/avgRating")
+    public ResponseEntity<?> getAverageRating(@PathVariable Integer productDetailId) {
+    	try {
+    		Double averageRating = productReviewService.getAverageRatingByProductDetailId(productDetailId);
+    		if (averageRating == null) {
+    			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No reviews found for this product.");
+    		}
+    		return ResponseEntity.ok(averageRating);
+    	} catch (Exception e) {
+    		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error fetching average rating: " + e.getMessage());
+    	}
+    }
+    
+ // 查詢某個商品的評論總數
+    @GetMapping("/products/{productDetailId}/reviews/count")
+    public ResponseEntity<?> getReviewsCount(@PathVariable Integer productDetailId) {
+        try {
+            Integer count = productReviewService.getReviewsCountByProductDetailId(productDetailId);
+            if (count == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No reviews found for this product.");
+            }
+            return ResponseEntity.ok(count);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error fetching review count: " + e.getMessage());
+        }
+    }
+    
+    //該商品的所有評論
+    @GetMapping("/reviews/product/{productDetailId}")
+    public ResponseEntity<?> getReviewsByProductDetailId(
+            @PathVariable Integer productDetailId,
+            @RequestParam(defaultValue = "1", required = false) int page,  // 默認第1頁
+            @RequestParam(defaultValue = "10", required = false) int size) {  // 默認每頁10條評論
+        try {
+            Page<ProductReviewResponseDto> reviews = productReviewService.getReviewsByProductDetailId(productDetailId, page, size);
+
+            if (reviews.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No reviews found for this product.");
+            }
+
+            return ResponseEntity.ok(reviews);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error fetching reviews: " + e.getMessage());
+        }
+    }
+
 }

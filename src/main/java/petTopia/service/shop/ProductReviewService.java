@@ -7,6 +7,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -44,6 +48,45 @@ public class ProductReviewService {
         }
     }
     
+    // 將 ProductReview 轉換為 ProductReviewDTO
+    private ProductReviewResponseDto convertToDTO(ProductReview review) {
+    	ProductReviewResponseDto reviewDTO = new ProductReviewResponseDto();
+        
+        // 設定基本欄位
+        reviewDTO.setReviewId(review.getId());
+        reviewDTO.setMemberId(review.getMember().getId());
+        reviewDTO.setMemberName(review.getMember().getName());
+        reviewDTO.setProductId(review.getProduct().getId());
+        reviewDTO.setProductDetailId(review.getProduct().getProductDetail().getId());
+        reviewDTO.setProductName(review.getProduct().getProductDetail().getName());
+        reviewDTO.setProductColor(review.getProduct().getProductColor() != null ? review.getProduct().getProductColor().getName() : "無");
+        reviewDTO.setProductSize(review.getProduct().getProductSize() != null ? review.getProduct().getProductSize().getName() : "無");
+        reviewDTO.setRating(review.getRating());
+        reviewDTO.setReviewDescription(review.getReviewDescription());
+        reviewDTO.setReviewTime(review.getReviewTime());
+
+        // 處理圖片為 Base64 格式
+        List<ProductReviewPhotoDto> productReviewPhotoList = review.getReviewPhotos().stream()
+                .map(photo -> {
+                    ProductReviewPhotoDto reviewPhotoDto = new ProductReviewPhotoDto();
+                    reviewPhotoDto.setReviewPhotoId(photo.getId());
+
+                    // 轉換每個圖片為 Base64 字符串
+                    String base64Image = ImageConverter.byteToBase64(photo.getReviewPhoto()); // 假设 ImageConverter.byteToBase64 处理的是单张图片
+
+                    // 将 Base64 图片设置到 DTO 中
+                    reviewPhotoDto.setReviewPhotos(base64Image); // 直接设置为字符串，而不是列表
+
+                    return reviewPhotoDto;
+                })
+                .collect(Collectors.toList());
+
+        reviewDTO.setProductReviewPhoto(productReviewPhotoList);
+        
+        return reviewDTO;
+    }
+    
+    //===================會員評論==================
     // 新增評論
     public ProductReview createReview(ProductReview productReview,Integer productId,Integer memberId, List<MultipartFile> reviewPhotos) throws IOException {
         // 檢查會員是否已經對該商品評論過
@@ -82,57 +125,20 @@ public class ProductReviewService {
     }
     
     // 根據 memberId 查找所有評論，並確保載入評論的圖片
-    public List<ProductReviewResponseDto> getReviewsByMemberId(Integer memberId) {
-        List<ProductReview> reviews = productReviewRepository.findByMemberIdOrderByReviewTimeDesc(memberId);
-
+    public Page<ProductReviewResponseDto> getReviewsByMemberId(Integer memberId, int page, int size) {
+        // 設定分頁請求，根據 reviewTime 降冪排序
+        Pageable pageable = PageRequest.of(page - 1, size);  // 頁數從0開始
+        
+        // 查詢會員的評論，並使用分頁
+        Page<ProductReview> reviewsPage = productReviewRepository.findByMemberIdOrderByReviewTimeDesc(memberId, pageable);
+        
         // 確保每條評論的圖片都被載入
-        for (ProductReview review : reviews) {
-            review.getReviewPhotos().size(); // 強制 Hibernate 載入評論的圖片
-        }
+        reviewsPage.getContent().forEach(review -> review.getReviewPhotos().size()); // 強制 Hibernate 載入評論的圖片
 
-        // 將 ProductReview 轉換為 ProductReviewDTO
-        return reviews.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+        // 將 ProductReview 轉換為 ProductReviewResponseDto
+        return reviewsPage.map(this::convertToDTO);
     }
 
-    // 將 ProductReview 轉換為 ProductReviewDTO
-    private ProductReviewResponseDto convertToDTO(ProductReview review) {
-    	ProductReviewResponseDto reviewDTO = new ProductReviewResponseDto();
-        
-        // 設定基本欄位
-        reviewDTO.setReviewId(review.getId());
-        reviewDTO.setMemberId(review.getMember().getId());
-        reviewDTO.setMemberName(review.getMember().getName());
-        reviewDTO.setProductId(review.getProduct().getId());
-        reviewDTO.setProductDetailId(review.getProduct().getProductDetail().getId());
-        reviewDTO.setProductName(review.getProduct().getProductDetail().getName());
-        reviewDTO.setProductColor(review.getProduct().getProductColor() != null ? review.getProduct().getProductColor().getName() : "無");
-        reviewDTO.setProductSize(review.getProduct().getProductSize() != null ? review.getProduct().getProductSize().getName() : "無");
-        reviewDTO.setRating(review.getRating());
-        reviewDTO.setReviewDescription(review.getReviewDescription());
-        reviewDTO.setReviewTime(review.getReviewTime());
-
-        // 處理圖片為 Base64 格式
-        List<ProductReviewPhotoDto> productReviewPhotoList = review.getReviewPhotos().stream()
-                .map(photo -> {
-                    ProductReviewPhotoDto reviewPhotoDto = new ProductReviewPhotoDto();
-                    reviewPhotoDto.setReviewPhotoId(photo.getId());
-
-                    // 轉換每個圖片為 Base64 字符串
-                    String base64Image = ImageConverter.byteToBase64(photo.getReviewPhoto()); // 假设 ImageConverter.byteToBase64 处理的是单张图片
-
-                    // 将 Base64 图片设置到 DTO 中
-                    reviewPhotoDto.setReviewPhotos(base64Image); // 直接设置为字符串，而不是列表
-
-                    return reviewPhotoDto;
-                })
-                .collect(Collectors.toList());
-
-        reviewDTO.setProductReviewPhoto(productReviewPhotoList);
-        
-        return reviewDTO;
-    }
 
     // 修改單一評論
     public boolean updateReview(Integer reviewId, Integer rating, String reviewDescription, List<MultipartFile> newPhotos,List<Integer> deletePhotoIds) throws IOException {
@@ -172,15 +178,44 @@ public class ProductReviewService {
         return false;
     }
     
-    // 根據評論ID找單個評論
-    public ProductReview getReviewById(Integer reviewId) {
-        return productReviewRepository.findById(reviewId)
-                .orElseThrow(() -> new RuntimeException("Review not found"));
-    }
+    //===================商品評論===================
     
     // 讀取所有評論（根據商品ID查詢）
     public List<ProductReview> getReviewsByProductId(Integer productId) {
         return productReviewRepository.findByProductId(productId);
+    }
+    
+    // 找某商品的平均評分
+    public Double getAverageRatingByProductDetailId(Integer productDetailId) {
+        return productReviewRepository.findAverageRatingByProductDetailId(productDetailId);
+    }
+
+    // 找某商品的所有評論
+    public Page<ProductReviewResponseDto> getReviewsByProductDetailId(Integer productDetailId, int page, int size) {
+        // 設定分頁請求，根據 reviewTime 降冪排序
+        Pageable pageable = PageRequest.of(page - 1, size);  // 頁數從0開始
+        
+        // 查詢該商品的所有評論，並使用分頁
+        Page<ProductReview> reviewsPage = productReviewRepository.findAllReviewsByProductDetailIdOrderByReviewTimeDesc(productDetailId, pageable);
+
+        // 確保每條評論的圖片都被載入
+        reviewsPage.getContent().forEach(review -> review.getReviewPhotos().size()); // 強制 Hibernate 載入評論的圖片
+
+        // 將 ProductReview 轉換為 ProductReviewResponseDto
+        return reviewsPage.map(this::convertToDTO);
+    }
+    
+    //找某商品的總評論數
+    public Integer getReviewsCountByProductDetailId(Integer productDetailId) {
+        return productReviewRepository.countReviewsByProductDetailId(productDetailId);
+    }
+    
+    //====================未完成=====================
+    
+    // 根據評論ID找單個評論
+    public ProductReview getReviewById(Integer reviewId) {
+        return productReviewRepository.findById(reviewId)
+                .orElseThrow(() -> new RuntimeException("Review not found"));
     }
 
     // 刪除評論
@@ -189,6 +224,5 @@ public class ProductReviewService {
                 .orElseThrow(() -> new RuntimeException("Review not found"));
         productReviewRepository.delete(existingReview);
     }
-
 
 }
