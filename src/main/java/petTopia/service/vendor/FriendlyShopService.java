@@ -91,9 +91,9 @@ public class FriendlyShopService {
 
 		if (friendlyShop == null) {
 			FriendlyShop newFriendlyShop = new FriendlyShop();
-			if(vendor.getName()!=null) {				
+			if (vendor.getName() != null) {
 				newFriendlyShop.setName(vendor.getName());
-			}else {
+			} else {
 				newFriendlyShop.setName("( 無店家名稱 )");
 			}
 			newFriendlyShop.setVendor(vendor);
@@ -121,6 +121,8 @@ public class FriendlyShopService {
 		double[] latLng = getLatLng(vendor.getAddress());
 		BigDecimal lat = BigDecimal.valueOf(latLng[0]);
 		BigDecimal lng = BigDecimal.valueOf(latLng[1]);
+		friendlyShop.setName(vendor.getName());
+		friendlyShop.setVendorCategory(vendor.getVendorCategory());
 		friendlyShop.setLatitude(lat);
 		friendlyShop.setLongitude(lng);
 		friendlyShop.setAddress(vendor.getAddress());
