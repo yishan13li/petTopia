@@ -46,5 +46,9 @@ public interface MemberRepository extends JpaRepository<Member, Integer> {
     
     List<Member> findAllById(Iterable<Integer> memberIds);
     
+    // 統計總會員數
+    @Query("SELECT COUNT(m) FROM Member m")
+    long countTotalMembers();
+    
 } 
 

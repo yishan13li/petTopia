@@ -35,5 +35,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, Prod
 	
 	public ProductDetail findByProductDetailId(Integer productDetailId);
 	
+	// 統計總商品數
+	@Query("SELECT COUNT(p) FROM Product p")
+	public long countTotalProducts();
 	
 }
