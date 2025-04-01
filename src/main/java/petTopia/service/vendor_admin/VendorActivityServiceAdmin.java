@@ -7,10 +7,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
+import petTopia.dto.vendor_admin.TopActivityDTO;
 import petTopia.model.vendor.VendorActivity;
 import petTopia.repository.vendor.CalendarEventRepository;
 import petTopia.repository.vendor.VendorActivityRepository;
+import petTopia.repository.vendor_admin.ActivityRegistrationRepository;
 import petTopia.repository.vendor_admin.VendorActivityImagesRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
 
 @Service
 public class VendorActivityServiceAdmin {
@@ -23,6 +29,9 @@ public class VendorActivityServiceAdmin {
 
 	@Autowired
 	private CalendarEventRepository calendarEventRepository;
+
+	@Autowired
+	private ActivityRegistrationRepository activityRegistrationRepository;
 
 	public VendorActivity saveVendorActivity(VendorActivity vendorActivity) {
 		return vendorActivityRepository.save(vendorActivity);
@@ -55,6 +64,11 @@ public class VendorActivityServiceAdmin {
 
 	public Optional<VendorActivity> getVendorActivityById(Integer id) {
 		return vendorActivityRepository.findById(id);
+	}
+
+	public List<TopActivityDTO> getTop5Activities() {
+		Pageable pageable = PageRequest.of(0, 5);
+	        return activityRegistrationRepository.findTop5Activities(pageable);
 	}
 
 }

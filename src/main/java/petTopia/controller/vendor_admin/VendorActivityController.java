@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
+import petTopia.dto.vendor_admin.TopActivityDTO;
 import petTopia.model.vendor.ActivityPeopleNumber;
 import petTopia.model.vendor.ActivityType;
 import petTopia.model.vendor.CalendarEvent;
@@ -58,27 +59,34 @@ public class VendorActivityController {
 
 	@Autowired
 	private ActivityPeopleNumberRepository activityPeopleNumberRepository;
-	
+
 	@Autowired
 	private CalendarEventRepository calendarEventRepository;
 
 	@Autowired
 	private ActivityRegistrationRepository activityRegistrationRepository;
-	
+
+	@ResponseBody
+	@GetMapping("/api/vendor_admin/activity/top5")
+	public ResponseEntity<List<TopActivityDTO>> getTop5Activities() {
+		List<TopActivityDTO> topActivities = vendorActivityServiceAdmin.getTop5Activities();
+		return ResponseEntity.ok(topActivities);
+	}
+
 	public void updateActivityCount(Vendor vendor) {
 		int activityCount = vendorActivityRepository.countByVendor(vendor);
 		vendor.setEventCount(activityCount);
-		
+
 		// **根据活动数量更新 level**
-	    if (activityCount >8) {
-	        vendor.setVendorLevel("頂級"); // 例如：50场以上是白金等级
-	    } else if (activityCount >5) {
-	        vendor.setVendorLevel("資深"); // 20-49场是黄金等级
-	    } else if (activityCount >2) {
-	        vendor.setVendorLevel("進階"); // 10-19场是白银等级
-	    } else {
-	        vendor.setVendorLevel("普通"); // 10场以下是青铜等级
-	    }
+		if (activityCount > 8) {
+			vendor.setVendorLevel("頂級"); // 例如：50场以上是白金等级
+		} else if (activityCount > 5) {
+			vendor.setVendorLevel("資深"); // 20-49场是黄金等级
+		} else if (activityCount > 2) {
+			vendor.setVendorLevel("進階"); // 10-19场是白银等级
+		} else {
+			vendor.setVendorLevel("普通"); // 10场以下是青铜等级
+		}
 		vendorRepository.save(vendor); // 更新活动数量到数据库
 	}
 //	@GetMapping
@@ -182,11 +190,11 @@ public class VendorActivityController {
 
 	@ResponseBody
 	@GetMapping("/api/vendor_admin/activity/allTypes")
-    public ResponseEntity<List<ActivityType>> getAllActivityTypes() {
-        List<ActivityType> types = activityTypeService.getAllActivityTypes();
-        return ResponseEntity.ok(types);
-    }
-	
+	public ResponseEntity<List<ActivityType>> getAllActivityTypes() {
+		List<ActivityType> types = activityTypeService.getAllActivityTypes();
+		return ResponseEntity.ok(types);
+	}
+
 	@ResponseBody
 	@PostMapping("/api/vendor_activity/add") // 不只可以送json 也可以送@RequestParam
 	public ResponseEntity<?> addActivity(@RequestParam("vendor_id") Integer vendorId,
@@ -232,7 +240,7 @@ public class VendorActivityController {
 			activityPeopleNumberRepository.save(activityPeopleNumber);
 
 			updateActivityCount(vendor);
-			
+
 			CalendarEvent calendarEvent = new CalendarEvent();
 			calendarEvent.setEventTitle(activity_name);
 			calendarEvent.setStartTime(startTime);
@@ -279,8 +287,7 @@ public class VendorActivityController {
 
 			Boolean isRegistrationRequired = Boolean.parseBoolean(is_registration_required);
 			vendorActivity.setIsRegistrationRequired(isRegistrationRequired); // 設置布林值
-			
-			
+
 			// 3. 刪除指定的圖片
 			if (deletedImageIds != null && !deletedImageIds.isEmpty()) {
 				vendorActivityImagesRepository.deleteAllById(deletedImageIds);
@@ -308,18 +315,18 @@ public class VendorActivityController {
 			activityPeopleNumber.setMaxParticipants(max_participants);
 
 			activityPeopleNumberRepository.save(activityPeopleNumber);
-			
+
 			if (!isRegistrationRequired) {
-			    activityRegistrationRepository.deleteByVendorActivityId(activityId);
-			    
-			    activityPeopleNumber.setCurrentParticipants(0);
+				activityRegistrationRepository.deleteByVendorActivityId(activityId);
+
+				activityPeopleNumber.setCurrentParticipants(0);
 
 				activityPeopleNumberRepository.save(activityPeopleNumber);
 			}
 
 			// 6. 儲存變更
 			vendorActivityRepository.save(vendorActivity);
-			
+
 			Optional<CalendarEvent> calendarOpt = calendarEventRepository.findByVendorActivityId(activityId);
 			if (calendarOpt.isPresent()) {
 				System.out.println(calendarOpt);
