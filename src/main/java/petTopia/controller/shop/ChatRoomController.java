@@ -1,11 +1,18 @@
 package petTopia.controller.shop;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,14 +20,18 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import petTopia.dto.shop.ChatMessagesDto;
 import petTopia.model.shop.ChatMessages;
+import petTopia.model.shop.ChatPhoto;
 import petTopia.model.user.Member;
 import petTopia.service.shop.ChatMessagesService;
+import petTopia.service.shop.ChatPhotoService;
 import petTopia.service.user.MemberService;
 
 @RequestMapping("/chatRoom")
@@ -29,14 +40,17 @@ public class ChatRoomController {
 	
 	private final SimpMessagingTemplate messagingTemplate;
 	private final ChatMessagesService chatMessagesService;
+	private final ChatPhotoService chatPhotoService;
 	private final MemberService memberService;
 
     public ChatRoomController(
-    		ChatMessagesService chatMessagesService, 
     		SimpMessagingTemplate messagingTemplate, 
+    		ChatMessagesService chatMessagesService,
+    		ChatPhotoService chatPhotoService, 
     		MemberService memberService) {
     	this.messagingTemplate = messagingTemplate;
     	this.chatMessagesService = chatMessagesService;
+    	this.chatPhotoService = chatPhotoService;
     	this.memberService = memberService;
     }
     
@@ -51,8 +65,20 @@ public class ChatRoomController {
         String sendTime = (String) message.get("sendTime");
         Instant instant = Instant.parse(sendTime);
         Date parsedDate = Date.from(instant);
+        List<String> urlPhotos = (List<String>) message.get("photos"); // 圖片url列表
         
-        Integer saveMessageId = chatMessagesService.saveMessage(senderId, receiverId, content, parsedDate);
+        // 儲存訊息
+        ChatMessages saveMessage = chatMessagesService.saveMessage(senderId, receiverId, content, parsedDate);
+        Integer saveMessageId = saveMessage.getId();
+        // 儲存圖片
+        
+        if (urlPhotos != null && !urlPhotos.isEmpty()) {
+            for (String photo : urlPhotos) {
+            	
+                chatPhotoService.savePhoto(saveMessage, photo);
+                
+            }
+        }
         
         if (saveMessageId != 0) {
         	chatMessagesDto.setId(saveMessageId);
@@ -61,6 +87,7 @@ public class ChatRoomController {
         	chatMessagesDto.setIsRead(false);
         	chatMessagesDto.setContent(content);
         	chatMessagesDto.setSendTime(parsedDate);
+        	chatMessagesDto.setPhotos(urlPhotos);
         	
         	// **發送給發送者**
             messagingTemplate.convertAndSend("/topic/messages/" + senderId, chatMessagesDto);
@@ -114,15 +141,23 @@ public class ChatRoomController {
 		
 		List<ChatMessages> chatMessagesHistory = chatMessagesService.getChatMessagesHistory(senderId, receiverId);
 		if (chatMessagesHistory != null) {
+			
 			for (ChatMessages chatMessages : chatMessagesHistory) {
+				
+				// 獲取圖片url
+				List<String> photos = chatPhotoService.getChatPhotos(chatMessages.getId());
+				
+				// ChatMessagesDto
 				ChatMessagesDto chatMessagesDto = new ChatMessagesDto(
 						chatMessages.getId(), 
 						chatMessages.getSender().getId(), 
 						chatMessages.getReceiver().getId(), 
 						chatMessages.getContent(), 
 						chatMessages.getIsRead(), 
-						chatMessages.getSendTime()
+						chatMessages.getSendTime(), 
+						photos
 						);
+				
 				chatMessagesDtoList.add(chatMessagesDto);
 				
 			}
@@ -137,6 +172,41 @@ public class ChatRoomController {
 		
 		return new ResponseEntity<Map<String, Object>>(responseBody, HttpStatus.OK);
 		
+	}
+	
+	// 上傳圖片
+	@PostMapping("/api/uploadPhoto")
+	public ResponseEntity<Map<String, String>> uploadPhoto(@RequestBody Map<String, String> photo) {
+	    try {
+	    	String userId = photo.get("userId");
+	        String base64String = photo.get("image");
+
+	        // 解碼 Base64 -> byte[]
+	        byte[] imageBytes = Base64.getDecoder().decode(base64String.split(",")[1]);
+
+	        // 檢查資料夾是否存在
+	        Path uploadDir = Paths.get("src/main/resources/static/chatRoomPhoto");
+	        if (!Files.exists(uploadDir)) {
+	            Files.createDirectories(uploadDir);
+	        }
+	        
+	        // 產生唯一檔名
+	        LocalDateTime now = LocalDateTime.now();
+	        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+	        String formattedDate = now.format(formatter);
+	        String fileName = userId + "_" + formattedDate + ".jpg";
+	        Path filePath = uploadDir.resolve(fileName);
+
+	        // 儲存圖片到本地 (或改成 S3 上傳)
+	        Files.write(filePath, imageBytes);
+
+	        // 回傳圖片 URL
+	        Map<String, String> response = new HashMap<>();
+	        response.put("url", "/chatRoomPhoto/" + fileName);
+	        return ResponseEntity.ok(response);
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+	    }
 	}
 	
 }
