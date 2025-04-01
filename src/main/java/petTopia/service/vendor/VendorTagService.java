@@ -1,5 +1,6 @@
 package petTopia.service.vendor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,8 +15,15 @@ public class VendorTagService {
 	private VendorCertificationTagRepository vendorCertificationTagRepository;
 
 	public List<VendorCertificationTag> findConfirmedTagByVendorId(Integer vendorId) {
-		List<VendorCertificationTag> tagList = vendorCertificationTagRepository.findByVendorIdAndMeetsStandard(vendorId,
-				true);
-		return tagList;
+		List<VendorCertificationTag> tagList = vendorCertificationTagRepository.findByVendorId(vendorId);
+
+		List<VendorCertificationTag> confirmedList = new ArrayList<>();
+		for (VendorCertificationTag tag : tagList) {
+			if ("已認證".equals(tag.getCertification().getCertificationStatus())) {
+				confirmedList.add(tag);
+			}
+		}
+
+		return confirmedList;
 	}
 }

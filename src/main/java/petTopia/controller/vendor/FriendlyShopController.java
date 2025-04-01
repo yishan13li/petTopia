@@ -35,25 +35,29 @@ public class FriendlyShopController {
 	}
 
 	@PostMapping("/api/vendor/coordinate/find")
-	public ResponseEntity<?> findByKeyword(@RequestBody Map<String, String> data) {
+	public ResponseEntity<List<FriendlyShop>> findByKeyword(@RequestBody Map<String, String> data) {
 		String keyword = data.get("keyword");
 		List<FriendlyShop> friendlyShopList = friendlyShopService.findByKeyword(keyword);
-		Map<String, Object> resopnse = new HashMap<>();
-		resopnse.put("response", friendlyShopList);
-		return ResponseEntity.ok(resopnse);
+		return ResponseEntity.ok(friendlyShopList);
 	}
 
 	@GetMapping("/api/vendor/coordinate/find/vendor/{vendorId}")
 	public ResponseEntity<List<FriendlyShop>> findByVendorId(@PathVariable Integer vendorId) {
-		List<FriendlyShop> friendlyShop = friendlyShopService.findByVendorId(vendorId);
-		return ResponseEntity.ok(friendlyShop);
+		List<FriendlyShop> friendlyShopList = friendlyShopService.findByVendorId(vendorId);
+		return ResponseEntity.ok(friendlyShopList);
 	}
 
 	@GetMapping("/api/vendor/coordinate/find/category/{categoryId}")
 	public ResponseEntity<List<FriendlyShop>> findByVendorCategory(@PathVariable Integer categoryId) {
-		List<FriendlyShop> friendlyShop = friendlyShopService.findByVendorCategoryId(categoryId);
-		return ResponseEntity.ok(friendlyShop);
+		List<FriendlyShop> friendlyShopList = friendlyShopService.findByCategoryId(categoryId);
+		return ResponseEntity.ok(friendlyShopList);
 	}
+
+//	@GetMapping("/api/vendor/coordinate/find/category/null")
+//	public ResponseEntity<List<FriendlyShop>> findByVendorCategoryNull() {
+//		List<FriendlyShop> friendlyShopList = friendlyShopService.findByCategoryIdNull();
+//		return ResponseEntity.ok(friendlyShopList);
+//	}
 
 	@PostMapping("/api/vendor/coordinate")
 	public ResponseEntity<?> findByAddress(@RequestParam String address) {

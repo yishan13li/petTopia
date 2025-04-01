@@ -47,6 +47,7 @@ public class FriendlyShopService {
 					.queryParam("key", GOOGLE_MAPS_API_KEY).toUriString();
 
 			/* 2. 建立URL物件 */
+			@SuppressWarnings("deprecation")
 			URL url = new URL(urlString);
 
 			/* 3. 開啟 HTTP 連線並設置 User-Agent 標頭 */
@@ -148,11 +149,13 @@ public class FriendlyShopService {
 		List<FriendlyShop> friendlyShopList = friendlyShopRepository.findAll();
 
 		for (FriendlyShop friendlyShop : friendlyShopList) {
-			byte[] logoImg = friendlyShop.getVendor().getLogoImg();
-			if (logoImg != null) {
-				String mimeType = ImageConverter.getMimeType(logoImg);
-				String base64 = "data:%s;base64,".formatted(mimeType) + Base64.getEncoder().encodeToString(logoImg);
-				friendlyShop.getVendor().setLogoImgBase64(base64);
+			if(friendlyShop.getVendor()!=null) {				
+				byte[] logoImg = friendlyShop.getVendor().getLogoImg();
+				if (logoImg != null) {
+					String mimeType = ImageConverter.getMimeType(logoImg);
+					String base64 = "data:%s;base64,".formatted(mimeType) + Base64.getEncoder().encodeToString(logoImg);
+					friendlyShop.getVendor().setLogoImgBase64(base64);
+				}
 			}
 		}
 		return friendlyShopList;
@@ -162,11 +165,13 @@ public class FriendlyShopService {
 		List<FriendlyShop> friendlyShopList = friendlyShopRepository.findByNameContaining(keyword);
 
 		for (FriendlyShop friendlyShop : friendlyShopList) {
-			byte[] logoImg = friendlyShop.getVendor().getLogoImg();
-			if (logoImg != null) {
-				String mimeType = ImageConverter.getMimeType(logoImg);
-				String base64 = "data:%s;base64,".formatted(mimeType) + Base64.getEncoder().encodeToString(logoImg);
-				friendlyShop.getVendor().setLogoImgBase64(base64);
+			if(friendlyShop.getVendor()!=null) {				
+				byte[] logoImg = friendlyShop.getVendor().getLogoImg();
+				if (logoImg != null) {
+					String mimeType = ImageConverter.getMimeType(logoImg);
+					String base64 = "data:%s;base64,".formatted(mimeType) + Base64.getEncoder().encodeToString(logoImg);
+					friendlyShop.getVendor().setLogoImgBase64(base64);
+				}
 			}
 		}
 		return friendlyShopList;
@@ -177,28 +182,47 @@ public class FriendlyShopService {
 		List<FriendlyShop> friendlyShopList = friendlyShopRepository.findByVendor(vendor);
 
 		for (FriendlyShop friendlyShop : friendlyShopList) {
-			byte[] logoImg = friendlyShop.getVendor().getLogoImg();
-			if (logoImg != null) {
-				String mimeType = ImageConverter.getMimeType(logoImg);
-				String base64 = "data:%s;base64,".formatted(mimeType) + Base64.getEncoder().encodeToString(logoImg);
-				friendlyShop.getVendor().setLogoImgBase64(base64);
+			if(friendlyShop.getVendor()!=null) {				
+				byte[] logoImg = friendlyShop.getVendor().getLogoImg();
+				if (logoImg != null) {
+					String mimeType = ImageConverter.getMimeType(logoImg);
+					String base64 = "data:%s;base64,".formatted(mimeType) + Base64.getEncoder().encodeToString(logoImg);
+					friendlyShop.getVendor().setLogoImgBase64(base64);
+				}
 			}
 		}
 		return friendlyShopList;
 	}
 
-	public List<FriendlyShop> findByVendorCategoryId(Integer categoryId) {
+	public List<FriendlyShop> findByCategoryId(Integer categoryId) {
 		VendorCategory category = vendorCategoryRepository.findById(categoryId).orElse(null);
 		List<FriendlyShop> friendlyShopList = friendlyShopRepository.findByVendorCategory(category);
 
+		
 		for (FriendlyShop friendlyShop : friendlyShopList) {
-			byte[] logoImg = friendlyShop.getVendor().getLogoImg();
-			if (logoImg != null) {
-				String mimeType = ImageConverter.getMimeType(logoImg);
-				String base64 = "data:%s;base64,".formatted(mimeType) + Base64.getEncoder().encodeToString(logoImg);
-				friendlyShop.getVendor().setLogoImgBase64(base64);
+			if(friendlyShop.getVendor()!=null) {				
+				byte[] logoImg = friendlyShop.getVendor().getLogoImg();
+				if (logoImg != null) {
+					String mimeType = ImageConverter.getMimeType(logoImg);
+					String base64 = "data:%s;base64,".formatted(mimeType) + Base64.getEncoder().encodeToString(logoImg);
+					friendlyShop.getVendor().setLogoImgBase64(base64);
+				}
 			}
 		}
 		return friendlyShopList;
 	}
+	
+//	public List<FriendlyShop> findByCategoryIdNull() {
+//		List<FriendlyShop> friendlyShopList = friendlyShopRepository.findByVendorCategoryIsNull();
+//
+//		for (FriendlyShop friendlyShop : friendlyShopList) {
+//			byte[] logoImg = friendlyShop.getVendor().getLogoImg();
+//			if (logoImg != null) {
+//				String mimeType = ImageConverter.getMimeType(logoImg);
+//				String base64 = "data:%s;base64,".formatted(mimeType) + Base64.getEncoder().encodeToString(logoImg);
+//				friendlyShop.getVendor().setLogoImgBase64(base64);
+//			}
+//		}
+//		return friendlyShopList;
+//	}
 }
