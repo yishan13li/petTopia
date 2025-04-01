@@ -1,5 +1,7 @@
 package petTopia.controller.shop;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -21,7 +23,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import petTopia.dto.shop.ManageAllOrdersDto;
 import petTopia.dto.shop.OrderDetailDto;
+import petTopia.dto.shop.SaleDto;
 import petTopia.dto.shop.UpdateOneOrderDto;
+import petTopia.projection.shop.ProductSalesProjection;
 import petTopia.repository.shop.OrderStatusRepository;
 import petTopia.repository.shop.PaymentCategoryRepository;
 import petTopia.repository.shop.PaymentStatusRepository;
@@ -175,4 +179,35 @@ public class ManageOrderController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("刪除訂單時發生錯誤");
         }
     }
+    
+    // 獲取銷售最高的前 5 名商品詳情
+    @GetMapping("/orders/top5BestSellingProducts")
+    public ResponseEntity<List<ProductSalesProjection>> getTop5BestSellingProductsWithDetails() {
+        try {
+            // 獲取前5名銷售商品及詳細資料
+            List<ProductSalesProjection> top5Products = orderDetailService.getTop5BestSellingProductsWithDetails();
+            
+            // 如果結果為空，返回 204 No Content
+            if (top5Products.isEmpty()) {
+                return ResponseEntity.noContent().build(); // 204 No Content
+            }
+            
+            // 返回 200 OK 並包含銷售最好商品的資料
+            return ResponseEntity.ok(top5Products); // 200 OK
+        } catch (Exception e) {
+            // 如果發生錯誤，返回 500 Internal Server Error
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ArrayList<>());
+        }
+    }
+    
+    @GetMapping("/orders/sales")
+    public ResponseEntity<SaleDto> getSalesData() {
+        try {
+        	SaleDto salesData = manageOrderService.getSalesData();
+            return ResponseEntity.ok(salesData); // 返回 200 OK 並包含銷售數據
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null); // 返回 500 Internal Server Error
+        }
+    }
+    
 }

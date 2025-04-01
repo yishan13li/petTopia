@@ -9,7 +9,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import petTopia.model.shop.Product;
+import petTopia.model.shop.ProductDetail;
 import petTopia.model.shop.ProductReview;
+import petTopia.projection.shop.ProductDetailRatingProjection;
+import petTopia.projection.shop.ProductRatingProjection;
 
 @Repository
 public interface ProductReviewRepository extends JpaRepository<ProductReview, Integer> {
@@ -62,4 +66,23 @@ public interface ProductReviewRepository extends JpaRepository<ProductReview, In
 
     //刪除評論
     void deleteById(Integer reviewId);
+    
+    //========統計分析=========
+    //評分最高的商品
+    @Query("SELECT p AS product, AVG(pr.rating) AS avgRating " +
+    	       "FROM Product p " +
+    	       "JOIN ProductReview pr ON p.id = pr.product.id " +
+    	       "GROUP BY p " +
+    	       "ORDER BY avgRating DESC")
+    List<ProductRatingProjection> findTop5ProductsByAverageRating(Pageable pageable);
+
+    //評分最高商品種類
+    @Query("SELECT pd AS productDetail, AVG(pr.rating) AS avgRating " +
+    	       "FROM ProductReview pr " +
+    	       "JOIN pr.product p " +
+    	       "JOIN p.productDetail pd " +
+    	       "GROUP BY pd " +
+    	       "ORDER BY avgRating DESC")
+    	List<ProductDetailRatingProjection> findTop3ProductDetailsByAverageRating(Pageable pageable);
+
 }

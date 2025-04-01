@@ -16,8 +16,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import petTopia.dto.shop.ProductReviewPhotoDto;
 import petTopia.dto.shop.ProductReviewResponseDto;
+import petTopia.model.shop.Product;
+import petTopia.model.shop.ProductDetail;
 import petTopia.model.shop.ProductReview;
 import petTopia.model.shop.ProductReviewPhoto;
+import petTopia.projection.shop.ProductDetailRatingProjection;
+import petTopia.projection.shop.ProductRatingProjection;
 import petTopia.repository.shop.ProductRepository;
 import petTopia.repository.shop.ProductReviewPhotoRepository;
 import petTopia.repository.shop.ProductReviewRepository;
@@ -270,4 +274,16 @@ public class ProductReviewService {
         productReviewRepository.deleteById(reviewId);
     }
 
+    //=================評分統計=======================
+    //評分最高商品
+    public List<ProductRatingProjection> getTop5ProductsByAverageRating() {
+    	Pageable top5Page = PageRequest.of(0, 5);
+        return productReviewRepository.findTop5ProductsByAverageRating(top5Page);
+    }
+
+    //評分最高商品種類
+    public List<ProductDetailRatingProjection> getTop3ProductDetailsByAverageRating() {
+    	Pageable top3Page = PageRequest.of(0, 3);
+    	return productReviewRepository.findTop3ProductDetailsByAverageRating(top3Page);
+    }
 }

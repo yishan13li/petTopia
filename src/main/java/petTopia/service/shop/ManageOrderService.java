@@ -2,6 +2,7 @@ package petTopia.service.shop;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -28,6 +29,7 @@ import jakarta.transaction.Transactional;
 import petTopia.dto.shop.ManageAllOrdersDto;
 import petTopia.dto.shop.ManageOrderItemDto;
 import petTopia.dto.shop.OrderSummaryAmoutDto;
+import petTopia.dto.shop.SaleDto;
 import petTopia.dto.shop.UpdateOneOrderDto;
 import petTopia.model.shop.Cart;
 import petTopia.model.shop.Coupon;
@@ -394,4 +396,52 @@ public class ManageOrderService {
     	}
     }
     
+    // 獲取銷售數據（總銷售額、每日銷售趨勢、每月銷售趨勢）
+    public Map<String, Object> getSalesData() {
+        // 取得每日銷售額趨勢
+        List<Object[]> dailySalesData = orderRepo.calculateDailySalesTrend();
+        Map<String, BigDecimal> dailySalesMap = new HashMap<>();
+        for (Object[] data : dailySalesData) {
+            String date = (String) data[0];  // 日期
+            BigDecimal sales = (BigDecimal) data[1]; // 銷售額
+            dailySalesMap.put(date, sales);
+        }
+
+        // 生成每日銷售額趨勢，根據每個月的實際天數
+        List<Map<String, Object>> dailySalesTrend = new ArrayList<>();
+        for (int month = 1; month <= 12; month++) {
+            YearMonth yearMonth = YearMonth.of(2025, month); // 設定年份為 2025
+            int daysInMonth = yearMonth.lengthOfMonth(); // 取得當月的天數
+
+            // 生成從 1 號到最後一號的日期
+            for (int day = 1; day <= daysInMonth; day++) {
+                // 生成日期字符串，例如 "2025-03-01"
+                String date = String.format("2025-%02d-%02d", month, day);
+                BigDecimal sales = dailySalesMap.getOrDefault(date, BigDecimal.ZERO); // 如果沒有數據，則設為 0
+                Map<String, Object> dailySales = new HashMap<>();
+                dailySales.put("date", date);
+                dailySales.put("sales", sales);
+                dailySalesTrend.add(dailySales);
+            }
+        }
+
+        // 計算每月銷售額
+        List<Object[]> monthlySalesData = orderRepo.calculateMonthlySalesTrend();
+        List<Map<String, Object>> monthlySalesTrend = new ArrayList<>();
+        for (Object[] data : monthlySalesData) {
+            Map<String, Object> monthlySales = new HashMap<>();
+            monthlySales.put("year", data[0]);  // 年份
+            monthlySales.put("month", data[1]); // 月份
+            monthlySales.put("sales", data[2]); // 銷售額
+            monthlySalesTrend.add(monthlySales);
+        }
+
+        // 最終組合成 JSON 格式
+        Map<String, Object> result = new HashMap<>();
+        result.put("totalSales", orderRepo.calculateTotalSales());
+        result.put("dailySalesTrend", dailySalesTrend);
+        result.put("monthlySalesTrend", monthlySalesTrend);
+
+        return result;
+    }
 }
