@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import petTopia.model.shop.OrderDetail;
+import petTopia.model.shop.ProductCategory;
+import petTopia.projection.shop.ProductCategorySalesProjection;
 import petTopia.projection.shop.ProductSalesProjection;
 
 @Repository
@@ -25,4 +27,16 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
 		       "GROUP BY pd " +
 		       "ORDER BY totalQuantity DESC")
     List<ProductSalesProjection> findTop5BestSellingProductsWithDetails(Pageable page);
+
+	@Query("SELECT pc.name AS categoryName, SUM(od.quantity) AS totalQuantity " +
+		       "FROM OrderDetail od " +
+		       "JOIN od.product p " +
+		       "JOIN p.productDetail pd " +
+		       "JOIN pd.productCategory pc " +
+		       "JOIN od.order o " +
+		       "WHERE o.orderStatus.name = '已完成' " +
+		       "GROUP BY pc.name " +
+		       "ORDER BY totalQuantity DESC")
+		List<ProductCategorySalesProjection> findProductCategorySales();
+
 }

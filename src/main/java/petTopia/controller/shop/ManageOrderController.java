@@ -23,8 +23,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import petTopia.dto.shop.ManageAllOrdersDto;
 import petTopia.dto.shop.OrderDetailDto;
-import petTopia.dto.shop.SaleDto;
+import petTopia.dto.shop.SalesDto;
 import petTopia.dto.shop.UpdateOneOrderDto;
+import petTopia.projection.shop.ProductCategorySalesProjection;
 import petTopia.projection.shop.ProductSalesProjection;
 import petTopia.repository.shop.OrderStatusRepository;
 import petTopia.repository.shop.PaymentCategoryRepository;
@@ -201,13 +202,37 @@ public class ManageOrderController {
     }
     
     @GetMapping("/orders/sales")
-    public ResponseEntity<SaleDto> getSalesData() {
+    public ResponseEntity<Map<String, Object>> getSalesData() {
         try {
-        	SaleDto salesData = manageOrderService.getSalesData();
-            return ResponseEntity.ok(salesData); // 返回 200 OK 並包含銷售數據
+            // 獲取銷售數據
+            SalesDto salesData = manageOrderService.getSalesData();
+            
+            // 將數據格式化為適合前端使用的格式
+            Map<String, Object> formattedData = salesData.getFormattedSalesData();
+            
+            // 返回格式化後的數據
+            return ResponseEntity.ok(formattedData); // 返回 200 OK 並包含格式化的銷售數據
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null); // 返回 500 Internal Server Error
         }
     }
-    
+
+    @GetMapping("/orders/category-sales")
+    public ResponseEntity<Map<String, Object>> getCategorySales() {
+        try {
+            // 獲取銷售數據
+            List<ProductCategorySalesProjection> salesData = manageOrderService.getProductCategorySales();
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("data", salesData);
+
+            return ResponseEntity.ok(response); // 返回 200 OK，並包含數據
+        } catch (Exception e) {
+            // 發生錯誤時返回 500
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("message", "伺服器內部錯誤，請稍後再試");
+            
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
 }

@@ -277,7 +277,7 @@ public class ProductReviewService {
     //=================評分統計=======================
     //評分最高商品
     public List<ProductRatingProjection> getTop5ProductsByAverageRating() {
-    	Pageable top5Page = PageRequest.of(0, 5);
+    	Pageable top5Page = PageRequest.of(0, 3);
         return productReviewRepository.findTop5ProductsByAverageRating(top5Page);
     }
 
