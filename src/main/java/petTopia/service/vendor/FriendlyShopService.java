@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.util.Base64;
 import java.util.List;
@@ -40,21 +41,18 @@ public class FriendlyShopService {
 	private VendorCategoryRepository vendorCategoryRepository;
 
 	/* 透過 Google API 取得地址之經緯度 */
-	public double[] getLatLng(String address) {
+	public BigDecimal[] getLatLng(String address) {
 		try {
 			/* 1. 建立URL字串 */
 			String urlString = UriComponentsBuilder.fromUriString(GOOGLE_MAPS_API_URL).queryParam("address", address)
 					.queryParam("key", GOOGLE_MAPS_API_KEY).toUriString();
 
-			/* 2. 建立URL物件 */
-			@SuppressWarnings("deprecation")
-			URL url = new URL(urlString);
+			/* 2. 建立 URI 物件並轉換為 URL */
+			URI uri = new URI(urlString);
+			URL url = uri.toURL();
 
 			/* 3. 開啟 HTTP 連線並設置 User-Agent 標頭 */
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-//			connection.setRequestMethod("GET");
-//			connection.setRequestProperty("User-Agent",
-//					"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36");
 
 			/* 4. 取得響應輸入流 */
 			BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
@@ -78,7 +76,10 @@ public class FriendlyShopService {
 			double lat = location.path("lat").asDouble();
 			double lng = location.path("lng").asDouble();
 
-			return new double[] { lat, lng };
+			BigDecimal latitude = BigDecimal.valueOf(lat);
+			BigDecimal longitude = BigDecimal.valueOf(lng);
+
+			return new BigDecimal[] { latitude, longitude };
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -97,16 +98,14 @@ public class FriendlyShopService {
 			} else {
 				newFriendlyShop.setName("( 無店家名稱 )");
 			}
+
 			newFriendlyShop.setVendor(vendor);
 			newFriendlyShop.setVendorCategory(vendor.getVendorCategory());
 			newFriendlyShop.setAddress(vendor.getAddress());
 
-			double[] latLng = getLatLng(vendor.getAddress());
-			BigDecimal lat = BigDecimal.valueOf(latLng[0]);
-			BigDecimal lng = BigDecimal.valueOf(latLng[1]);
-
-			newFriendlyShop.setLatitude(lat);
-			newFriendlyShop.setLongitude(lng);
+			BigDecimal[] latLng = getLatLng(vendor.getAddress());
+			newFriendlyShop.setLatitude(latLng[0]);
+			newFriendlyShop.setLongitude(latLng[1]);
 			friendlyShopRepository.save(newFriendlyShop);
 
 			byte[] logoImg = vendor.getLogoImg();
@@ -119,10 +118,6 @@ public class FriendlyShopService {
 			return friendlyShop;
 		}
 
-		double[] latLng = getLatLng(vendor.getAddress());
-		BigDecimal lat = BigDecimal.valueOf(latLng[0]);
-		BigDecimal lng = BigDecimal.valueOf(latLng[1]);
-
 		if (vendor.getName() != null) {
 			friendlyShop.setName(vendor.getName());
 		} else {
@@ -130,9 +125,11 @@ public class FriendlyShopService {
 		}
 
 		friendlyShop.setVendorCategory(vendor.getVendorCategory());
-		friendlyShop.setLatitude(lat);
-		friendlyShop.setLongitude(lng);
 		friendlyShop.setAddress(vendor.getAddress());
+
+		BigDecimal[] latLng = getLatLng(vendor.getAddress());
+		friendlyShop.setLatitude(latLng[0]);
+		friendlyShop.setLongitude(latLng[1]);
 		friendlyShopRepository.save(friendlyShop);
 
 		byte[] logoImg = vendor.getLogoImg();
@@ -149,7 +146,7 @@ public class FriendlyShopService {
 		List<FriendlyShop> friendlyShopList = friendlyShopRepository.findAll();
 
 		for (FriendlyShop friendlyShop : friendlyShopList) {
-			if(friendlyShop.getVendor()!=null) {				
+			if (friendlyShop.getVendor() != null) {
 				byte[] logoImg = friendlyShop.getVendor().getLogoImg();
 				if (logoImg != null) {
 					String mimeType = ImageConverter.getMimeType(logoImg);
@@ -165,7 +162,7 @@ public class FriendlyShopService {
 		List<FriendlyShop> friendlyShopList = friendlyShopRepository.findByNameContaining(keyword);
 
 		for (FriendlyShop friendlyShop : friendlyShopList) {
-			if(friendlyShop.getVendor()!=null) {				
+			if (friendlyShop.getVendor() != null) {
 				byte[] logoImg = friendlyShop.getVendor().getLogoImg();
 				if (logoImg != null) {
 					String mimeType = ImageConverter.getMimeType(logoImg);
@@ -182,7 +179,7 @@ public class FriendlyShopService {
 		List<FriendlyShop> friendlyShopList = friendlyShopRepository.findByVendor(vendor);
 
 		for (FriendlyShop friendlyShop : friendlyShopList) {
-			if(friendlyShop.getVendor()!=null) {				
+			if (friendlyShop.getVendor() != null) {
 				byte[] logoImg = friendlyShop.getVendor().getLogoImg();
 				if (logoImg != null) {
 					String mimeType = ImageConverter.getMimeType(logoImg);
@@ -198,9 +195,8 @@ public class FriendlyShopService {
 		VendorCategory category = vendorCategoryRepository.findById(categoryId).orElse(null);
 		List<FriendlyShop> friendlyShopList = friendlyShopRepository.findByVendorCategory(category);
 
-		
 		for (FriendlyShop friendlyShop : friendlyShopList) {
-			if(friendlyShop.getVendor()!=null) {				
+			if (friendlyShop.getVendor() != null) {
 				byte[] logoImg = friendlyShop.getVendor().getLogoImg();
 				if (logoImg != null) {
 					String mimeType = ImageConverter.getMimeType(logoImg);
@@ -211,18 +207,47 @@ public class FriendlyShopService {
 		}
 		return friendlyShopList;
 	}
+
+	/* 新增友善店家 */
+	public FriendlyShop addFriendlyShop(String name, Integer categoryId, String address) {
+		FriendlyShop friendlyShop = new FriendlyShop();
+		VendorCategory category = vendorCategoryRepository.findById(categoryId).orElse(null);
+		BigDecimal[] latLng = getLatLng(address);
+
+		friendlyShop.setName(name);
+		friendlyShop.setVendorCategory(category);
+		friendlyShop.setAddress(address);
+		friendlyShop.setLatitude(latLng[0]);
+		friendlyShop.setLongitude(latLng[1]);
+		friendlyShopRepository.save(friendlyShop);
+
+		return friendlyShop;
+	}
+
+	/* 修改友善店家 */
+	public FriendlyShop modifyFriendlyShop(Integer id, String name, Integer categoryId, String address) {
+		FriendlyShop friendlyShop = friendlyShopRepository.findById(id).orElse(null);
+		VendorCategory category = vendorCategoryRepository.findById(categoryId).orElse(null);
+		BigDecimal[] latLng = getLatLng(address);
+
+		friendlyShop.setName(name);
+		friendlyShop.setVendorCategory(category);
+		friendlyShop.setAddress(address);
+		friendlyShop.setLatitude(latLng[0]);
+		friendlyShop.setLongitude(latLng[1]);
+		friendlyShopRepository.save(friendlyShop);
+
+		return friendlyShop;
+	}
+
+	/* 刪除友善店家 */
+	public void deleteFriendlyShop(Integer id) {
+		friendlyShopRepository.deleteById(id);
+	}
 	
-//	public List<FriendlyShop> findByCategoryIdNull() {
-//		List<FriendlyShop> friendlyShopList = friendlyShopRepository.findByVendorCategoryIsNull();
-//
-//		for (FriendlyShop friendlyShop : friendlyShopList) {
-//			byte[] logoImg = friendlyShop.getVendor().getLogoImg();
-//			if (logoImg != null) {
-//				String mimeType = ImageConverter.getMimeType(logoImg);
-//				String base64 = "data:%s;base64,".formatted(mimeType) + Base64.getEncoder().encodeToString(logoImg);
-//				friendlyShop.getVendor().setLogoImgBase64(base64);
-//			}
-//		}
-//		return friendlyShopList;
-//	}
+	/* 獲取友善店家 */
+	public FriendlyShop getFriendlyShop(Integer id) {
+		FriendlyShop friendlyShop = friendlyShopRepository.findById(id).orElse(null);
+		return friendlyShop;
+	}
 }
