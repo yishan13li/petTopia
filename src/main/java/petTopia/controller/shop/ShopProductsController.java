@@ -24,6 +24,7 @@ import petTopia.dto.shop.ProductDetailDto;
 import petTopia.model.shop.Product;
 import petTopia.model.shop.ProductDetail;
 import petTopia.service.shop.ProductDetailService;
+import petTopia.service.shop.ProductReviewService;
 import petTopia.service.shop.ProductService;
 
 @Controller
@@ -35,9 +36,12 @@ public class ShopProductsController {
 	
 	@Autowired
 	private ProductService productService;
+	
 	@Autowired
 	private ProductDetailService productDetailService;
 	
+	@Autowired
+	private ProductReviewService productReviewService;
 
 	// 商品瀏覽頁面 vue
 	@ResponseBody
@@ -83,8 +87,8 @@ public class ShopProductsController {
 					
 					productDetailDto.setMinPriceProduct(minPriceProduct);
 				}
-				
 				productDetailDto.setProductDetail(productDetail);
+				productDetailDto.setAvgRating(productReviewService.getAverageRatingByProductDetailId(productDetail.getId()));
 				
 				productDetailDtoList.add(productDetailDto);
 			}

@@ -2,6 +2,7 @@ package petTopia.service.shop;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -28,6 +29,7 @@ import jakarta.transaction.Transactional;
 import petTopia.dto.shop.ManageAllOrdersDto;
 import petTopia.dto.shop.ManageOrderItemDto;
 import petTopia.dto.shop.OrderSummaryAmoutDto;
+import petTopia.dto.shop.SalesDto;
 import petTopia.dto.shop.UpdateOneOrderDto;
 import petTopia.model.shop.Cart;
 import petTopia.model.shop.Coupon;
@@ -42,6 +44,7 @@ import petTopia.model.shop.Shipping;
 import petTopia.model.shop.ShippingAddress;
 import petTopia.model.shop.ShippingCategory;
 import petTopia.model.user.Member;
+import petTopia.projection.shop.ProductCategorySalesProjection;
 import petTopia.repository.shop.CartRepository;
 import petTopia.repository.shop.CouponRepository;
 import petTopia.repository.shop.OrderDetailRepository;
@@ -57,19 +60,7 @@ import petTopia.repository.shop.ShippingRepository;
 public class ManageOrderService {
 	
 	@Autowired
-	private CouponRepository couponRepo;
-	
-	@Autowired
-	private CartService cartService;
-	
-	@Autowired
-	private CartRepository cartRepo;
-    
-	@Autowired
     private ShippingCategoryRepository shippingCategoryRepo;
-    
-	@Autowired
-	private CouponService couponService;
 	
 	@Autowired
 	private PaymentCategoryRepository paymentCategoryRepo;
@@ -81,13 +72,7 @@ public class ManageOrderService {
 	private ShippingRepository shippingRepo;
 	
 	@Autowired
-	private PaymentService paymentService;
-	
-	@Autowired
 	private OrderStatusRepository orderStatusRepo;
-	
-	@Autowired
-	private ShippingService shippingService;
 	
 	@Autowired
 	private OrderDetailService orderDetailService;
@@ -394,4 +379,63 @@ public class ManageOrderService {
     	}
     }
     
+    // 獲取銷售數據（總銷售額、每日銷售趨勢、每月銷售趨勢）
+    public SalesDto getSalesData() {
+        // 取得每日銷售額趨勢
+        List<Object[]> dailySalesData = orderRepo.calculateDailySalesTrend();
+        Map<String, BigDecimal> dailySalesMap = new HashMap<>();
+        for (Object[] data : dailySalesData) {
+        	String date = data[0].toString();
+        	BigDecimal sales = data[1] != null ? new BigDecimal(data[1].toString()) : BigDecimal.ZERO;
+            dailySalesMap.put(date, sales);
+        }
+
+        // 生成每日銷售額趨勢
+        List<Map<String, Object>> dailySalesTrend = new ArrayList<>();
+        for (int month = 1; month <= 12; month++) {
+            YearMonth yearMonth = YearMonth.of(2025, month);
+            int daysInMonth = yearMonth.lengthOfMonth();
+
+            for (int day = 1; day <= daysInMonth; day++) {
+                String date = String.format("2025-%02d-%02d", month, day);
+                BigDecimal sales = dailySalesMap.getOrDefault(date, BigDecimal.ZERO);
+                Map<String, Object> dailySales = new HashMap<>();
+                dailySales.put("date", date);
+                dailySales.put("sales", sales);
+                dailySalesTrend.add(dailySales);
+            }
+        }
+
+        // 計算每月銷售額
+        List<Object[]> monthlySalesData = orderRepo.calculateMonthlySalesTrend();
+        Map<Integer, BigDecimal> monthlySalesMap = new HashMap<>();
+
+        // 先放入 SQL 查詢結果
+        for (Object[] data : monthlySalesData) {
+            int month = (Integer) data[1];
+            BigDecimal sales = data[2] != null ? (BigDecimal) data[2] : BigDecimal.ZERO;
+            monthlySalesMap.put(month, sales);
+        }
+
+        // 1~12 月的銷售額
+        List<Map<String, Object>> monthlySalesTrend = new ArrayList<>();
+        for (int month = 1; month <= 12; month++) {
+            Map<String, Object> monthlySales = new HashMap<>();
+            monthlySales.put("year", 2025);
+            monthlySales.put("month", month);
+            monthlySales.put("sales", monthlySalesMap.getOrDefault(month, BigDecimal.ZERO));
+            monthlySalesTrend.add(monthlySales);
+        }
+
+        // 總銷售額
+        BigDecimal totalSales = orderRepo.calculateTotalSales();
+
+        // 回傳 SaleDto 物件
+        return new SalesDto(totalSales, dailySalesTrend, monthlySalesTrend);
+    }
+    
+    //商品種類比例
+    public List<ProductCategorySalesProjection> getProductCategorySales() {
+        return orderDetailRepo.findProductCategorySales();
+    }
 }

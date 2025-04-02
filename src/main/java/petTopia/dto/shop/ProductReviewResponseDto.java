@@ -20,7 +20,7 @@ public class ProductReviewResponseDto {
     private String productName;
     private String productColor;
     private String productSize;
-    private String productPhoto;
+    private byte[] productPhoto;
     private Integer rating;
     private String reviewDescription;
     private List<ProductReviewPhotoDto> productReviewPhoto; // 存 Base64 格式的圖片

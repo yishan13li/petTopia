@@ -101,9 +101,6 @@ public class OrderService {
 	@Autowired
 	private PaymentRepository paymentRepo;
 	
-	@Autowired
-	private MemberCouponRepository memberCouponRepo;
-	
 	@PersistenceContext
 	private EntityManager entityManager;
 //	================================================

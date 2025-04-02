@@ -16,8 +16,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import petTopia.dto.shop.ProductReviewPhotoDto;
 import petTopia.dto.shop.ProductReviewResponseDto;
+import petTopia.model.shop.Product;
+import petTopia.model.shop.ProductDetail;
 import petTopia.model.shop.ProductReview;
 import petTopia.model.shop.ProductReviewPhoto;
+import petTopia.projection.shop.ProductDetailRatingProjection;
+import petTopia.projection.shop.ProductRatingProjection;
 import petTopia.repository.shop.ProductRepository;
 import petTopia.repository.shop.ProductReviewPhotoRepository;
 import petTopia.repository.shop.ProductReviewRepository;
@@ -48,6 +52,11 @@ public class ProductReviewService {
         }
     }
     
+    public boolean hasReviewed(Integer productId, Integer memberId) {
+        Optional<ProductReview> existingReview = productReviewRepository.findByProductIdAndMemberId(productId, memberId);
+        return existingReview.isPresent();
+    }
+    
     // 將 ProductReview 轉換為 ProductReviewDTO
     private ProductReviewResponseDto convertToDTO(ProductReview review) {
     	ProductReviewResponseDto reviewDTO = new ProductReviewResponseDto();
@@ -61,6 +70,7 @@ public class ProductReviewService {
         reviewDTO.setProductName(review.getProduct().getProductDetail().getName());
         reviewDTO.setProductColor(review.getProduct().getProductColor() != null ? review.getProduct().getProductColor().getName() : "無");
         reviewDTO.setProductSize(review.getProduct().getProductSize() != null ? review.getProduct().getProductSize().getName() : "無");
+        reviewDTO.setProductPhoto(review.getProduct().getPhoto());
         reviewDTO.setRating(review.getRating());
         reviewDTO.setReviewDescription(review.getReviewDescription());
         reviewDTO.setReviewTime(review.getReviewTime());
@@ -74,7 +84,7 @@ public class ProductReviewService {
                     // 轉換每個圖片為 Base64 字符串
                     String base64Image = ImageConverter.byteToBase64(photo.getReviewPhoto()); // 假设 ImageConverter.byteToBase64 处理的是单张图片
 
-                    // 将 Base64 图片设置到 DTO 中
+                    // 將base64放到dto中
                     reviewPhotoDto.setReviewPhotos(base64Image); // 直接设置为字符串，而不是列表
 
                     return reviewPhotoDto;
@@ -210,8 +220,51 @@ public class ProductReviewService {
         return productReviewRepository.countReviewsByProductDetailId(productDetailId);
     }
     
-    //====================未完成=====================
+ // 取得所有評論，根據 reviewTime 降冪排序（含分頁）
+    public Page<ProductReviewResponseDto> getAllReviewsSortedByTime(int page, int size) {
+        // 設定分頁請求，頁數從 0 開始
+        Pageable pageable = PageRequest.of(page - 1, size);
+
+        // 查詢評論並使用分頁
+        Page<ProductReview> reviewsPage = productReviewRepository.findAllReviewsOrderByReviewTimeDesc(pageable);
+
+        // 確保每條評論的圖片都被載入
+        reviewsPage.getContent().forEach(review -> review.getReviewPhotos().size()); // 強制 Hibernate 載入評論的圖片
+
+        // 將 ProductReview 轉換為 ProductReviewResponseDto
+        return reviewsPage.map(this::convertToDTO);
+    }
+
+    // 取得所有評論，根據 id 降冪排序（含分頁）
+    public Page<ProductReviewResponseDto> getAllReviewsSortedById(int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<ProductReview> reviewsPage = productReviewRepository.findAllReviewsByIdDesc(pageable);
+        reviewsPage.getContent().forEach(review -> review.getReviewPhotos().size());
+        return reviewsPage.map(this::convertToDTO);
+    }
+
+    // 取得所有評論，根據 rating 降冪排序（含分頁）
+    public Page<ProductReviewResponseDto> getAllReviewsSortedByRating(int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<ProductReview> reviewsPage = productReviewRepository.findAllReviewsByRatingDesc(pageable);
+        reviewsPage.getContent().forEach(review -> review.getReviewPhotos().size());
+        return reviewsPage.map(this::convertToDTO);
+    }
     
+    //模糊搜尋
+    public Page<ProductReviewResponseDto> searchReviews(String keyword, int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        
+        // 執行模糊搜尋
+        Page<ProductReview> reviewsPage = productReviewRepository.searchReviews(keyword, pageable);
+
+        // 確保評論的圖片載入
+        reviewsPage.getContent().forEach(review -> review.getReviewPhotos().size());
+
+        // 轉換為 DTO
+        return reviewsPage.map(this::convertToDTO);
+    }
+
     // 根據評論ID找單個評論
     public ProductReview getReviewById(Integer reviewId) {
         return productReviewRepository.findById(reviewId)
@@ -219,10 +272,23 @@ public class ProductReviewService {
     }
 
     // 刪除評論
-    public void deleteReview(Integer reviewId) {
-        ProductReview existingReview = productReviewRepository.findById(reviewId)
-                .orElseThrow(() -> new RuntimeException("Review not found"));
-        productReviewRepository.delete(existingReview);
+    public void deleteReviewById(Integer reviewId) {
+        if (!productReviewRepository.existsById(reviewId)) {
+            throw new IllegalArgumentException("Review with ID " + reviewId + " not found.");
+        }
+        productReviewRepository.deleteById(reviewId);
     }
 
+    //=================評分統計=======================
+    //評分最高商品
+    public List<ProductRatingProjection> getTop5ProductsByAverageRating() {
+    	Pageable top5Page = PageRequest.of(0, 3);
+        return productReviewRepository.findTop5ProductsByAverageRating(top5Page);
+    }
+
+    //評分最高商品種類
+    public List<ProductDetailRatingProjection> getTop3ProductDetailsByAverageRating() {
+    	Pageable top3Page = PageRequest.of(0, 3);
+    	return productReviewRepository.findTop3ProductDetailsByAverageRating(top3Page);
+    }
 }

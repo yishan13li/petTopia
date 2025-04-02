@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import petTopia.dto.vendor.VendorDto;
 import petTopia.model.vendor.Vendor;
 import petTopia.model.vendor.VendorCategory;
 import petTopia.model.vendor.VendorImages;
@@ -81,4 +82,9 @@ public class VendorController {
 		return ResponseEntity.ok(categoryList);
 	}
 
+	@GetMapping("/api/vendor/all/for/swiper")
+	public ResponseEntity<List<VendorDto>> getAllVendorsForSwiper() {
+		List<VendorDto> dtoList = vendorService.getAllVendorDto();
+		return ResponseEntity.ok(dtoList);
+	}
 }

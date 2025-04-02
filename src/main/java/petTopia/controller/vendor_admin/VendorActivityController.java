@@ -33,6 +33,7 @@ import petTopia.repository.vendor.CalendarEventRepository;
 import petTopia.repository.vendor.VendorActivityRepository;
 import petTopia.repository.vendor.VendorRepository;
 import petTopia.repository.vendor_admin.ActivityPeopleNumberRepository;
+import petTopia.repository.vendor_admin.ActivityRegistrationRepository;
 import petTopia.repository.vendor_admin.VendorActivityImagesRepository;
 import petTopia.service.vendor_admin.ActivityTypeService;
 import petTopia.service.vendor_admin.VendorActivityServiceAdmin;
@@ -61,16 +62,19 @@ public class VendorActivityController {
 	@Autowired
 	private CalendarEventRepository calendarEventRepository;
 
+	@Autowired
+	private ActivityRegistrationRepository activityRegistrationRepository;
+	
 	public void updateActivityCount(Vendor vendor) {
 		int activityCount = vendorActivityRepository.countByVendor(vendor);
 		vendor.setEventCount(activityCount);
 		
 		// **根据活动数量更新 level**
-	    if (activityCount >15) {
+	    if (activityCount >8) {
 	        vendor.setVendorLevel("頂級"); // 例如：50场以上是白金等级
-	    } else if (activityCount >10) {
-	        vendor.setVendorLevel("資深"); // 20-49场是黄金等级
 	    } else if (activityCount >5) {
+	        vendor.setVendorLevel("資深"); // 20-49场是黄金等级
+	    } else if (activityCount >2) {
 	        vendor.setVendorLevel("進階"); // 10-19场是白银等级
 	    } else {
 	        vendor.setVendorLevel("普通"); // 10场以下是青铜等级
@@ -275,6 +279,8 @@ public class VendorActivityController {
 
 			Boolean isRegistrationRequired = Boolean.parseBoolean(is_registration_required);
 			vendorActivity.setIsRegistrationRequired(isRegistrationRequired); // 設置布林值
+			
+			
 			// 3. 刪除指定的圖片
 			if (deletedImageIds != null && !deletedImageIds.isEmpty()) {
 				vendorActivityImagesRepository.deleteAllById(deletedImageIds);
@@ -302,6 +308,14 @@ public class VendorActivityController {
 			activityPeopleNumber.setMaxParticipants(max_participants);
 
 			activityPeopleNumberRepository.save(activityPeopleNumber);
+			
+			if (!isRegistrationRequired) {
+			    activityRegistrationRepository.deleteByVendorActivityId(activityId);
+			    
+			    activityPeopleNumber.setCurrentParticipants(0);
+
+				activityPeopleNumberRepository.save(activityPeopleNumber);
+			}
 
 			// 6. 儲存變更
 			vendorActivityRepository.save(vendorActivity);

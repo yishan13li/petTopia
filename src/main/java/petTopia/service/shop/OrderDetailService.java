@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import petTopia.dto.shop.ManageOrderItemDto;
@@ -21,6 +23,7 @@ import petTopia.model.shop.Product;
 import petTopia.model.shop.ProductColor;
 import petTopia.model.shop.ProductSize;
 import petTopia.model.shop.Shipping;
+import petTopia.projection.shop.ProductSalesProjection;
 import petTopia.repository.shop.OrderDetailRepository;
 import petTopia.repository.shop.OrderRepository;
 import petTopia.repository.shop.PaymentRepository;
@@ -160,6 +163,12 @@ public class OrderDetailService {
     	manageOrderItemDto.setProductId(orderDetail.getProduct().getId());
     	manageOrderItemDto.setProductName(orderDetail.getProduct().getProductDetail().getName());
         return manageOrderItemDto;
+    }
+    
+    // 銷售最好的前五名商品及其商品詳情（只計算已完成的訂單）
+    public List<ProductSalesProjection> getTop5BestSellingProductsWithDetails() {
+    	Pageable top5Page = PageRequest.of(0, 5);
+    	return orderDetailRepo.findTop5BestSellingProductsWithDetails(top5Page);
     }
     
 }
