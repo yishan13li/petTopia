@@ -195,6 +195,18 @@ public class VendorActivityController {
 		return ResponseEntity.ok(types);
 	}
 
+	@GetMapping("/api/vendor_admin/activity/checkConflictDetail")
+	public ResponseEntity<Boolean> checkActivityTimeConflictDetail(@RequestParam("vendorId") Integer vendorId,@RequestParam("activityId") Integer activityId,@RequestParam("startTime") String startTime, @RequestParam("endTime") String endTime) {
+	    boolean conflictExists = vendorActivityServiceAdmin.checkTimeConflictDetail(vendorId,activityId,startTime, endTime);
+	    return ResponseEntity.ok(conflictExists);
+	}
+	
+	@GetMapping("/api/vendor_admin/activity/checkConflict")
+	public ResponseEntity<Boolean> checkActivityTimeConflict(@RequestParam("vendorId") Integer vendorId,@RequestParam("startTime") String startTime, @RequestParam("endTime") String endTime) {
+	    boolean conflictExists = vendorActivityServiceAdmin.checkTimeConflict(vendorId,startTime, endTime);
+	    return ResponseEntity.ok(conflictExists);
+	}
+	
 	@ResponseBody
 	@PostMapping("/api/vendor_activity/add") // 不只可以送json 也可以送@RequestParam
 	public ResponseEntity<?> addActivity(@RequestParam("vendor_id") Integer vendorId,
