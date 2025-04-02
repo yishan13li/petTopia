@@ -18,6 +18,6 @@ public class ChatMessagesDto {
 	private String content;
 	private Boolean isRead;
 	private Date sendTime;
-	private List<String> photos;
+	private List<byte[]> photos;
 	
 }
