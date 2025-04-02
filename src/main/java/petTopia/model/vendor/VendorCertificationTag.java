@@ -14,7 +14,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 @Entity
 @Table(name = "vendor_certification_tag")
@@ -32,7 +31,7 @@ public class VendorCertificationTag {
 	@ManyToOne
 	@JoinColumn(name = "vendor_id", nullable = false)
 	private Vendor vendor;
-	
+
 	@ManyToOne
 	@JoinColumn(name = "certification_id", nullable = false)
 	private VendorCertification certification;

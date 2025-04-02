@@ -15,6 +15,8 @@ public interface FriendlyShopRepository extends JpaRepository<FriendlyShop, Inte
 	public List<FriendlyShop> findByNameContaining(String name);
 
 	public List<FriendlyShop> findByVendor(Vendor vendor);
-	
+
 	public List<FriendlyShop> findByVendorCategory(VendorCategory vendorCategory);
+
+	List<FriendlyShop> findByVendorCategoryIsNull();
 }
