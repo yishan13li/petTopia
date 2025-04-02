@@ -1,6 +1,7 @@
 package petTopia.dto.shop;
 
 import java.util.Date;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,5 +18,6 @@ public class ChatMessagesDto {
 	private String content;
 	private Boolean isRead;
 	private Date sendTime;
+	private List<byte[]> photos;
 	
 }

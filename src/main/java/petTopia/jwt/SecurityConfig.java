@@ -115,7 +115,9 @@ public class SecurityConfig {
                     "/manage/**", 
 
                     "/chat/**", 
-                    "/chatRoom/**"
+                    "/chatRoom/**",
+                    "/chatRoomPhoto/**"
+                    
                     
                 ).permitAll()
                 
