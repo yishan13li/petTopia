@@ -145,5 +145,16 @@ public class ShopProductReviewController {
         }
     }
     
+    // 檢查會員是否已經對該商品評論過
+    @GetMapping("/review/hasReviewed")
+    public ResponseEntity<Map<String, Boolean>> checkIfReviewed(
+            @RequestParam Integer productId, 
+            @RequestParam Integer memberId) {
+
+        boolean hasReviewed = productReviewService.hasReviewed(productId, memberId);
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("hasReviewed", hasReviewed);
+        return ResponseEntity.ok(response);
+    }
 
 }

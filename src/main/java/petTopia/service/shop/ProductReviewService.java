@@ -52,6 +52,11 @@ public class ProductReviewService {
         }
     }
     
+    public boolean hasReviewed(Integer productId, Integer memberId) {
+        Optional<ProductReview> existingReview = productReviewRepository.findByProductIdAndMemberId(productId, memberId);
+        return existingReview.isPresent();
+    }
+    
     // 將 ProductReview 轉換為 ProductReviewDTO
     private ProductReviewResponseDto convertToDTO(ProductReview review) {
     	ProductReviewResponseDto reviewDTO = new ProductReviewResponseDto();
