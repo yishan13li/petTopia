@@ -9,4 +9,5 @@ import petTopia.model.shop.Shipping;
 public interface ShippingRepository extends JpaRepository<Shipping, Integer>{
 
 	Shipping findByOrderId(Integer orderId);
+	
 }

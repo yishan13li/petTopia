@@ -89,6 +89,12 @@
 			<artifactId>jsoup</artifactId>
 			<version>1.19.1</version>
 		</dependency>
+	    <!-- Apache POI for generating Excel files -->
+		<dependency>
+		    <groupId>org.apache.poi</groupId>
+		    <artifactId>poi-ooxml</artifactId>
+		    <version>5.4.0</version>
+		</dependency>
 
 		<!--  Spring Security - 用於會員認證和授權  -->
 		<dependency>

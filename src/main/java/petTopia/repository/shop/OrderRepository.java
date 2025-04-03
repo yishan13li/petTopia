@@ -1,10 +1,12 @@
 package petTopia.repository.shop;
 
 import java.math.BigDecimal;
+import java.sql.Date;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import petTopia.model.shop.Order;
@@ -35,4 +37,8 @@ public interface OrderRepository extends JpaRepository<petTopia.model.shop.Order
             "ORDER BY year DESC, month DESC", nativeQuery = true)
     List<Object[]> calculateMonthlySalesTrend();
 
+    //財務報表用
+    @Query("SELECT o FROM Order o WHERE o.createdTime BETWEEN :startDate AND :endDate")
+    List<Order> findOrdersByDateRange(@Param("startDate") java.util.Date startDate, @Param("endDate") java.util.Date endDate);
+    
 }
