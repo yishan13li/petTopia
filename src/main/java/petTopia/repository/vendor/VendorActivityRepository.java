@@ -26,4 +26,8 @@ public interface VendorActivityRepository extends JpaRepository<VendorActivity, 
 
 	public List<VendorActivity> findByAddressContaining(String adress);
 
+	// 統計總活動數
+	@Query("SELECT COUNT(va) FROM VendorActivity va")
+	long countTotalActivities();
+
 }

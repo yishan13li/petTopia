@@ -56,4 +56,8 @@ public interface VendorRepository extends JpaRepository<Vendor, Integer> {
 	List<Vendor> findAllByIdNot(Integer vendorId);
 
 	Optional<Vendor> findStatusById(Integer vendorId);
+	// 統計總店家數
+	@Query("SELECT COUNT(v) FROM Vendor v")
+	long countTotalVendors();
+
 }
