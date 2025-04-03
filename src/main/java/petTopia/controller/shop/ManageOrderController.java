@@ -1,6 +1,8 @@
 package petTopia.controller.shop;
 
-import java.math.BigDecimal;
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -10,6 +12,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -22,7 +25,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import petTopia.dto.shop.ManageAllOrdersDto;
+import petTopia.dto.shop.OrderAnalysisDto;
 import petTopia.dto.shop.OrderDetailDto;
+import petTopia.dto.shop.OrderItemAnalysisDto;
 import petTopia.dto.shop.SalesDto;
 import petTopia.dto.shop.UpdateOneOrderDto;
 import petTopia.projection.shop.ProductCategorySalesProjection;
@@ -32,6 +37,7 @@ import petTopia.repository.shop.PaymentCategoryRepository;
 import petTopia.repository.shop.PaymentStatusRepository;
 import petTopia.repository.shop.ShippingCategoryRepository;
 import petTopia.service.shop.ManageOrderService;
+import petTopia.service.shop.OrderAnalysisExcelService;
 import petTopia.service.shop.OrderDetailService;
 
 @RestController
@@ -55,6 +61,9 @@ public class ManageOrderController {
 	
 	@Autowired
 	private ShippingCategoryRepository shippingCategoryRepo;
+	
+	@Autowired
+	private OrderAnalysisExcelService excelService;
 	
 	@GetMapping("/orders/options")
 	public ResponseEntity<Map<String, Object>> getOrderOptions() {
@@ -234,5 +243,32 @@ public class ManageOrderController {
             
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
+    }
+    
+    // 生成訂單財務報表
+    @GetMapping("/orders/generateReport")
+    public ResponseEntity<byte[]> generateReport(
+            @RequestParam String orderStartDate, 
+            @RequestParam String orderEndDate) throws IOException, ParseException {
+        
+        // 指定日期格式
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        
+        // 轉換 String 為 Date
+        Date startDate = dateFormat.parse(orderStartDate);
+        Date endDate = dateFormat.parse(orderEndDate);
+
+        // 查詢數據
+        List<OrderAnalysisDto> orders = manageOrderService.getOrdersAnalysisByDateRange(startDate, endDate);
+        List<OrderItemAnalysisDto> orderItems = manageOrderService.getOrderItemsByDateRange(startDate, endDate);
+        
+        // 產生 Excel
+        byte[] excelData = excelService.generateOrdersAndItemsExcel(orders, orderItems);
+
+        // 設定回應 Headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=orders_and_items_report.xlsx");
+        
+        return new ResponseEntity<>(excelData, headers, HttpStatus.OK);
     }
 }

@@ -28,6 +28,8 @@ import jakarta.persistence.criteria.Root;
 import jakarta.transaction.Transactional;
 import petTopia.dto.shop.ManageAllOrdersDto;
 import petTopia.dto.shop.ManageOrderItemDto;
+import petTopia.dto.shop.OrderAnalysisDto;
+import petTopia.dto.shop.OrderItemAnalysisDto;
 import petTopia.dto.shop.OrderSummaryAmoutDto;
 import petTopia.dto.shop.SalesDto;
 import petTopia.dto.shop.UpdateOneOrderDto;
@@ -438,4 +440,105 @@ public class ManageOrderService {
     public List<ProductCategorySalesProjection> getProductCategorySales() {
         return orderDetailRepo.findProductCategorySales();
     }
+    
+    //財務報表分析
+    public OrderAnalysisDto getOrderAnalysisById(Integer orderId) {
+        // 查詢訂單
+        Optional<Order> orderOpt = orderRepo.findById(orderId);
+        if (!orderOpt.isPresent()) {
+            throw new RuntimeException("Order not found with ID: " + orderId);
+        }
+        Order order = orderOpt.get();
+        
+        // 查詢配送資訊
+        Shipping shipping = shippingRepo.findByOrderId(orderId);
+        
+        // 查詢付款資訊
+        Payment payment = paymentRepo.findByOrderId(orderId);
+        
+        // 組合為 OrderAnalysisDto
+        OrderAnalysisDto orderAnalysisDto = new OrderAnalysisDto();
+        orderAnalysisDto.setOrderId(order.getId());
+        orderAnalysisDto.setCreatedTime(order.getCreatedTime());
+        orderAnalysisDto.setOrderStatus(order.getOrderStatus().getName());
+        orderAnalysisDto.setMemberId(order.getMember().getId());
+        orderAnalysisDto.setMemberName(order.getMember().getName() != null ? order.getMember().getName() : "無");
+        orderAnalysisDto.setMemberPhone(order.getMember().getPhone() != null ? order.getMember().getPhone() : "無");
+        orderAnalysisDto.setSubtotal(order.getSubtotal() != null ? order.getSubtotal() : BigDecimal.ZERO);
+        orderAnalysisDto.setDiscountAmount(order.getDiscountAmount() != null ? order.getDiscountAmount() : BigDecimal.ZERO);
+        orderAnalysisDto.setShippingFee(order.getShippingFee() != null ? order.getShippingFee() : BigDecimal.ZERO);
+        orderAnalysisDto.setTotalAmount(order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO);
+
+        if (payment != null) {
+            orderAnalysisDto.setPaymentCategory(payment.getPaymentCategory() != null ? payment.getPaymentCategory().getName() : "無");
+            orderAnalysisDto.setPaymentStatus(payment.getPaymentStatus() != null ? payment.getPaymentStatus().getName() : "無");
+            orderAnalysisDto.setPaymentDate(payment.getPaymentDate() != null ? payment.getPaymentDate() : null);
+            orderAnalysisDto.setPaymentAmount(payment.getPaymentAmount() != null ? payment.getPaymentAmount() : BigDecimal.ZERO);
+        } else {
+            orderAnalysisDto.setPaymentCategory("無");
+            orderAnalysisDto.setPaymentStatus("無");
+            orderAnalysisDto.setPaymentDate(null);
+            orderAnalysisDto.setPaymentAmount(BigDecimal.ZERO);
+        }
+
+        if (shipping != null) {
+            orderAnalysisDto.setShippingCategory(shipping.getShippingCategory() != null ? shipping.getShippingCategory().getName() : "無");
+            orderAnalysisDto.setLastModifiedDate(shipping.getUpdatedTime() != null ? shipping.getUpdatedTime() : null);
+        } else {
+            orderAnalysisDto.setShippingCategory("無");
+            orderAnalysisDto.setLastModifiedDate(null);
+        }
+
+        return orderAnalysisDto;
+    }
+
+
+    public List<OrderAnalysisDto> getOrdersAnalysisByDateRange(Date startDate, Date endDate) {
+        // 查詢指定日期範圍內的所有訂單
+        List<Order> orders = orderRepo.findOrdersByDateRange(startDate, endDate);
+        
+        // 轉換為 DTO 列表
+        List<OrderAnalysisDto> orderAnalysisDtos = new ArrayList<>();
+        for (Order order : orders) {
+            OrderAnalysisDto orderAnalysisDto = getOrderAnalysisById(order.getId());
+            orderAnalysisDtos.add(orderAnalysisDto);
+        }
+        
+        return orderAnalysisDtos;
+    }
+    
+    //=====orderItems=====
+    // 根據時間範圍查詢商品明細
+    public List<OrderItemAnalysisDto> getOrderItemsByDateRange(Date startDate, Date endDate) {
+        List<OrderDetail> orderDetails = orderDetailRepo.findOrderDetailsByDateRange(startDate, endDate);
+        
+        // 轉換為 OrderItemAnalysisDto
+        List<OrderItemAnalysisDto> orderItemAnalysisDtos = new ArrayList<>();
+        for (OrderDetail orderDetail : orderDetails) {
+            OrderItemAnalysisDto orderItemAnalysisDto = new OrderItemAnalysisDto();
+            orderItemAnalysisDto.setOrderId(orderDetail.getOrder().getId());
+            orderItemAnalysisDto.setProductId(orderDetail.getProduct().getId());
+            orderItemAnalysisDto.setProductDetailId(
+                orderDetail.getProduct().getProductDetail() != null ? orderDetail.getProduct().getProductDetail().getId() : null
+            );
+            orderItemAnalysisDto.setProductName(
+                orderDetail.getProduct().getProductDetail() != null ? orderDetail.getProduct().getProductDetail().getName() : "無"
+            );
+            orderItemAnalysisDto.setProductColor(
+                orderDetail.getProduct().getProductColor() != null ? orderDetail.getProduct().getProductColor().getName() : "無"
+            );
+            orderItemAnalysisDto.setProductSize(
+                orderDetail.getProduct().getProductSize() != null ? orderDetail.getProduct().getProductSize().getName() : "無"
+            );
+            orderItemAnalysisDto.setQuantity(orderDetail.getQuantity() != null ? orderDetail.getQuantity() : 0);
+            orderItemAnalysisDto.setUnitPrice(orderDetail.getUnitPrice() != null ? orderDetail.getUnitPrice() : BigDecimal.ZERO);
+            orderItemAnalysisDto.setDiscountPrice(orderDetail.getDiscountPrice() != null ? orderDetail.getDiscountPrice() : BigDecimal.ZERO);
+            orderItemAnalysisDto.setTotalPrice(orderDetail.getTotalPrice() != null ? orderDetail.getTotalPrice() : BigDecimal.ZERO);
+            
+            orderItemAnalysisDtos.add(orderItemAnalysisDto);
+        }
+
+        return orderItemAnalysisDtos;
+    }
+
 }

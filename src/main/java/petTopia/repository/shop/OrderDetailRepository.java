@@ -1,10 +1,12 @@
 package petTopia.repository.shop;
 
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import petTopia.model.shop.OrderDetail;
@@ -38,5 +40,8 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
 		       "GROUP BY pc.name " +
 		       "ORDER BY totalQuantity DESC")
 		List<ProductCategorySalesProjection> findProductCategorySales();
+
+    @Query("SELECT od FROM OrderDetail od WHERE od.order.createdTime BETWEEN :startDate AND :endDate")
+    List<OrderDetail> findOrderDetailsByDateRange(@Param("startDate") Date startDate, @Param("endDate") Date endDate);
 
 }
