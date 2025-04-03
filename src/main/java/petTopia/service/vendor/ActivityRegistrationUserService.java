@@ -118,7 +118,7 @@ public class ActivityRegistrationUserService {
 
 	/* 取得活動當前與最大人數 */
 	public ActivityPeopleNumber getPeopleNumber(Integer activityId) {
-		ActivityPeopleNumber peopleNumber = activityPeopleNumberRepository.findById(activityId).orElse(null);
+		ActivityPeopleNumber peopleNumber = activityPeopleNumberRepository.findByVendorActivityId(activityId);
 
 		// 取得該活動當前報名人數並更新
 		Integer number = activityRegistrationRepository.countByVendorActivityId(activityId);
@@ -147,7 +147,7 @@ public class ActivityRegistrationUserService {
 		List<ActivityRegistration> list = activityRegistrationRepository.findAllByMemberId(memberId);
 		return list;
 	}
-	
+
 	/* 藉ID刪除報名 */
 	public boolean deleteByRegistrationId(Integer likeId) {
 		if (activityRegistrationRepository.existsById(likeId)) {
