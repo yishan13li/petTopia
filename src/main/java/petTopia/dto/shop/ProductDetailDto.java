@@ -15,4 +15,6 @@ public class ProductDetailDto {
 	
 	private Product minPriceProduct;
 	
+	private Double avgRating;
+	
 }

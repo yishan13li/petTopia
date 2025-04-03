@@ -47,8 +47,8 @@ public class ChatMessagesService {
 		
 	}
 		
-	// 儲存輸入的聊天訊息 回傳該訊息ID
-	public Integer saveMessage(Integer senderId, Integer receiverId, String content, Date sendTime) {
+	// 儲存輸入的聊天訊息 回傳該訊息
+	public ChatMessages saveMessage(Integer senderId, Integer receiverId, String content, Date sendTime) {
 		
 		ChatMessages chatMessages = new ChatMessages();
 		
@@ -66,7 +66,7 @@ public class ChatMessagesService {
 		
 	    ChatMessages save = chatMessagesRepository.save(chatMessages);
 	    
-	    return save != null ? save.getId() : 0;
+	    return save != null ? save : null;
 		
 	}
 	

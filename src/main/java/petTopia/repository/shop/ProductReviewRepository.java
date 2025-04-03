@@ -9,7 +9,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import petTopia.model.shop.Product;
+import petTopia.model.shop.ProductDetail;
 import petTopia.model.shop.ProductReview;
+import petTopia.projection.shop.ProductDetailRatingProjection;
+import petTopia.projection.shop.ProductRatingProjection;
 
 @Repository
 public interface ProductReviewRepository extends JpaRepository<ProductReview, Integer> {
@@ -34,17 +38,51 @@ public interface ProductReviewRepository extends JpaRepository<ProductReview, In
     @Query("SELECT pr FROM ProductReview pr WHERE pr.product.productDetail.id = :productDetailId ORDER BY pr.reviewTime DESC")
     Page<ProductReview> findAllReviewsByProductDetailIdOrderByReviewTimeDesc(@Param("productDetailId") Integer productDetailId, Pageable pageable);
     
-    //==========未完成==========
-    // 查詢所有會員的評論並根據 reviewTime 降冪排序
+    // 查詢所有會員的評論並根據 reviewTime 降冪排序（含分頁）
     @Query("SELECT pr FROM ProductReview pr ORDER BY pr.reviewTime DESC")
-    List<ProductReview> findAllReviewsOrderByReviewTimeDesc();
+    Page<ProductReview> findAllReviewsOrderByReviewTimeDesc(Pageable pageable);
 
-    // 查詢所有評論並根據 id 降冪排序
+    // 查詢所有評論並根據 id 降冪排序（含分頁）
     @Query("SELECT pr FROM ProductReview pr ORDER BY pr.id DESC")
-    List<ProductReview> findAllReviewsByIdDesc();
+    Page<ProductReview> findAllReviewsByIdDesc(Pageable pageable);
 
-    // 根據 rating 降冪排序
+    // 根據 rating 降冪排序（含分頁）
     @Query("SELECT pr FROM ProductReview pr ORDER BY pr.rating DESC")
-    List<ProductReview> findAllReviewsByRatingDesc();
+    Page<ProductReview> findAllReviewsByRatingDesc(Pageable pageable);
+
+    // 模糊搜尋（商品 ID、會員 ID、評論 ID 或評論描述）
+    @Query("""
+            SELECT pr FROM ProductReview pr
+            JOIN pr.product p
+            JOIN p.productDetail pd
+            WHERE CAST(pr.product.id AS string) LIKE CONCAT('%', :keyword, '%')
+               OR CAST(pr.member.id AS string) LIKE CONCAT('%', :keyword, '%')
+               OR CAST(pr.id AS string) LIKE CONCAT('%', :keyword, '%')
+               OR LOWER(pr.reviewDescription) LIKE LOWER(CONCAT('%', :keyword, '%'))
+               OR LOWER(pd.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            ORDER BY pr.reviewTime DESC
+        """)
+    Page<ProductReview> searchReviews(@Param("keyword") String keyword, Pageable pageable);
+
+    //刪除評論
+    void deleteById(Integer reviewId);
+    
+    //========統計分析=========
+    //評分最高的商品
+    @Query("SELECT p AS product, AVG(pr.rating) AS avgRating " +
+    	       "FROM Product p " +
+    	       "JOIN ProductReview pr ON p.id = pr.product.id " +
+    	       "GROUP BY p " +
+    	       "ORDER BY avgRating DESC")
+    List<ProductRatingProjection> findTop5ProductsByAverageRating(Pageable pageable);
+
+    //評分最高商品種類
+    @Query("SELECT pd AS productDetail, AVG(pr.rating) AS avgRating " +
+    	       "FROM ProductReview pr " +
+    	       "JOIN pr.product p " +
+    	       "JOIN p.productDetail pd " +
+    	       "GROUP BY pd " +
+    	       "ORDER BY avgRating DESC")
+    	List<ProductDetailRatingProjection> findTop3ProductDetailsByAverageRating(Pageable pageable);
 
 }

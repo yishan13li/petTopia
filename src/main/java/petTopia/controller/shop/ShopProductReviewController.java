@@ -144,5 +144,17 @@ public class ShopProductReviewController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error fetching reviews: " + e.getMessage());
         }
     }
+    
+    // 檢查會員是否已經對該商品評論過
+    @GetMapping("/review/hasReviewed")
+    public ResponseEntity<Map<String, Boolean>> checkIfReviewed(
+            @RequestParam Integer productId, 
+            @RequestParam Integer memberId) {
+
+        boolean hasReviewed = productReviewService.hasReviewed(productId, memberId);
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("hasReviewed", hasReviewed);
+        return ResponseEntity.ok(response);
+    }
 
 }
