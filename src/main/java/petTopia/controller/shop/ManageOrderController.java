@@ -32,9 +32,12 @@ import petTopia.dto.shop.SalesDto;
 import petTopia.dto.shop.UpdateOneOrderDto;
 import petTopia.projection.shop.ProductCategorySalesProjection;
 import petTopia.projection.shop.ProductSalesProjection;
+import petTopia.repository.shop.OrderRepository;
 import petTopia.repository.shop.OrderStatusRepository;
 import petTopia.repository.shop.PaymentCategoryRepository;
 import petTopia.repository.shop.PaymentStatusRepository;
+import petTopia.repository.shop.ProductRepository;
+import petTopia.repository.shop.ProductReviewRepository;
 import petTopia.repository.shop.ShippingCategoryRepository;
 import petTopia.service.shop.ManageOrderService;
 import petTopia.service.shop.OrderAnalysisExcelService;
@@ -64,6 +67,15 @@ public class ManageOrderController {
 	
 	@Autowired
 	private OrderAnalysisExcelService excelService;
+	
+	@Autowired
+	private ProductReviewRepository productReviewRepo;
+	
+	@Autowired
+	private ProductRepository productRepo;
+	
+	@Autowired
+	private OrderRepository orderRepo;
 	
 	@GetMapping("/orders/options")
 	public ResponseEntity<Map<String, Object>> getOrderOptions() {
@@ -270,5 +282,26 @@ public class ManageOrderController {
         headers.add("Content-Disposition", "attachment; filename=orders_and_items_report.xlsx");
         
         return new ResponseEntity<>(excelData, headers, HttpStatus.OK);
+    }
+    
+    // 取得統計資料：訂單數量、評論數量、低庫存商品數量
+    @GetMapping("/dashboard/summary")
+    public ResponseEntity<?> getDashboradSummary() {
+        try {
+            // 訂單數量
+            long orderCount = orderRepo.countTotalOrders();
+            // 評論數量
+            long reviewCount = productReviewRepo.countTotalProductReviews();
+            // 低庫存商品數量
+            long lowStockCount = productRepo.countLowStockProducts();
+
+            return ResponseEntity.ok(Map.of(
+                "totalOrders", orderCount,
+                "totalReviews", reviewCount,
+                "lowStockProducts", lowStockCount
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("無法取得統計資料，請稍後再試：" + e.getMessage());
+        }
     }
 }

@@ -17,7 +17,7 @@ public class OrderItemAnalysisDto {
 	private String productColor;
 	private String productSize;
     private Integer quantity;
-    private BigDecimal unitPrice;
-    private BigDecimal discountPrice;
-    private BigDecimal totalPrice;
+    private double unitPrice;
+    private double discountPrice;
+    private double totalPrice;
 }

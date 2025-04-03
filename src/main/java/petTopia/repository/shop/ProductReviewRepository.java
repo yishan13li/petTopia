@@ -85,4 +85,6 @@ public interface ProductReviewRepository extends JpaRepository<ProductReview, In
     	       "ORDER BY avgRating DESC")
     	List<ProductDetailRatingProjection> findTop3ProductDetailsByAverageRating(Pageable pageable);
 
+    @Query("SELECT COUNT(pr) FROM ProductReview pr")
+    long countTotalProductReviews();
 }
