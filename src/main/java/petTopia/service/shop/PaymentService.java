@@ -34,8 +34,7 @@ import petTopia.util.EcpayUtils; // 引入 EcpayUtils
 @Service
 public class PaymentService {
 	
-    @Value("${ecpay.merchantId}")
-    private String merchantId;
+	private final String merchantId = "3002607";
 
     @Autowired
     private PaymentRepository paymentRepo;

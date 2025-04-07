@@ -67,3 +67,5 @@ replay_pid*
 *.zip
 *.tar.gz
 *.rar
+
+.env
