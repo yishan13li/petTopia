@@ -7,37 +7,17 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import jakarta.transaction.Transactional;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpEntity;
 
 import petTopia.dto.shop.PaymentInfoDto;
 import petTopia.dto.shop.PaymentResponseDto;
-import petTopia.model.shop.Cart;
 import petTopia.model.shop.Order;
 import petTopia.model.shop.OrderDetail;
 import petTopia.model.shop.Payment;
@@ -131,15 +111,15 @@ public class PaymentService {
         // 創建 PaymentResponseDto 並設置值
         PaymentResponseDto paymentResponse = new PaymentResponseDto();
         paymentResponse.setMerchantId(merchantId);
-        paymentResponse.setMerchantTradeNo("petTopiaOrder" + order.getId());
+        paymentResponse.setMerchantTradeNo(new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()) + "P" + order.getId());
         paymentResponse.setMerchantTradeDate(new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date()));
         paymentResponse.setPaymentType("aio");
         paymentResponse.setTotalAmount(paymentAmount);
         paymentResponse.setTradeDesc("petTopia商品付款");
         paymentResponse.setItemName(itemName);
-        paymentResponse.setReturnURL("https://363f-59-125-142-166.ngrok-free.app/shop/payment/ecpay/callback");
+        paymentResponse.setReturnURL("https://30a5-59-125-142-166.ngrok-free.app/shop/payment/ecpay/callback");
         paymentResponse.setOrderResultURL("");
-        paymentResponse.setClientBackURL("https://6ad5-59-125-142-166.ngrok-free.app/shop/ecpay/success");
+        paymentResponse.setClientBackURL("https://5ee4-59-125-142-166.ngrok-free.app/shop/ecpay/success");
 //        paymentResponse.setClientBackURL("https://localhost:5173/shop/orders/" + order.getId());
         paymentResponse.setChoosePayment("ALL");
         paymentResponse.setEncryptType("1");
@@ -167,8 +147,15 @@ public class PaymentService {
         String paymentDateStr = callbackParams.get("PaymentDate");
 
         // 3. 去除前綴，取得訂單 ID
-        String orderIdStr = merchantTradeNo.replace("petTopiaOrder", "");
-        Integer orderId = Integer.valueOf(orderIdStr);
+        String[] parts = merchantTradeNo.split("P");
+        Integer orderId = null;
+        if (parts.length == 2) {
+            String orderIdStr = parts[1]; 
+            orderId = Integer.valueOf(orderIdStr);
+        } else {
+            throw new IllegalArgumentException("merchantTradeNo 格式錯誤，無法擷取訂單 ID");
+        }
+
         BigDecimal paymentAmount = new BigDecimal(tradeAmt);
 
         // 4. 查找訂單
