@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<!-- TODO 個人資訊 -->
+
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>個人資訊</title>
+<!-- Favicon icon -->
+<link rel="icon" type="image/png" sizes="16x16"
+	th:href="@{/admin_static/images/favicon.png}">
+<link th:href="@{/admin_static/css/style.css}" rel="stylesheet">
+<style>
+.btn-transparent {
+	border: 1px solid #ccc;
+	background-color: transparent;
+	color: #333;
+	padding: 5px 10px;
+	font-size: 14px;
+	border-radius: 5px;
+	cursor: pointer;
+}
+
+.btn-transparent:hover {
+	background-color: rgba(0, 0, 0, 0.1);
+}
+
+.rounded-circle {
+	border-radius: 50% !important;
+	width: 90px;
+	height: 90px;
+	object-fit: cover;
+}
+
+.container {
+	max-width: 95%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	/*             height: 100vh; */
+	position: relative;
+}
+
+.content-box {
+	width: 95%;
+	max-width: 95%;
+	background: white;
+	padding: 20px;
+	border-radius: 10px;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+	position: relative;
+}
+
+.back-button {
+	position: absolute;
+	top: 10px;
+	left: 10px;
+}
+
+select.form-control {
+	height: calc(2.25rem + 2px);
+	/* 與 input 標籤相同的高度 */
+	padding: 0.375rem 0.75rem;
+	/* 與 input 標籤相同的內邊距 */
+}
+</style>
+</head>
+
+<body>
+
+	<!--*******************
+        Preloader start
+    ********************-->
+	<div id="preloader">
+		<div class="sk-three-bounce">
+			<div class="sk-child sk-bounce1"></div>
+			<div class="sk-child sk-bounce2"></div>
+			<div class="sk-child sk-bounce3"></div>
+		</div>
+	</div>
+	<!--*******************
+        Preloader end
+    ********************-->
+
+
+	<!--**********************************
+        Main wrapper start
+    ***********************************-->
+	<div id="main-wrapper">
+
+		<div th:replace="~{layout/vendor_admin_header}"></div>
+
+		<!--**********************************
+            Content body start
+        ***********************************-->
+		<div class="content-body">
+			<div class="container">
+				<div class="content-box">
+					<form method="post" enctype="multipart/form-data"
+						id="updateVendorForm">
+						<button class="btn btn-transparent profile-button"
+							onclick="window.location.href='/vendor_admin/vendor_admin_activity'"
+							type="button">返回首頁</button>
+						<div class="row">
+							<div
+								class="col-md-4 border-right d-flex align-items-center justify-content-center">
+								<div class="text-center p-3 py-5">
+									<img id="vendorLogoImg" class="rounded-circle mt-3"
+										th:src="@{/profileImage/{vendorId}(vendorId=${vendor.Id})}"
+										width="90"
+										onclick="document.getElementById('imageUpload').click();">
+
+									<!-- 上傳圖片 input -->
+									<input type="file" id="imageUpload" name="profileImage"
+										accept="image/*" style="display: none"
+										onchange="previewImage(event)"> <br> <span
+										class="font-weight-bold">會員ID: <span
+										th:text="${vendor.Id}"></span></span> <input type="hidden"
+										name="vendorId" th:value="${vendor.Id}" id="userId" /> <br>
+									店家等級:<span class="text-black-50"
+										th:text="${vendor.vendorLevel}"></span><br>總活動數:<span
+										class="font-weight-bold" th:text="${vendor.eventCount}"></span><br>
+									平均星級:<span th:text="${vendor.avgRating}"></span>
+								</div>
+							</div>
+							<div class="col-md-8">
+								<div class="p-3 py-5">
+									<div class="row mt-2">
+										<div class="col-md-6">
+											<label>店家名稱:</label><input type="text" class="form-control"
+												name="vendorName" id="vendorName" th:value="${vendor.Name}">
+										</div>
+										<div class="col-md-6">
+											<label>店家類別:</label> <select name="category"
+												class="form-control" id="category">
+												<!-- 												<option value="餐廳" -->
+												<!-- 													th:selected="${vendor.vendorCategory.categoryName == '餐廳'}">餐廳</option> -->
+												<!-- 												<option value="旅店" -->
+												<!-- 													th:selected="${vendor.vendorCategory.categoryName == '旅店'}">旅店</option> -->
+
+
+												<option th:each="type : ${allcategory}"
+													th:value="${type.id}" th:text="${type.name}"
+													th:selected="${type.id == vendor.vendorCategory.id}"></option>
+											</select><br />
+										</div>
+									</div>
+									<div class="row mt-3">
+										<div class="col-md-6">
+											<label>Email:</label><input type="email" class="form-control"
+												name="contactEmail" id="contactEmail" required="required"
+												th:value="${vendor.contactEmail}"> <span
+												id="emailError" style="color: red; display: none;">請輸入有效的
+												Email。</span>
+										</div>
+										<div class="col-md-6">
+											<label>電話號碼:</label><input type="text" class="form-control"
+												name="vendorPhone" id="vendorPhone" required="required"
+												th:value="${vendor.Phone}"> <span id="phoneError"
+												style="color: red; display: none;">請輸入有效的電話號碼。</span>
+										</div>
+									</div>
+									<div class="row mt-3">
+										<div class="col-md-6">
+											<label>地址:</label>
+											<textarea rows="" cols="" id="vendorAddress"
+												class="form-control" name="vendorAddress"
+												th:text="${vendor.Address}"></textarea>
+										</div>
+
+										<div class="col-md-6">
+											<label>介紹:</label>
+											<textarea rows="" cols="" id="vendorDescription"
+												class="form-control" name="vendorDescription"
+												th:text="${vendor.Description}"></textarea>
+										</div>
+									</div>
+									<div class="row mt-3">
+										<div class="col-md-6">
+											<label>聯絡人:</label><input id="contactPerson" type="text"
+												class="form-control" name="contactPerson"
+												th:value="${vendor.contactPerson}">
+										</div>
+										<div class="col-md-6">
+											<label>統一編號:</label><input id="vendorTaxidNumber" type="text"
+												class="form-control" name="vendorTaxidNumber"
+												th:value="${vendor.TaxidNumber}">
+										</div>
+
+									</div>
+									<div class="row mt-3">
+										<div class="col-md-6">
+											<label>註冊日期:</label><input id="registrationDate" type="text"
+												class="form-control" name="registrationDate"
+												th:value="${vendor.registrationDate}" disabled="disabled">
+										</div>
+										<div class="col-md-6">
+											<label>認證狀態:</label> <span th:if="${vendor.status}"> <input
+												type="text" class="form-control" value="已認證"
+												disabled="disabled" id="status"> <input
+												type="hidden" name="status" value="true" id="status">
+											</span> <span th:unless="${vendor.status}"> <input
+												type="text" id="status" class="form-control" value="未認證"
+												disabled="disabled"> <input id="status"
+												type="hidden" name="status" value="false">
+											</span>
+										</div>
+									</div>
+									<div class="mt-5 text-right">
+										<button class="btn btn-primary profile-button" type="submit">更新資訊</button>
+
+										<a href="@{${pageContext.request.contextPath}/logout}"
+											class="btn btn-danger">登出</a>
+									</div>
+
+									<div class="modal fade" id="updateSuccessModal" tabindex="-1"
+										aria-labelledby="updateSuccessLabel" aria-hidden="true">
+										<div class="modal-dialog">
+											<div class="modal-content">
+												<div class="modal-header">
+													<h5 class="modal-title" id="updateSuccessLabel">更新成功</h5>
+													<button type="button" class="btn-close"
+														data-bs-dismiss="modal" aria-label="Close"></button>
+												</div>
+												<div class="modal-body">您的資料已成功更新！</div>
+												<div class="modal-footer">
+													<button type="button" class="btn btn-primary"
+														data-bs-dismiss="modal" id="confirmButton">確定</button>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+					</form>
+				</div>
+
+			</div>
+
+		</div>
+
+		<!--**********************************
+            Content body end
+        ***********************************-->
+
+
+		<!--**********************************
+            Footer start
+        ***********************************-->
+
+		<!--**********************************
+            Footer end
+        ***********************************-->
+
+		<!--**********************************
+           Support ticket button start
+        ***********************************-->
+
+		<!--**********************************
+           Support ticket button end
+        ***********************************-->
+
+
+	</div>
+	<!--**********************************
+        Main wrapper end
+    ***********************************-->
+
+	<!--**********************************
+        Scripts
+    ***********************************-->
+	<!-- Required vendors -->
+
+	<script type="text/javascript">
+		const updateVendorForm = document.getElementById('updateVendorForm');
+		var user = {
+		        email: '${user.email}',
+		        password: '${user.password}'
+		    };
+		
+		function formatReviewDate(dateString) {
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1; // 月份從0開始
+            const day = date.getDate();
+            let hours = date.getHours();
+            const minutes = date.getMinutes();
+            const period = hours >= 12 ? '下午' : '上午';
+
+            // 轉換為12小時制
+            hours = hours % 12;
+            hours = hours ? hours : 12; // 小時為0時顯示12
+
+            // 格式化為 'YYYY年M月D日 上午/下午 HH:mm'
+            return `${year}年${month}月${day}日 ${period} ${hours}:${minutes < 10 ? '0' + minutes : minutes}`;
+        }
+		document.addEventListener("DOMContentLoaded", function() {
+	        const registrationDateInput = document.getElementById('registrationDate');
+	        const formattedDate = formatReviewDate(registrationDateInput.value); // 使用formatReviewDate函数格式化日期
+	        registrationDateInput.value = formattedDate; // 将格式化后的日期填充回输入框
+	    });
+		
+
+		function previewImage(event) {
+			var reader = new FileReader();
+			reader.onload = function () {
+				var output = document.getElementById('profileImage');
+				output.src = reader.result; // 更新圖片為本地預覽
+			};
+			reader.readAsDataURL(event.target.files[0]);
+		}
+
+		document.getElementById("updateVendorForm").addEventListener('submit', function (event) {
+			event.preventDefault(); // 防止表單默認提交
+
+			let formData = new FormData();
+			formData.append("vendorId", document.getElementById('userId').value);
+			formData.append("vendorName", document.getElementById('vendorName').value);
+			formData.append("contactEmail", document.getElementById('contactEmail').value);
+			formData.append("vendorPhone", document.getElementById('vendorPhone').value);
+			formData.append("vendorAddress", document.getElementById('vendorAddress').value);
+			formData.append("vendorDescription", document.getElementById('vendorDescription').value);
+			formData.append("contactPerson", document.getElementById('contactPerson').value);
+			formData.append("vendorTaxidNumber", document.getElementById('vendorTaxidNumber').value);
+			formData.append("category", document.getElementById('category').value);
+
+			// 檢查是否有選擇 logo 圖片
+			let logoInput = document.getElementById('imageUpload');
+			if (logoInput.files.length > 0) {
+				formData.append("vendorLogoImg", logoInput.files[0]);
+			}
+
+			// 獲取動態的 vendorId
+			let vendorId = document.getElementById('userId').value;
+			console.log(vendorId);  // 確保這裡有正確的值
+			let url = 'http://localhost:8080/api/vendor/update/' + vendorId;
+
+			// 使用 Axios 發送 multipart/form-data
+			axios({
+				method: 'POST',
+				url: url,
+				data: formData,
+				headers: { "Content-Type": "multipart/form-data" },
+			})
+				.then(response => {
+					if (response.data.success) {
+						alert('商家資料更新成功');
+						window.location.reload();
+
+					} else {
+						alert('更新失敗');
+					}
+				})
+				.catch(error => {
+					console.error('更新商家資料時發生錯誤：', error);
+				});
+
+			console.log("請求的資料:", formData);  // 這裡放在表單提交事件內部
+		});
+
+		document
+			.getElementById('imageUpload')
+			.addEventListener(
+				'change',
+				function (event) {
+					const file = event.target.files[0];
+					if (file) {
+						const reader = new FileReader();
+						reader.onload = function (e) {
+							document.getElementById('vendorLogoImg').src = e.target.result;
+						}
+						reader.readAsDataURL(file);
+					}
+				});
+
+		console.log("請求的URL:", '/api/vendor/update/' + document.getElementById('userId').value);
+
+
+	</script>
+
+
+</body>
+
+</html>
