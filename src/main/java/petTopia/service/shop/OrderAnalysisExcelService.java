@@ -65,11 +65,13 @@ public class OrderAnalysisExcelService {
             row.createCell(3).setCellValue(order.getMemberId());
             row.createCell(4).setCellValue(order.getMemberName());
             row.createCell(5).setCellValue(order.getMemberPhone());
-            row.createCell(6).setCellValue(order.getSubtotal().toString());
-            row.createCell(7).setCellValue(order.getDiscountAmount().toString());
-            row.createCell(8).setCellValue(order.getShippingFee().toString());
-            row.createCell(9).setCellValue(order.getTotalAmount().toString());
-            row.createCell(10).setCellValue(order.getPaymentAmount().toString());
+            
+            row.createCell(6).setCellValue(Math.round(order.getSubtotal())); 
+            row.createCell(7).setCellValue(Math.round(order.getDiscountAmount())); 
+            row.createCell(8).setCellValue(Math.round(order.getShippingFee())); 
+            row.createCell(9).setCellValue(Math.round(order.getTotalAmount())); 
+            row.createCell(10).setCellValue(Math.round(order.getPaymentAmount())); 
+
             row.createCell(11).setCellValue(order.getPaymentCategory());
             row.createCell(12).setCellValue(order.getPaymentStatus());
             row.createCell(13).setCellValue(order.getPaymentDate() != null ? order.getPaymentDate().toString() : "");
@@ -105,9 +107,9 @@ public class OrderAnalysisExcelService {
             row.createCell(4).setCellValue(item.getProductColor());
             row.createCell(5).setCellValue(item.getProductSize());
             row.createCell(6).setCellValue(item.getQuantity());
-            row.createCell(7).setCellValue(item.getUnitPrice().toString());
-            row.createCell(8).setCellValue(item.getDiscountPrice().toString());
-            row.createCell(9).setCellValue(item.getTotalPrice().toString());
-        }
+            row.createCell(7).setCellValue(Math.round(item.getUnitPrice())); 
+            row.createCell(8).setCellValue(Math.round(item.getDiscountPrice())); 
+            row.createCell(9).setCellValue(Math.round(item.getTotalPrice())); 
+       }
     }
 }

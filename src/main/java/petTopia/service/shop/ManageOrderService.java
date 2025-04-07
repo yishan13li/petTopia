@@ -15,7 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -55,6 +57,8 @@ import petTopia.repository.shop.OrderStatusRepository;
 import petTopia.repository.shop.PaymentCategoryRepository;
 import petTopia.repository.shop.PaymentRepository;
 import petTopia.repository.shop.PaymentStatusRepository;
+import petTopia.repository.shop.ProductRepository;
+import petTopia.repository.shop.ProductReviewRepository;
 import petTopia.repository.shop.ShippingCategoryRepository;
 import petTopia.repository.shop.ShippingRepository;
 
@@ -464,21 +468,21 @@ public class ManageOrderService {
         orderAnalysisDto.setMemberId(order.getMember().getId());
         orderAnalysisDto.setMemberName(order.getMember().getName() != null ? order.getMember().getName() : "無");
         orderAnalysisDto.setMemberPhone(order.getMember().getPhone() != null ? order.getMember().getPhone() : "無");
-        orderAnalysisDto.setSubtotal(order.getSubtotal() != null ? order.getSubtotal() : BigDecimal.ZERO);
-        orderAnalysisDto.setDiscountAmount(order.getDiscountAmount() != null ? order.getDiscountAmount() : BigDecimal.ZERO);
-        orderAnalysisDto.setShippingFee(order.getShippingFee() != null ? order.getShippingFee() : BigDecimal.ZERO);
-        orderAnalysisDto.setTotalAmount(order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO);
+        orderAnalysisDto.setSubtotal((order.getSubtotal() != null) ? order.getSubtotal().doubleValue() : 0.0);
+        orderAnalysisDto.setDiscountAmount((order.getDiscountAmount() != null) ? order.getDiscountAmount().doubleValue() : 0.0);
+        orderAnalysisDto.setShippingFee((order.getShippingFee() != null) ? order.getShippingFee().doubleValue() : 0.0);
+        orderAnalysisDto.setTotalAmount((order.getTotalAmount() != null) ? order.getTotalAmount().doubleValue() : 0.0);
 
         if (payment != null) {
             orderAnalysisDto.setPaymentCategory(payment.getPaymentCategory() != null ? payment.getPaymentCategory().getName() : "無");
             orderAnalysisDto.setPaymentStatus(payment.getPaymentStatus() != null ? payment.getPaymentStatus().getName() : "無");
             orderAnalysisDto.setPaymentDate(payment.getPaymentDate() != null ? payment.getPaymentDate() : null);
-            orderAnalysisDto.setPaymentAmount(payment.getPaymentAmount() != null ? payment.getPaymentAmount() : BigDecimal.ZERO);
-        } else {
+            orderAnalysisDto.setPaymentAmount((payment.getPaymentAmount() != null) ? payment.getPaymentAmount().doubleValue() : 0.0);
+            } else {
             orderAnalysisDto.setPaymentCategory("無");
             orderAnalysisDto.setPaymentStatus("無");
             orderAnalysisDto.setPaymentDate(null);
-            orderAnalysisDto.setPaymentAmount(BigDecimal.ZERO);
+            orderAnalysisDto.setPaymentAmount(0.0);
         }
 
         if (shipping != null) {
@@ -531,10 +535,10 @@ public class ManageOrderService {
                 orderDetail.getProduct().getProductSize() != null ? orderDetail.getProduct().getProductSize().getName() : "無"
             );
             orderItemAnalysisDto.setQuantity(orderDetail.getQuantity() != null ? orderDetail.getQuantity() : 0);
-            orderItemAnalysisDto.setUnitPrice(orderDetail.getUnitPrice() != null ? orderDetail.getUnitPrice() : BigDecimal.ZERO);
-            orderItemAnalysisDto.setDiscountPrice(orderDetail.getDiscountPrice() != null ? orderDetail.getDiscountPrice() : BigDecimal.ZERO);
-            orderItemAnalysisDto.setTotalPrice(orderDetail.getTotalPrice() != null ? orderDetail.getTotalPrice() : BigDecimal.ZERO);
-            
+            orderItemAnalysisDto.setUnitPrice((orderDetail.getUnitPrice() != null) ? orderDetail.getUnitPrice().doubleValue() : 0.0);
+            orderItemAnalysisDto.setDiscountPrice((orderDetail.getDiscountPrice() != null) ? orderDetail.getDiscountPrice().doubleValue() : 0.0);
+            orderItemAnalysisDto.setTotalPrice((orderDetail.getTotalPrice() != null) ? orderDetail.getTotalPrice().doubleValue() : 0.0);
+
             orderItemAnalysisDtos.add(orderItemAnalysisDto);
         }
 

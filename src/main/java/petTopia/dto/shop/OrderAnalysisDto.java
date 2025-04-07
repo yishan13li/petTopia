@@ -17,11 +17,11 @@ public class OrderAnalysisDto {
 	private Integer memberId; //會員編號
 	private String memberName; //會員姓名
 	private String memberPhone; //會員電話
-    private BigDecimal subtotal; // 商品總金額
-    private BigDecimal discountAmount; 	//折扣金額
-    private BigDecimal shippingFee; //運費
-    private BigDecimal totalAmount; //訂單總金額(應付金額)
-    private BigDecimal paymentAmount; //實際付款金額
+    private double subtotal; // 商品總金額
+    private double discountAmount; 	//折扣金額
+    private double shippingFee; //運費
+    private double totalAmount; //訂單總金額(應付金額)
+    private double paymentAmount; //實際付款金額
     private String paymentCategory;  //付款方式
     private String paymentStatus; //付款狀態
     private Date paymentDate; //付款時間
