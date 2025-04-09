@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>會員個人資料 - Waggy</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/user_static/css/vendor.css">
+  <link rel="stylesheet" type="text/css" href="/user_static/style.css">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    body {
+      font-family: 'Comic Neue', cursive;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background: url('/user_static/images/background-img.png') no-repeat center center/cover;
+    }
+
+    /* 頁面容器樣式 */
+    .page-container {
+      display: flex;
+      width: 95%;
+      margin: 2rem auto;
+      gap: 2rem;
+      padding-left: 10%;
+    }
+
+    /* 側邊欄樣式 */
+    .sidebar-menu {
+      width: 15%;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+      height: fit-content;
+    }
+
+    /* 主內容區域樣式 */
+    .profile-container {
+      width: 65%;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+      margin: 0;
+    }
+
+    /* 表單布局 */
+    form {
+      display: grid;
+      grid-template-columns: 1fr;
+      /* 改為單欄布局 */
+      gap: 1.5rem;
+    }
+
+    /* 表單組件樣式 */
+    .form-group {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      min-width: 120px;
+      margin-bottom: 0;
+      white-space: nowrap;
+      font-size: 0.875rem;
+      text-align: end;
+    }
+
+    .form-control {
+      flex: 1;
+      height: 2.5rem;
+      padding: 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    /* 頭像上傳區域 */
+    .avatar-section {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding: 1rem;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .avatar-img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      margin-bottom: 1rem;
+      object-fit: cover;
+      border: 3px solid #fff;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 按鈕樣式 */
+    .button-group {
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .button-group .btn {
+      padding: 0.5rem 2rem;
+      font-size: 1rem;
+    }
+
+    .required::after {
+      content: " *";
+      color: red;
+    }
+
+    @keyframes fadeOut {
+      0% {
+        opacity: 1;
+      }
+
+      70% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0;
+      }
+    }
+
+    .text-success,
+    .text-danger {
+      font-size: 0.9rem;
+      padding: 8px 15px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .text-success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+
+    .text-danger {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+
+    .fas {
+      font-size: 1rem;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Header Section -->
+  <header>
+    <div class="container py-2">
+      <div class="row py-4 pb-0 pb-sm-4 align-items-center">
+        <div class="col-sm-4 col-lg-3 text-center text-sm-start">
+          <div class="main-logo d-flex align-items-center">
+            <a th:href="@{/}" class="me-4">
+              <img th:src="@{/user_static/images/logo.png}" alt="logo" class="img-fluid">
+            </a>
+            <!-- 新增商家入口 -->
+            <div class="vendor-portal ms-3">
+              <div class="dropdown" th:if="${session.vendorEmail != null}">
+                <a href="#" class="mx-3 dropdown-toggle" data-bs-toggle="dropdown">
+                  <span class="ms-2" th:text="${session.vendorEmail}">商家Email</span>
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" th:href="@{/vendor/logout}">登出</a></li>
+                </ul>
+              </div>
+              <div class="dropdown" th:unless="${session.vendorEmail != null}">
+                <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                  商家專區
+                </button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" th:href="@{/vendor/login}">商家登入</a></li>
+                  <li><a class="dropdown-item" th:href="@{/vendor/register}">商家註冊</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-sm-6 offset-sm-2 offset-md-0 col-lg-5 d-none d-lg-block">
+          <div class="search-bar border rounded-2 px-3 border-dark-subtle">
+            <form id="search-form-mobile" class="text-center d-flex align-items-center" action="" method="">
+              <input type="text" class="form-control border-0 bg-transparent"
+                placeholder="Search for more than 10,000 products" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                <path fill="currentColor"
+                  d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0a1 1 0 0 0 0-1.39ZM11 18a7 7 0 1 1 7-7a7 7 0 0 1-7 7Z" />
+              </svg>
+            </form>
+          </div>
+        </div>
+
+        <div
+          class="col-sm-8 col-lg-4 d-flex justify-content-end gap-5 align-items-center mt-4 mt-sm-0 justify-content-center justify-content-sm-end">
+          <!-- 已登入狀態 -->
+          <div class="user-info d-flex align-items-center" th:if="${session.memberName != null}">
+            <div class="dropdown">
+              <a href="#" class="mx-3 dropdown-toggle" data-bs-toggle="dropdown">
+                <img th:src="@{/user_static/images/default-avatar.png}" alt="用戶頭像" class="rounded-circle"
+                  style="width: 32px; height: 32px;">
+                <span class="ms-2" th:text="${session.memberName}">會員名稱</span>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" th:href="@{/member/profile}">個人資料</a></li>
+                <li>
+                  <hr class="dropdown-divider">
+                </li>
+                <li><a class="dropdown-item" th:href="@{/logout}">登出</a></li>
+              </ul>
+            </div>
+          </div>
+          <!-- 未登入狀態 -->
+          <div class="support-box text-end" th:unless="${session.memberName != null}">
+            <div class="dropdown">
+              <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                會員專區
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" th:href="@{/login}">會員登入</a></li>
+                <li><a class="dropdown-item" th:href="@{/register}">會員註冊</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container-fluid">
+      <hr class="m-0">
+    </div>
+
+    <div class="container">
+      <nav class="main-menu d-flex navbar navbar-expand-lg">
+        <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar"
+          aria-controls="offcanvasNavbar">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+          <div class="offcanvas-header justify-content-center">
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+          </div>
+
+          <div class="offcanvas-body justify-content-between">
+            <select class="filter-categories border-0 mb-0 me-5">
+              <option>Shop by Category</option>
+              <option>Clothes</option>
+              <option>Food</option>
+              <option>Toy</option>
+            </select>
+
+            <ul class="navbar-nav menu-list list-unstyled d-flex gap-md-3 mb-0">
+              <li class="nav-item">
+                <a href="index.html" class="nav-link active">Home</a>
+              </li>
+              <li class="nav-item">
+                <a href="index.html" class="nav-link">Shop</a>
+              </li>
+              <li class="nav-item">
+                <a href="index.html" class="nav-link">Blog</a>
+              </li>
+              <li class="nav-item">
+                <a href="index.html" class="nav-link">Contact</a>
+              </li>
+              <li class="nav-item">
+                <a href="index.html" class="nav-link">Others</a>
+              </li>
+            </ul>
+
+            <div class="d-none d-lg-flex align-items-end">
+              <ul class="d-flex justify-content-end list-unstyled m-0">
+                <li>
+                  <a th:href="${session.loginUser != null} ? @{/profile} : @{/login}" class="mx-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                      <path fill="currentColor"
+                        d="M15.71 12.71a6 6 0 1 0-7.42 0a10 10 0 0 0-6.22 8.18a1 1 0 0 0 2 .22a8 8 0 0 1 15.9 0a1..." />
+                    </svg>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="page-container">
+    <!-- Left Sidebar -->
+    <div class="sidebar-menu">
+      <div class="user-info">
+        <img th:if="${member != null and member.profilePhoto != null}"
+          th:src="@{'data:image/jpeg;base64,' + ${T(java.util.Base64).getEncoder().encodeToString(member.profilePhoto)}}"
+          alt="使用者頭像" class="sidebar-avatar">
+        <img th:unless="${member != null and member.profilePhoto != null}" th:src="@{/static/images/default-avatar.png}"
+          alt="預設頭像" class="sidebar-avatar">
+        <p class="username" th:text="${member != null ? member.name : '訪客'}">使用者名稱</p>
+        <a href="#profile-settings" style="font-size: 0.8rem; color: #666;">編輯個人資料</a>
+      </div>
+
+      <ul>
+        <li class="main-item active" onclick="toggleSubMenu(this)">
+          我的帳戶
+          <span class="arrow">▼</span>
+        </li>
+        <ul class="sub-items show">
+          <li class="sub-item"><a href="#" class="active">個人檔案</a></li>
+          <li class="sub-item"><a th:href="@{/member/address#}">地址</a></li>
+          <li class="sub-item"><a th:href="@{/member/password}">更改密碼</a></li>
+          <li class="sub-item"><a href="#">通知設置</a></li>
+        </ul>
+        <li class="main-item"><a href="#">購買清單</a></li>
+        <li class="main-item"><a href="#">我的優惠券</a></li>
+        <li class="main-item"><a href="#">退款查詢</a></li>
+      </ul>
+    </div>
+
+    <!-- Profile Container -->
+    <div class="profile-container">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">個人資料設定</h2>
+        <!-- 顯示訊息 -->
+        <div th:if="${success}" class="alert alert-success">
+          <i class="fas fa-check-circle"></i>
+          <span th:text="${success}"></span>
+        </div>
+        <div th:if="${error}" class="alert alert-danger">
+          <i class="fas fa-exclamation-circle"></i>
+          <span th:text="${error}"></span>
+        </div>
+      </div>
+
+      <!-- 頭像上傳區域 -->
+      <div class="avatar-section mb-4">
+        <img th:if="${member != null && member.profilePhoto != null}"
+          th:src="@{'data:image/jpeg;base64,' + ${T(java.util.Base64).getEncoder().encodeToString(member.profilePhoto)}}"
+          alt="用戶頭像" class="avatar-img" id="avatar-preview">
+        <img th:unless="${member != null && member.profilePhoto != null}" src="/user_static/images/default-avatar.png"
+          alt="預設頭像" class="avatar-img" id="avatar-preview">
+        <div class="text-center mt-2">
+          <span class="text-muted" th:text="${userEmail}"></span>
+        </div>
+        <div class="mt-2">
+          <label for="photo" class="btn btn-outline-primary">
+            更換頭像
+            <input type="file" id="photo" name="photo" accept="image/*" onchange="previewImage(this)"
+              style="display: none;">
+          </label>
+        </div>
+      </div>
+
+      <form th:action="@{/member/update}" method="post" enctype="multipart/form-data">
+        <!-- 基本資料 -->
+        <div class="form-group mb-3">
+          <label class="form-label required">姓名</label>
+          <input type="text" class="form-control" name="name" th:value="${member != null ? member.name : ''}" required>
+        </div>
+
+        <div class="form-group mb-3">
+          <label class="form-label required">電話</label>
+          <input type="tel" class="form-control" name="phone" th:value="${member != null ? member.phone : ''}"
+            pattern="^09\d{8}$" required>
+          <small class="form-text text-muted">請輸入09開頭的10位手機號碼</small>
+        </div>
+
+        <div class="form-group mb-3">
+          <label class="form-label">生日</label>
+          <input type="date" class="form-control" name="birthdate"
+            th:value="${member != null && member.birthdate != null ? #temporals.format(member.birthdate, 'yyyy-MM-dd') : ''}"
+            pattern="yyyy-MM-dd">
+        </div>
+
+        <div class="form-group mb-3">
+          <label class="form-label">性別</label>
+          <div class="gender-options">
+            <div class="form-check form-check-inline">
+              <input type="radio" class="form-check-input" name="gender" id="male" value="false"
+                th:checked="${member == null || member.gender == false}">
+              <label class="form-check-label" for="male">男</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input type="radio" class="form-check-input" name="gender" id="female" value="true"
+                th:checked="${member != null && member.gender == true}">
+              <label class="form-check-label" for="female">女</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group mb-3">
+          <label class="form-label">地址</label>
+          <input type="text" class="form-control" name="address" th:value="${member != null ? member.address : ''}"
+            placeholder="請輸入詳細地址">
+        </div>
+
+        <div class="text-muted mb-3">
+          <small>* 標示為必填欄位</small>
+        </div>
+
+        <div class="d-grid gap-2 mt-4">
+          <button type="submit" class="btn btn-primary">更新資料</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer Section -->
+  <footer id="footer" class="my-5">
+    <div class="container py-5 my-5">
+      <div class="row">
+        <div class="col-md-3">
+          <div class="footer-menu">
+            <img src="/user_static/images/logo.png" alt="logo">
+            <p class="blog-paragraph fs-6 mt-3">Subscribe to our newsletter to get updates about our grand offers.</p>
+            <div class="social-links">
+              <ul class="d-flex list-unstyled gap-2">
+                <li class="social">
+                  <a href="#"><iconify-icon class="social-icon" icon="ri:facebook-fill"></iconify-icon></a>
+                </li>
+                <li class="social">
+                  <a href="#"><iconify-icon class="social-icon" icon="ri:twitter-fill"></iconify-icon></a>
+                </li>
+                <li class="social">
+                  <a href="#"><iconify-icon class="social-icon" icon="ri:pinterest-fill"></iconify-icon></a>
+                </li>
+                <li class="social">
+                  <a href="#"><iconify-icon class="social-icon" icon="ri:instagram-fill"></iconify-icon></a>
+                </li>
+                <li class="social">
+                  <a href="#"><iconify-icon class="social-icon" icon="ri:youtube-fill"></iconify-icon></a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <!-- ... 其他 footer columns ... -->
+      </div>
+    </div>
+    <div id="footer-bottom">
+      <div class="container">
+        <hr class="m-0">
+        <div class="row mt-3">
+          <div class="col-md-6 copyright">
+            <p class="secondary-font">© 2023 Waggy. All rights reserved.</p>
+          </div>
+          <div class="col-md-6 text-md-end">
+            <p class="secondary-font">Free HTML Template by <a href="https://templatesjungle.com/" target="_blank"
+                class="text-decoration-underline fw-bold text-black-50">TemplatesJungle</a> Distributed by <a
+                href="https://themewagon.com/" target="_blank"
+                class="text-decoration-underline fw-bold text-black-50">ThemeWagon</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="/user_static/js/jquery-1.11.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/user_static/js/plugins.js"></script>
+  <script src="/user_static/js/script.js"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+
+  <!-- 您提供的 JavaScript 代碼 -->
+  <script>
+    function previewImage(input) {
+      if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function (e) {
+          document.getElementById('avatar-preview').src = e.target.result;
+        }
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    function toggleSubMenu(element) {
+      const subItems = element.nextElementSibling;
+      const arrow = element.querySelector('.arrow');
+      subItems.classList.toggle('show');
+      arrow.classList.toggle('rotate');
+    }
+
+    // 頁面載入時展開當前頁面所在的選單
+    window.onload = function () {
+      const activeLink = document.querySelector('.active');
+      if (activeLink) {
+        const subMenu = activeLink.closest('.sub-items');
+        if (subMenu) {
+          subMenu.classList.add('show');
+          const mainItem = subMenu.previousElementSibling;
+          const arrow = mainItem.querySelector('.arrow');
+          arrow.classList.add('rotate');
+        }
+      }
+    }
+  </script>
+</body>
+
+</html>

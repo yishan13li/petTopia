@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>會員註冊 - Waggy</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" th:href="@{/user_static/css/vendor.css}">
+  <link rel="stylesheet" type="text/css" th:href="@{/user_static/css/style.css}">
+
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+  <style>
+    body {
+      font-family: 'Comic Neue', cursive;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background: url('/user_static/images/background-img.png') no-repeat center center/cover;
+    }
+
+    /* Header Styles */
+    header {
+      background-color: #ffffff;
+      padding: 1rem 0;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    header h1 {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 0;
+    }
+
+    .register-container {
+      width: 25%;
+      /* 設定適中的寬度 */
+      background: rgba(255, 255, 255, 0.95);
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+      margin: 2rem auto;
+      flex-grow: 1;
+      margin-left: 65%;
+      /* 將左側間距設為 20%，使其在頁面中間偏右 */
+      margin-right: 0;
+    }
+
+    .social-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background-color: white;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .social-btn img {
+      width: 24px;
+      height: 24px;
+      margin-right: 10px;
+    }
+
+    .social-btn1 {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background-color: white;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .social-btn1 img {
+      width: 36px;
+      height: 36px;
+      margin-right: 5px;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      position: relative;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: "";
+      flex-grow: 1;
+      /* 讓左右線條自動填滿 */
+      height: 1px;
+      background-color: #ccc;
+    }
+
+    .divider span {
+      color: #ccc;
+      font-size: 0.75rem;
+      padding: 0 16px;
+      text-transform: uppercase;
+      font-weight: bold;
+      white-space: nowrap;
+      background: white;
+      /* 確保背景顏色不會讓文字被線擋住 */
+      z-index: 1;
+      /* 讓 "或" 文字顯示在上層 */
+    }
+
+
+    /* Footer Styles */
+    footer {
+      background-color: #ffffff;
+      padding: 1rem 0;
+      text-align: center;
+      box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    footer p {
+      font-size: 14px;
+      margin: 0;
+    }
+
+    footer .social-links {
+      margin-top: 20px;
+      /* 這裡加上 margin-top 調整圖示間距 */
+    }
+
+    footer .search-bar {
+      margin-top: 20px;
+      /* 這裡加上 margin-top 調整搜尋列位置 */
+    }
+
+    .verification-code-container {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      margin: 20px 0;
+      padding: 0;
+    }
+
+    .verification-code-input {
+      width: 15%;
+      height: 60px;
+      /* 增加高度 */
+      text-align: center;
+      font-size: 20px;
+      /* 增加字体大小 */
+      border: 2px solid #ced4da;
+      border-radius: 8px;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+
+    .verification-code-input:focus {
+      outline: none;
+      border-color: #86b7fe;
+      box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+
+    @media (max-width: 576px) {
+      .verification-code-input {
+        width: 15%;
+        height: 40px;
+        /* 移动端也相应增加高度 */
+        font-size: 18px;
+        /* 移动端也增加字体 */
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Header Section -->
+  <header>
+    <div class="container py-2">
+      <div class="row py-4 pb-0 pb-sm-4 align-items-center">
+        <div class="col-sm-4 col-lg-3 text-center text-sm-start">
+          <div class="main-logo d-flex align-items-center justify-content-center justify-content-sm-start">
+            <a th:href="@{/}" class="d-flex align-items-center text-decoration-none">
+              <img th:src="@{/user_static/images/logo.png}" alt="logo" class="img-fluid">
+              <h1 class="mb-0" style="font-size: 32px; 
+                                                  margin-left: 15px; 
+                                                
+                                                  color: #2B4F76;
+                                                  font-family: 'Noto Sans TC', sans-serif;
+                                                  white-space: nowrap;
+                                                  writing-mode: horizontal-tb;">會員註冊</h1>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container-fluid">
+      <hr class="m-0">
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="register-container">
+    <h2 class="mb-4 text-center">會員註冊</h2>
+    <div th:if="${errors != null}">
+      <div th:each="error : ${errors.values()}" class="alert alert-danger">
+        <span th:text="${error}"></span>
+      </div>
+    </div>
+    <form th:action="@{/register}" method="POST">
+      <div class="mb-3">
+        <label for="email" class="form-label">電子郵件</label>
+        <input type="email" class="form-control" id="email" name="email" required>
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">密碼</label>
+        <input type="password" class="form-control" id="password" name="password" required>
+      </div>
+      <div class="mb-3">
+        <label for="confirmPassword" class="form-label">確認密碼</label>
+        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+      </div>
+      <button type="submit" class="btn btn-primary w-100">註冊</button>
+    </form>
+    <div class="divider"><span>或</span></div>
+    <a href="/oauth2/authorization/facebook" class="social-btn">
+      <img th:src="@{/user_static/icon/Facebook_icon.png}" alt="Facebook"> 使用 Facebook 註冊
+    </a>
+    <a href="/oauth2/authorization/google" class="social-btn1">
+      <img th:src="@{/user_static/icon/Google_icon.png}" alt="Google"> 使用 Google 註冊
+    </a>
+    <p class="text-center mt-3">已有帳號？ <a th:href="@{/login}">登入</a></p>
+
+  </div>
+
+  <!-- 跳轉驗證碼 -->
+  <div class="verification-container" style="display: none;">
+    <div class="register-container">
+      <h2 class="mb-4">請輸入驗證碼</h2>
+      <div id="captcha-section" class="mb-3">
+        <div class="alert alert-success" role="alert">
+          您的驗證碼已透過簡訊傳送至 _ _ _＿＿＿＿
+        </div>
+        <div id="timer" class="text-center mb-3">
+          驗證碼有效時間: <span id="countdown">05:00</span>
+        </div>
+        <label for="captcha" class="form-label">請輸入驗證碼</label>
+        <div class="verification-code-container">
+          <input type="text" class="verification-code-input" maxlength="1" onkeyup="moveToNext(this, 0)" id="code1">
+          <input type="text" class="verification-code-input" maxlength="1" onkeyup="moveToNext(this, 1)" id="code2">
+          <input type="text" class="verification-code-input" maxlength="1" onkeyup="moveToNext(this, 2)" id="code3">
+          <input type="text" class="verification-code-input" maxlength="1" onkeyup="moveToNext(this, 3)" id="code4">
+          <input type="text" class="verification-code-input" maxlength="1" onkeyup="moveToNext(this, 4)" id="code5">
+          <input type="text" class="verification-code-input" maxlength="1" onkeyup="moveToNext(this, 5)" id="code6">
+        </div>
+        <button type="button" class="btn btn-primary w-100 mt-3" onclick="verifyCode()">驗證認證碼</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer Section -->
+
+  <footer id="footer" class="my-5">
+    <div class="container py-5 my-5">
+      <div class="row">
+
+        <div class="col-md-3">
+          <div class="footer-menu">
+            <img src="images/logo.png" alt="logo">
+            <p class="blog-paragraph fs-6 mt-3">Subscribe to our newsletter to get updates about our grand offers.</p>
+            <div class="social-links">
+              <ul class="d-flex list-unstyled gap-2">
+                <li class="social">
+                  <a href="#">
+                    <iconify-icon class="social-icon" icon="ri:facebook-fill"></iconify-icon>
+                  </a>
+                </li>
+                <li class="social">
+                  <a href="#">
+                    <iconify-icon class="social-icon" icon="ri:twitter-fill"></iconify-icon>
+                  </a>
+                </li>
+                <li class="social">
+                  <a href="#">
+                    <iconify-icon class="social-icon" icon="ri:pinterest-fill"></iconify-icon>
+                  </a>
+                </li>
+                <li class="social">
+                  <a href="#">
+                    <iconify-icon class="social-icon" icon="ri:instagram-fill"></iconify-icon>
+                  </a>
+                </li>
+                <li class="social">
+                  <a href="#">
+                    <iconify-icon class="social-icon" icon="ri:youtube-fill"></iconify-icon>
+                  </a>
+                </li>
+
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="footer-menu">
+            <h3>Quick Links</h3>
+            <ul class="menu-list list-unstyled">
+              <li class="menu-item">
+                <a href="#" class="nav-link">Home</a>
+              </li>
+              <li class="menu-item">
+                <a href="#" class="nav-link">About us</a>
+              </li>
+              <li class="menu-item">
+                <a href="#" class="nav-link">Offer </a>
+              </li>
+              <li class="menu-item">
+                <a href="#" class="nav-link">Services</a>
+              </li>
+              <li class="menu-item">
+                <a href="#" class="nav-link">Conatct Us</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="footer-menu">
+            <h3>Help Center</h5>
+              <ul class="menu-list list-unstyled">
+                <li class="menu-item">
+                  <a href="#" class="nav-link">FAQs</a>
+                </li>
+                <li class="menu-item">
+                  <a href="#" class="nav-link">Payment</a>
+                </li>
+                <li class="menu-item">
+                  <a href="#" class="nav-link">Returns & Refunds</a>
+                </li>
+                <li class="menu-item">
+                  <a href="#" class="nav-link">Checkout</a>
+                </li>
+                <li class="menu-item">
+                  <a href="#" class="nav-link">Delivery Information</a>
+                </li>
+              </ul>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div>
+            <h3>Our Newsletter</h3>
+            <p class="blog-paragraph fs-6">Subscribe to our newsletter to get updates about our grand offers.</p>
+            <div class="search-bar border rounded-pill border-dark-subtle px-2">
+              <form class="text-center d-flex align-items-center" action="" method="">
+                <input type="text" class="form-control border-0 bg-transparent" placeholder="Enter your email here" />
+                <iconify-icon class="send-icon" icon="tabler:location-filled"></iconify-icon>
+              </form>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </footer>
+
+  <div id="footer-bottom">
+    <div class="container">
+      <hr class="m-0">
+      <div class="row mt-3">
+        <div class="col-md-6 copyright">
+          <p class="secondary-font">© 2023 Waggy. All rights reserved.</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <p class="secondary-font">Free HTML Template by <a href="https://templatesjungle.com/" target="_blank"
+              class="text-decoration-underline fw-bold text-black-50"> TemplatesJungle</a> Distributed by <a
+              href="https://themewagon.com/" target="_blank" class="text-decoration-underline fw-bold text-black-50">
+              ThemeWagon</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.querySelector("form").addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      // 獲取表單數據
+      const formData = {
+        email: document.getElementById("email").value,
+        password: document.getElementById("password").value,
+        confirmPassword: document.getElementById("confirmPassword").value
+      };
+
+      // 基本驗證
+      if (formData.password !== formData.confirmPassword) {
+        alert("密碼與確認密碼不符");
+        return;
+      }
+
+      // 發送註冊請求
+      fetch('/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // 發送驗證碼
+            return fetch('/api/send-verification', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ email: formData.email })
+            });
+          } else {
+            throw new Error(data.message);
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // 隱藏註冊表單
+            document.querySelector(".register-container").style.display = "none";
+
+            // 顯示驗證碼區塊
+            document.querySelector(".verification-container").style.display = "block";
+            document.querySelector(".alert-success").textContent =
+              `驗證碼已發送至您的信箱：${formData.email}`;
+            startTimer();
+          } else {
+            alert(data.message);
+          }
+        })
+        .catch(error => {
+          alert(error.message || "註冊過程發生錯誤，請稍後再試");
+        });
+    });
+
+    function moveToNext(input, index) {
+      const value = input.value;
+
+      // 只允許數字
+      if (!/^\d*$/.test(value)) {
+        input.value = value.replace(/\D/g, '');
+        return;
+      }
+
+      // 自動聚焦下一個輸入框
+      if (value.length === 1) {
+        if (index < 5) {
+          document.getElementById(`code${index + 2}`).focus();
+        }
+      } else if (value.length === 0 && index > 0) {
+        // 當刪除時，自動聚焦上一個輸入框
+        document.getElementById(`code${index}`).focus();
+      }
+
+      // 當所有框都填完時自動驗證
+      if (index === 5 && value.length === 1) {
+        verifyCode();
+      }
+    }
+
+    function verifyCode() {
+      const code = Array.from({ length: 6 }, (_, i) => document.getElementById(`code${i + 1}`).value).join('');
+      const email = document.getElementById("email").value;
+
+      // 發送驗證請求
+      fetch('/api/verify-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          code: code
+        })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert("驗證成功！");
+            window.location.href = "/login";  // 修改導向路徑
+          } else {
+            alert(data.message || "驗證碼錯誤，請重新輸入");
+          }
+        })
+        .catch(error => {
+          alert("驗證過程發生錯誤，請稍後再試");
+        });
+    }
+
+    function startTimer() {
+      let timeLeft = 5 * 60; // 5分鐘
+      const timerDisplay = document.getElementById('countdown');
+
+      const countdownTimer = setInterval(() => {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+
+        timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+        if (timeLeft <= 0) {
+          clearInterval(countdownTimer);
+          alert('驗證碼已過期，請重新發送');
+          // 返回註冊表單
+          document.querySelector(".verification-container").style.display = "none";
+          document.querySelector(".register-container").style.display = "block";
+        }
+
+        timeLeft--;
+      }, 1000);
+    }
+  </script>
+  <script th:src="@{/user_static/js/jquery-1.11.0.min.js}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe"
+    crossorigin="anonymous"></script>
+  <script th:src="@{/user_static/js/plugins.js}"></script>
+  <script th:src="@{/user_static/js/script.js}"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+</body>
+
+</html>

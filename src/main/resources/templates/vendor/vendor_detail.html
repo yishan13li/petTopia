@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org/">
+
+<head>
+  <title>PetTopia</title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="author" content="">
+  <meta name="keywords" content="">
+  <meta name="description" content="">
+  <meta name="vendor-id" content="[[${vendor.id}]]">
+
+
+  <style>
+    /* 遮罩層樣式 */
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+
+      z-index: 9999;
+    }
+
+    /* 彈出框樣式 */
+    .popup {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      text-align: center;
+
+      width: 400px;
+      height: 350px;
+      max-width: 90%;
+    }
+
+    /* 彈出框按鈕樣式 */
+    .popup button {
+      padding: 8px 15px;
+      cursor: pointer;
+    }
+
+    .stars {
+      display: flex;
+      justify-content: center;
+      font-size: 40px;
+      cursor: pointer;
+      color: gray;
+    }
+
+    .star {
+      transition: color 0.2s;
+    }
+
+    .star:hover,
+    .star.active {
+      color: gold;
+    }
+
+    #rating-value {
+      font-size: 20px;
+      margin-top: 10px;
+    }
+  </style>
+
+
+
+  <link rel="icon" type="image/png" th:href="@{images/favicon.png}">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.css" />
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+
+  <link rel="stylesheet" type="text/css" href="css/vendor.css">
+  <link rel="stylesheet" type="text/css" href="style.css">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chilanka&family=Montserrat:wght@300;400;500&display=swap"
+    rel="stylesheet">
+
+</head>
+
+<body>
+
+  <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+    <defs>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="link" viewBox="0 0 24 24">
+        <path fill="currentColor"
+          d="M12 19a1 1 0 1 0-1-1a1 1 0 0 0 1 1Zm5 0a1 1 0 1 0-1-1a1 1 0 0 0 1 1Zm0-4a1 1 0 1 0-1-1a1 1 0 0 0 1 1Zm-5 0a1 1 0 1 0-1-1a1 1 0 0 0 1 1Zm7-12h-1V2a1 1 0 0 0-2 0v1H8V2a1 1 0 0 0-2 0v1H5a3 3 0 0 0-3 3v14a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3Zm1 17a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9h16Zm0-11H4V6a1 1 0 0 1 1-1h1v1a1 1 0 0 0 2 0V5h8v1a1 1 0 0 0 2 0V5h1a1 1 0 0 1 1 1ZM7 15a1 1 0 1 0-1-1a1 1 0 0 0 1 1Zm0 4a1 1 0 1 0-1-1a1 1 0 0 0 1 1Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="arrow-right" viewBox="0 0 24 24">
+        <path fill="currentColor"
+          d="M17.92 11.62a1 1 0 0 0-.21-.33l-5-5a1 1 0 0 0-1.42 1.42l3.3 3.29H7a1 1 0 0 0 0 2h7.59l-3.3 3.29a1 1 0 0 0 0 1.42a1 1 0 0 0 1.42 0l5-5a1 1 0 0 0 .21-.33a1 1 0 0 0 0-.76Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="category" viewBox="0 0 24 24">
+        <path fill="currentColor"
+          d="M19 5.5h-6.28l-.32-1a3 3 0 0 0-2.84-2H5a3 3 0 0 0-3 3v13a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-10a3 3 0 0 0-3-3Zm1 13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-13a1 1 0 0 1 1-1h4.56a1 1 0 0 1 .95.68l.54 1.64a1 1 0 0 0 .95.68h7a1 1 0 0 1 1 1Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="calendar" viewBox="0 0 24 24">
+        <path fill="currentColor"
+          d="M19 4h-2V3a1 1 0 0 0-2 0v1H9V3a1 1 0 0 0-2 0v1H5a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3Zm1 15a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-7h16Zm0-9H4V7a1 1 0 0 1 1-1h2v1a1 1 0 0 0 2 0V6h6v1a1 1 0 0 0 2 0V6h2a1 1 0 0 1 1 1Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="heart" viewBox="0 0 24 24">
+        <path fill="currentColor"
+          d="M20.16 4.61A6.27 6.27 0 0 0 12 4a6.27 6.27 0 0 0-8.16 9.48l7.45 7.45a1 1 0 0 0 1.42 0l7.45-7.45a6.27 6.27 0 0 0 0-8.87Zm-1.41 7.46L12 18.81l-6.75-6.74a4.28 4.28 0 0 1 3-7.3a4.25 4.25 0 0 1 3 1.25a1 1 0 0 0 1.42 0a4.27 4.27 0 0 1 6 6.05Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="plus" viewBox="0 0 24 24">
+        <path fill="currentColor"
+          d="M19 11h-6V5a1 1 0 0 0-2 0v6H5a1 1 0 0 0 0 2h6v6a1 1 0 0 0 2 0v-6h6a1 1 0 0 0 0-2Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="minus" viewBox="0 0 24 24">
+        <path fill="currentColor" d="M19 11H5a1 1 0 0 0 0 2h14a1 1 0 0 0 0-2Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="cart" viewBox="0 0 24 24">
+        <path fill="currentColor"
+          d="M8.5 19a1.5 1.5 0 1 0 1.5 1.5A1.5 1.5 0 0 0 8.5 19ZM19 16H7a1 1 0 0 1 0-2h8.491a3.013 3.013 0 0 0 2.885-2.176l1.585-5.55A1 1 0 0 0 19 5H6.74a3.007 3.007 0 0 0-2.82-2H3a1 1 0 0 0 0 2h.921a1.005 1.005 0 0 1 .962.725l.155.545v.005l1.641 5.742A3 3 0 0 0 7 18h12a1 1 0 0 0 0-2Zm-1.326-9l-1.22 4.274a1.005 1.005 0 0 1-.963.726H8.754l-.255-.892L7.326 7ZM16.5 19a1.5 1.5 0 1 0 1.5 1.5a1.5 1.5 0 0 0-1.5-1.5Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="check" viewBox="0 0 24 24">
+        <path fill="currentColor"
+          d="M18.71 7.21a1 1 0 0 0-1.42 0l-7.45 7.46l-3.13-3.14A1 1 0 1 0 5.29 13l3.84 3.84a1 1 0 0 0 1.42 0l8.16-8.16a1 1 0 0 0 0-1.47Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="trash" viewBox="0 0 24 24">
+        <path fill="currentColor"
+          d="M10 18a1 1 0 0 0 1-1v-6a1 1 0 0 0-2 0v6a1 1 0 0 0 1 1ZM20 6h-4V5a3 3 0 0 0-3-3h-2a3 3 0 0 0-3 3v1H4a1 1 0 0 0 0 2h1v11a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3V8h1a1 1 0 0 0 0-2ZM10 5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1h-4Zm7 14a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V8h10Zm-3-1a1 1 0 0 0 1-1v-6a1 1 0 0 0-2 0v6a1 1 0 0 0 1 1Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="star-outline" viewBox="0 0 15 15">
+        <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+          d="M7.5 9.804L5.337 11l.413-2.533L4 6.674l2.418-.37L7.5 4l1.082 2.304l2.418.37l-1.75 1.793L9.663 11L7.5 9.804Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="star-solid" viewBox="0 0 15 15">
+        <path fill="currentColor"
+          d="M7.953 3.788a.5.5 0 0 0-.906 0L6.08 5.85l-2.154.33a.5.5 0 0 0-.283.843l1.574 1.613l-.373 2.284a.5.5 0 0 0 .736.518l1.92-1.063l1.921 1.063a.5.5 0 0 0 .736-.519l-.373-2.283l1.574-1.613a.5.5 0 0 0-.283-.844L8.921 5.85l-.968-2.062Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="search" viewBox="0 0 24 24">
+        <path fill="currentColor"
+          d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0a1 1 0 0 0 0-1.39ZM11 18a7 7 0 1 1 7-7a7 7 0 0 1-7 7Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="user" viewBox="0 0 24 24">
+        <path fill="currentColor"
+          d="M15.71 12.71a6 6 0 1 0-7.42 0a10 10 0 0 0-6.22 8.18a1 1 0 0 0 2 .22a8 8 0 0 1 15.9 0a1 1 0 0 0 1 .89h.11a1 1 0 0 0 .88-1.1a10 10 0 0 0-6.25-8.19ZM12 12a4 4 0 1 1 4-4a4 4 0 0 1-4 4Z" />
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" id="close" viewBox="0 0 15 15">
+        <path fill="currentColor"
+          d="M7.953 3.788a.5.5 0 0 0-.906 0L6.08 5.85l-2.154.33a.5.5 0 0 0-.283.843l1.574 1.613l-.373 2.284a.5.5 0 0 0 .736.518l1.92-1.063l1.921 1.063a.5.5 0 0 0 .736-.519l-.373-2.283l1.574-1.613a.5.5 0 0 0-.283-.844L8.921 5.85l-.968-2.062Z" />
+      </symbol>
+
+    </defs>
+  </svg>
+
+  <div class="preloader-wrapper">
+    <div class="preloader">
+    </div>
+  </div>
+
+  <div class="offcanvas offcanvas-end" data-bs-scroll="true" tabindex="-1" id="offcanvasCart" aria-labelledby="My Cart">
+    <div class="offcanvas-header justify-content-center">
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+      <div class="order-md-last">
+        <h4 class="d-flex justify-content-between align-items-center mb-3">
+          <span class="text-primary">Your cart</span>
+          <span class="badge bg-primary rounded-circle pt-2">3</span>
+        </h4>
+        <ul class="list-group mb-3">
+          <li class="list-group-item d-flex justify-content-between lh-sm">
+            <div>
+              <h6 class="my-0">Grey Hoodie</h6>
+              <small class="text-body-secondary">Brief description</small>
+            </div>
+            <span class="text-body-secondary">$12</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between lh-sm">
+            <div>
+              <h6 class="my-0">Dog Food</h6>
+              <small class="text-body-secondary">Brief description</small>
+            </div>
+            <span class="text-body-secondary">$8</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between lh-sm">
+            <div>
+              <h6 class="my-0">Soft Toy</h6>
+              <small class="text-body-secondary">Brief description</small>
+            </div>
+            <span class="text-body-secondary">$5</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            <span class="fw-bold">Total (USD)</span>
+            <strong>$20</strong>
+          </li>
+        </ul>
+
+        <button class="w-100 btn btn-primary btn-lg" type="submit">Continue to checkout</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="offcanvas offcanvas-end" data-bs-scroll="true" tabindex="-1" id="offcanvasSearch"
+    aria-labelledby="Search">
+    <div class="offcanvas-header justify-content-center">
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+
+      <div class="order-md-last">
+        <h4 class="text-primary text-uppercase mb-3">
+          Search
+        </h4>
+        <div class="search-bar border rounded-2 border-dark-subtle">
+          <form id="search-form" class="text-center d-flex align-items-center" action="" method="">
+            <input type="text" class="form-control border-0 bg-transparent" placeholder="Search Here" />
+            <iconify-icon icon="tabler:search" class="fs-4 me-3"></iconify-icon>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <header>
+    <div class="container py-2">
+      <div class="row py-4 pb-0 pb-sm-4 align-items-center ">
+
+        <div class="col-sm-4 col-lg-3 text-center text-sm-start">
+          <div class="main-logo">
+            <a href="index.html">
+              <img th:src="@{/user_static/images/logo.png}" alt="logo" class="img-fluid">
+            </a>
+          </div>
+        </div>
+
+        <div class="col-sm-6 offset-sm-2 offset-md-0 col-lg-5 d-none d-lg-block">
+          <div class="search-bar border rounded-2 px-3 border-dark-subtle">
+            <form id="search-form" class="text-center d-flex align-items-center" action="" method="">
+              <input type="text" class="form-control border-0 bg-transparent" placeholder="搜尋友善店家" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                <path fill="currentColor"
+                  d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0a1 1 0 0 0 0-1.39ZM11 18a7 7 0 1 1 7-7a7 7 0 0 1-7 7Z" />
+              </svg>
+            </form>
+          </div>
+        </div>
+
+        <div
+          class="col-sm-8 col-lg-4 d-flex justify-content-end align-items-center gap-3 mt-4 mt-sm-0 justify-content-center justify-content-sm-end">
+          <div class="d-none d-xl-block">
+            <ul class="d-flex list-unstyled m-0 gap-3">
+              <li>
+                <a href="account.html" class="mx-3">
+                  <iconify-icon icon="mdi:login" class="fs-5"></iconify-icon> <span class="fs-5">登入</span>
+                </a>
+              </li>
+              <li>
+                <a href="account.html" class="mx-3">
+                  <iconify-icon icon="mdi:user-plus" class="fs-5"></iconify-icon> <span class="fs-5">註冊</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="container-fluid">
+      <hr class="m-0">
+    </div>
+
+    <div class="container">
+      <nav class="main-menu d-flex navbar navbar-expand-lg ">
+
+        <div class="d-flex d-lg-none align-items-end mt-3">
+          <ul class="d-flex justify-content-end list-unstyled m-0">
+            <li>
+              <a href="account.html" class="mx-3">
+                <iconify-icon icon="healthicons:person" class="fs-4"></iconify-icon>
+              </a>
+            </li>
+            <li>
+              <a href="wishlist.html" class="mx-3">
+                <iconify-icon icon="mdi:heart" class="fs-4"></iconify-icon>
+              </a>
+            </li>
+
+            <li>
+              <a href="#" class="mx-3" data-bs-toggle="offcanvas" data-bs-target="#offcanvasCart"
+                aria-controls="offcanvasCart">
+                <iconify-icon icon="mdi:cart" class="fs-4 position-relative"></iconify-icon>
+                <span
+                  class="position-absolute translate-middle badge rounded-circle bg-primary border border-white pt-2 text-white">
+                  03
+                </span>
+              </a>
+            </li>
+
+            <li>
+              <a href="#" class="mx-3" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSearch"
+                aria-controls="offcanvasSearch">
+                <iconify-icon icon="tabler:search" class="fs-4"></iconify-icon>
+                </span>
+              </a>
+            </li>
+          </ul>
+
+        </div>
+        <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar"
+          aria-controls="offcanvasNavbar">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+
+          <div class="offcanvas-header justify-content-center">
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+          </div>
+
+          <div class="offcanvas-body justify-content-between" style="margin: auto">
+
+
+            <ul class="navbar-nav menu-list list-unstyled d-flex gap-md-3 mb-0">
+              <li class="nav-item">
+                <a href="index.html" class="nav-link">首頁</a>
+              </li>
+              <li class="nav-item">
+                <a href="index.html" class="nav-link">購物</a>
+              </li>
+              <li class="nav-item">
+                <a href="index.html" class="nav-link active">店家</a>
+              </li>
+              <li class="nav-item">
+                <a href="index.html" class="nav-link">活動</a>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+      </nav>
+
+    </div>
+  </header>
+
+
+  <!-- 主體開始 -->
+
+  <section id="about" class="padding-medium mt-xl-5">
+    <div class="container rounded-4" style="background-color:#F9F3EC; padding: 20px;">
+      <div class="row align-items-center mt-xl-5">
+
+        <div class="h-auto offset-md-1 col-md-5">
+          <img th:src="${vendor.logoImgBase64}" alt="img" class="img-fluid rounded-4" width="400">
+        </div>
+
+        <div class="col-md-5 mt-5 mt-md-0">
+          <div class="mb-3">
+            <h2 class="display-6 fw-semibold" th:text="${vendor.name}">店家名稱</h2>
+          </div>
+          <p th:text="${vendor.description}">店家資訊</p>
+          <div class="d-flex">
+
+            <div class="d-flex flex-wrap mt-3">
+              <a class="btn btn-primary btn-1g text-uppercase fs-5 rounded-4 me-4"
+                onclick="openCollection(), likeVendor()">
+                收藏
+              </a>
+              <a class="btn btn-primary btn-lg text-uppercase fs-5 rounded-4 me-4" onclick="openScore()">
+                評分
+              </a>
+              <a class="btn btn-primary btn-lg text-uppercase fs-5 rounded-4 me-4" onclick="openPopup()">
+                留言
+              </a>
+            </div>
+          </div>
+
+          <br>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 主體結束 -->
+
+  <!-- 店家圖片列表開始 -->
+
+  <section id="about" class="padding-medium mt-xl-5" style="padding: 20px;">
+    <div class="container">
+      <div class="section-header d-md-flex justify-content-between align-items-center mb-3">
+        <h2 class="display-6 fw-normal">店家圖片列表</h2>
+      </div>
+    </div>
+    <div class="container rounded-4" style="background-color:#F9F3EC; padding: 20px;">
+      <th:block th:each="image : ${imageList}">
+        <img th:src="${image.imageBase64}" class="img-fluid rounded-4" alt="image"
+          style="max-width: 500px; max-height: 300px">&emsp;
+      </th:block>
+    </div>
+  </section>
+
+  <!-- 店家圖片列表結束 -->
+
+  <!--Google Maps-->
+  <section style="display: flex; justify-content: center; ">
+    <div class="rounded-4" style="background-color: #F9F3EC; padding: 20px">
+      <iframe
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1983.8113934667251!2d120.29363820505375!3d22.62850450446957!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x346e0504c9f99145%3A0x7205ccf0a7c48c13!2z6JCK5a6i5LyK5pep5Y2I6aSQ!5e1!3m2!1szh-TW!2stw!4v1739277045613!5m2!1szh-TW!2stw"
+        width="1300" height="450" style="border:0;" allowfullscreen="" loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+  </section>
+  <br>
+  <!--Google Maps-->
+
+  <!-- 留言區 -->
+  <br>
+  <div class="container">
+    <div class="section-header d-md-flex justify-content-between align-items-center mb-3">
+      <h2 class="display-6 fw-normal">留言區</h2>
+    </div>
+  </div>
+
+  <th:block th:each="review : ${reviewList}">
+    <section>
+      <div class="comment" th:data-id="${review.reviewId}">
+        <div class="container rounded-3" style="background-color: #F9F3EC; padding: 20px">
+          <div class="row">
+            <div class="col-lg-3">
+              <div class="image-container">
+                <img class="img-fluid rounded-4" th:src="${review.profilePhotoBase64}" alt="alternative"
+                  style="max-width: 200px; max-height: 200px">
+              </div>
+            </div>
+
+            <div class="col-lg-9">
+              <div class="text-container" style="padding-top: 20px">
+
+                <h2><b th:text="${review.name}">會員名稱</b></h2>
+
+                <p>環境評分 ： <th:block th:if="${review.ratingEnvironment != null}">
+                    <span th:each="i : ${#numbers.sequence(1, review.ratingEnvironment)}" style="color:gold;">★ </span>
+                  </th:block>
+                  <th:block th:if="${(5 - (review.ratingEnvironment ?: 0)) > 0}">
+                    <span th:each="i : ${#numbers.sequence(1, 5 - (review.ratingEnvironment ?: 0))}"
+                      style="color:gray;">★ </span>
+                  </th:block>
+                </p>
+
+                <p>價格評分 ： <th:block th:if="${review.ratingPrice != null}"><span
+                      th:each="i : ${#numbers.sequence(1, review.ratingPrice)}" style="color:gold;">★ </span>
+                  </th:block>
+                  <th:block th:if="${(5 - (review.ratingPrice ?: 0)) > 0}">
+                    <span th:each="i : ${#numbers.sequence(1, 5 - (review.ratingPrice ?: 0))}" style="color:gray;">★
+                    </span>
+                  </th:block>
+                </p>
+
+                <p>服務評分 ： <th:block th:if="${review.ratingService != null}"><span
+                      th:each="i : ${#numbers.sequence(1, review.ratingService)}" style="color:gold;">★ </span>
+                  </th:block>
+                  <th:block th:if="${(5 - (review.ratingService ?: 0)) > 0}">
+                    <span th:each="i : ${#numbers.sequence(1, 5 - (review.ratingService ?: 0))}" style="color:gray;">★
+                    </span>
+                  </th:block>
+                </p>
+
+                <p><b th:text="'發表時間：'+${review.reviewTime}" th:data-time="${review.reviewId}">發表時間</b></p>
+
+                <p th:text="${review.reviewContent}" th:data-review="${review.reviewId}">評論內容</p>
+
+                <div class="d-flex flex-wrap mt-3">
+                  <a class="btn btn-outline-dark btn-1g text-uppercase fs-5 rounded-4 me-4"
+                    onclick="rewriteComment(this)" th:data-id="${review.reviewId}">
+                    修改
+                  </a>
+
+                  <a class="btn btn-outline-dark btn-lg text-uppercase fs-5 rounded-4 me-4"
+                    onclick="deleteComment(this)" th:data-id="${review.reviewId}">
+                    刪除
+                  </a>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <br>
+  </th:block>
+
+  <!-- 留言區 -->
+
+  <!-- 店家列表 -->
+  <section id="clothing" class="my-5 overflow-hidden">
+    <div class="container pb-5">
+
+      <div class="section-header d-md-flex justify-content-between align-items-center mb-3">
+        <h2 class="display-6 fw-normal">其他店家</h2>
+      </div>
+
+      <div class="isotope-container row">
+
+        <th:block th:each="vendor : ${vendorList}">
+          <div class="item bird col-md-4 col-lg-3 my-4">
+
+            <!-- <div class="z-1 position-absolute rounded-3 m-3 px-3 border border-dark-subtle">New</div> -->
+
+            <div class="card position-relative">
+              <a th:href="@{'/vendor/detail/' + ${vendor.id}}"><img th:src="${vendor.logoImgBase64}"
+                  class="img-fluid rounded-4" alt="image" style="max-width: 200px; max-height: 200px"></a>
+              <div class="card-body p-0">
+
+                <a th:href="@{'/vendor/detail/' + ${vendor.id}}">
+                  <h2 class="card-title pt-4 m-0" th:text="${vendor.name}">店家名稱</h2>
+                </a>
+
+                <div class="card-text">
+                  <span class="rating secondary-font" th:text="${vendor.description}">店家資訊</span>
+                </div>
+
+              </div>
+            </div>
+          </div>    
+        </th:block>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 店家列表 -->
+
+  <!-- 收藏彈跳視窗 -->
+
+  <div id="popupCollect" class="overlay">
+    <div class="popup">
+      <h3><b id="likeContent"></b></h3>
+      <br>
+      <button class="btn btn-outline-dark btn-1g text-uppercase fs-5 rounded-4" onclick="closeCollection()">關閉</button>
+    </div>
+  </div>
+
+  <!-- 收藏彈跳視窗 -->
+
+
+
+  <!-- 評分彈跳視窗 -->
+
+  <div id="popupScore" class="overlay">
+    <div class="popup">
+      <h3><b>評分</b></h3>
+      <br>
+      <div class="stars">
+        <span class="star" data-value="1">★</span>
+        <span class="star" data-value="2">★</span>
+        <span class="star" data-value="3">★</span>
+        <span class="star" data-value="4">★</span>
+        <span class="star" data-value="5">★</span>
+      </div>
+      <p id="rating-value">評分：0 顆星</p>
+      <button class="btn btn-outline-dark btn-1g text-uppercase fs-5 rounded-4" onclick="closeScore()">關閉</button>
+    </div>
+  </div>
+
+  <!-- 評分彈跳視窗 -->
+
+
+  <!-- 留言彈跳視窗 -->
+
+  <div id="popupComment" class="overlay">
+    <div class="popup">
+      <h3><b>留言</b></h3>
+      <textarea id="newInputField" name="context" placeholder="輸入感想" rows="6" col="40" style="resize: none"></textarea>
+      <br>
+      <button class="btn btn-outline-dark btn-1g text-uppercase fs-5 rounded-4" onclick="submitForm()">送出</button>
+      &emsp;
+      <button class="btn btn-outline-dark btn-1g text-uppercase fs-5 rounded-4" onclick="closePopup()">取消</button>
+    </div>
+  </div>
+
+  <!-- 留言彈跳視窗 -->
+
+  <!-- 留言改寫彈跳視窗 -->
+
+  <div class="overlay comment-rewrite">
+    <div class="popup">
+      <h3><b>留言改寫</b></h3>
+      <textarea class="inputField" value="" rows="6" col="400" style="resize: none"></textarea>
+      <br>
+      <button class="btn btn-outline-dark btn-1g text-uppercase fs-5 rounded-4"
+        onclick="submitRewriteComment()">送出</button>
+      &emsp;
+      <button class="btn btn-outline-dark btn-1g text-uppercase fs-5 rounded-4"
+        onclick="closeRewriteComment()">取消</button>
+    </div>
+  </div>
+
+  <!-- 留言改寫彈跳視窗 -->
+
+
+  <footer>
+    <section>
+      <br>
+      <div style="display: flex; justify-content: center;">
+        <a href="#" class="btn btn-outline-dark btn-lg text-uppercase fs-6 rounded-1">
+          回最上層
+        </a>
+      </div>
+      <br>
+
+    </section>
+
+  </footer>
+
+  <div id="footer-bottom">
+    <div class="container">
+      <hr class="m-0">
+      <div class="row mt-3">
+        <div class="col-md-6 copyright">
+          <p class="secondary-font">© 2023 Waggy. All rights reserved.</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <p class="secondary-font">Free HTML Template by <a href="https://templatesjungle.com/" target="_blank"
+              class="text-decoration-underline fw-bold text-black-50"> TemplatesJungle</a> Distributed by <a
+              href="https://themewagon.com/" target="_blank" class="text-decoration-underline fw-bold text-black-50">
+              ThemeWagon</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- 收藏視窗JS -->
+
+  <script th:inline="javascript">
+    function openCollection() {
+      document.getElementById('popupCollect').style.display = 'flex';
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeCollection() {
+      document.getElementById('popupCollect').style.display = 'none';
+      document.body.style.overflow = "scroll";
+    }
+
+    function likeVendor() {
+      let vendorId = /*[[${vendor.id}]]*/null;
+      let data = {
+        memberId: 19,  // 這裡改成實際的會員 ID
+        vendorId: vendorId
+      };
+
+      let content = document.getElementById('likeContent');
+
+      fetch("/vendor/give_vendor_like", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      })
+        .then(response => response.json())
+        .then(result => {
+          if (result.action == true) {
+            content.textContent = "成功收藏";
+          } else if (result.action == false) {
+            content.textContent = "取消收藏";
+          }
+        })
+        .catch(error => {
+          console.error("發生錯誤:", error);
+        });
+    }
+
+  </script>
+
+  <!-- 收藏視窗JS -->
+
+  <!-- 評分視窗JS -->
+
+  <script>
+    function openScore() {
+      document.getElementById('popupScore').style.display = 'flex';
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeScore() {
+      document.getElementById('popupScore').style.display = 'none';
+      document.body.style.overflow = "scroll";
+    }
+  </script>
+
+  <script>
+    const stars = document.querySelectorAll(".star");
+    const ratingValue = document.getElementById("rating-value");
+    let selectedRating = 0; // 新增變數儲存使用者點擊的評分
+
+    stars.forEach(star => {
+      star.addEventListener("click", function () {
+        selectedRating = this.getAttribute("data-value"); // 儲存選擇的評分
+        ratingValue.textContent = `評分：${selectedRating} 顆星`;
+
+        stars.forEach(s => s.classList.remove("active")); // 移除所有 active 樣式
+        for (let i = 0; i < selectedRating; i++) {
+          stars[i].classList.add("active");
+        }
+      });
+
+      star.addEventListener("mouseover", function () {
+        let hoverValue = this.getAttribute("data-value");
+        stars.forEach(s => s.classList.remove("active")); // 先移除所有 active 樣式
+        for (let i = 0; i < hoverValue; i++) {
+          stars[i].classList.add("active");
+        }
+      });
+
+      star.addEventListener("mouseout", function () {
+        stars.forEach(s => s.classList.remove("active")); // 清除 hover 的效果
+        for (let i = 0; i < selectedRating; i++) { // 恢復使用者選擇的評分
+          stars[i].classList.add("active");
+        }
+      });
+    });
+  </script>
+
+  <!-- 評分視窗JS -->
+
+  <!-- 留言視窗JS -->
+
+  <script th:inline="javascript">
+    function openPopup() {
+      document.getElementById('popupComment').style.display = 'flex';
+      document.getElementById('newInputField').value = "";
+      document.body.style.overflow = "hidden";
+    }
+
+    function closePopup() {
+      event.preventDefault();
+      document.getElementById('popupComment').style.display = 'none';
+      document.body.style.overflow = "scroll";
+    }
+
+    function submitForm() {
+      let vendorId = /*[[${vendor.id}]]*/null;
+      let content = document.getElementById('newInputField').value;
+
+      fetch("/vendor/give_text_review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          memberId: 18,  // 這裡之後要改
+          vendorId: vendorId,
+          content: content
+        })
+      })
+        .then(response => response.json()
+        )
+        .then(result => {
+          if (result.success) {
+            alert("留言新增成功");
+          } else {
+            alert("留言新增失敗");
+          }
+        })
+        .catch(error => {
+          console.error("發生錯誤:", error);
+        });
+
+      closePopup(); // 提交後關閉表單
+    }
+  </script>
+
+  <!-- 留言視窗JS -->
+
+
+
+  <!-- 個別留言視窗JS -->
+
+  <script th:inline="javascript">
+    let selectedReviewId = null;
+
+    function deleteComment(content) {
+      const isConfirmed = window.confirm("確定刪除評論？"); // 之後邏輯要新增符合之memeber才會顯示刪除按鈕
+
+      let reviewId = content.getAttribute('data-id');
+
+      if (isConfirmed) {
+
+        fetch(`http://localhost:8080/api/vendor/review/${reviewId}/delete`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" }
+        })
+          .then(response => response.json())
+          .then(result => {
+            if (result.success) {
+              let targetDiv = document.querySelector(`.comment[data-id='${reviewId}']`);
+              if (targetDiv) {
+                targetDiv.style.display = 'none';
+              }
+              alert("評論刪除成功");
+            } else {
+              alert("評論刪除失敗");
+            }
+          })
+          .catch(error => {
+            console.error("發生錯誤:", error);
+          });
+      }
+
+
+    }
+
+    function rewriteComment(content) { // 之後邏輯要新增符合之memeber才會顯示修改按鈕
+      let reviewId = content.getAttribute('data-id');
+      selectedReviewId = reviewId;
+
+      fetch(`http://localhost:8080/api/vendor/review/${reviewId}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      })
+        .then(response => response.json())
+        .then(data => {
+          document.querySelector(".inputField").value = data.review.reviewContent;
+        })
+        .catch(error => {
+          console.error("發生錯誤:", error);
+        });
+
+      document.querySelector(".comment-rewrite").style.display = "flex";
+      document.body.style.overflow = "hidden";
+
+    }
+
+    function submitRewriteComment() {
+      let newText = document.querySelector(".inputField").value;
+
+      fetch(`http://localhost:8080/api/vendor/review/${selectedReviewId}/rewrite`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: newText })
+      })
+        .then(response => response.json())
+        .then(data => {
+
+          let reviewElement = document.querySelector(`p[data-review="${selectedReviewId}"]`);
+          reviewElement.textContent = data.review.reviewContent; // 渲染留言
+
+          let reviewTime = document.querySelector(`b[data-time="${selectedReviewId}"]`);
+          reviewTime.textContent = "發表時間：" + data.review.reviewTime; // 渲染時間
+
+        })
+        .catch(error => {
+          console.error("發生錯誤:", error);
+        });
+      closeRewriteComment();
+    }
+
+    function closeRewriteComment() {
+      document.querySelector(".comment-rewrite").style.display = "none";
+      document.body.style.overflow = "scroll";
+    }
+
+  </script>
+
+  <!-- 個別視窗JS -->
+
+
+
+
+
+  <script src="js/jquery-1.11.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe"
+    crossorigin="anonymous"></script>
+  <script src="js/plugins.js"></script>
+  <script src="js/script.js"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+
+  <script src="js/swiper.js"></script>
+
+</body>
+
+</html>
