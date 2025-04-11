@@ -1,20 +1,26 @@
 # PetTopia
 
 ## 專案簡介
-**PetTopia** 是一個提供寵物商城、搜尋寵物友善店家與活動的綜合平台，讓飼主能夠增進與毛小孩的生活與關係。
+**PetTopia** 是一個提供寵物商城、搜尋寵物友善店家與活動、後台管理的多功能一站式寵物友善平台，讓飼主能夠增進與毛小孩的生活與關係。
 
 ## 技術架構
-(前期使用 MVC，後期考慮分離)
-- **後端**：Spring Boot + Hibernate + MSSQL
-- **前端**：HTML / CSS / JavaScript + Vue.js
+採用前後端分離:
+- **後端**：Spring Boot + Hibernate + MSSQL + RESTful API
+- **前端**：HTML / CSS / JavaScript / Bootstrap / chart.js / Vue.js + pinia
 - **API**：
+  - Gmail
+  - Facebook
   - Google Maps API
-  - 第三方支付 API
-  - RESTful API
-- **驗證方式**：JWT（JSON Web Token）
+  - ECpay綠界科技
+  - Web Share API
+  - WebSocket
+- **驗證方式**：JWT（JSON Web Token）+ Spring Security
 
 ## 後端環境
-- 安裝 spring tool suite, lombok, (postman, axios)
+- 安裝 spring tool suite, lombok
+
+## 其他開發工具
+postman, axios, Node.js, git, GitHub
 
 ## Git 分支管理規則
 我們使用 Git Feature Branch Workflow，主要分為以下幾個分支：
