@@ -24,7 +24,7 @@ public class OAuth2RedirectController {
     private JwtUtil jwtUtil;
 
     // 前端應用的URL
-    private static final String FRONTEND_URL = "http://localhost:5173";
+    private static final String FRONTEND_URL = "https://pettopia-vue.onrender.com";
 
     @GetMapping("/callback")
     public RedirectView oauth2Callback(
