@@ -44,7 +44,6 @@ public class EcpayUtils {
         
         String checkMacValue = sha256(lowerCaseString);
         
-        System.out.println(checkMacValue.toUpperCase());
         return checkMacValue.toUpperCase();
     }
 
