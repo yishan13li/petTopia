@@ -237,7 +237,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         // 允許的來源
-        configuration.setAllowedOrigins(Arrays.asList("https://pettopia-vue.onrender.com", "http://localhost:3000","http://localhost:5174"));
+        configuration.setAllowedOrigins(Arrays.asList("https://pettopia-vue.onrender.com", "http://localhost:3000","http://localhost:5174","http://localhost:5173","http://pettopia-fbgj.onrender.com"));
         // 允許的 HTTP 方法
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         // 允許的請求頭
