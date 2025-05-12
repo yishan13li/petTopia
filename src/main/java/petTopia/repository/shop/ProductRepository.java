@@ -3,9 +3,11 @@ package petTopia.repository.shop;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import jakarta.persistence.LockModeType;
 import petTopia.model.shop.Product;
 import petTopia.model.shop.ProductDetail;
 
@@ -43,4 +45,9 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, Prod
     @Query("SELECT COUNT(p) FROM Product p WHERE p.stockQuantity < 50")
     long countLowStockProducts();
 	
+    //購買商品更動庫存
+    // 使用 @Lock 註解指定悲觀鎖
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Product p WHERE p.id = :productId")
+    Product lockProduct(@Param("productId") Integer productId);
 }

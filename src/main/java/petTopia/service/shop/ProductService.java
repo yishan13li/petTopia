@@ -9,8 +9,10 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import jakarta.persistence.LockModeType;
 import petTopia.dto.shop.ProductDto;
 import petTopia.dto.shop.ProductDto2;
+import petTopia.model.shop.Cart;
 import petTopia.model.shop.Product;
 import petTopia.model.shop.ProductCategory;
 import petTopia.model.shop.ProductColor;
@@ -303,5 +305,22 @@ public class ProductService {
 		return false;
 	}
 	
-	
+    // 更新庫存數量
+    public void updateStockLevelsByCartItems(List<Cart> cartItems) {
+        for (Cart cart : cartItems) {
+            // 呼叫 lockProduct 方法，自動加鎖
+            Product product = productRepository.lockProduct(cart.getProduct().getId());
+
+            int quantity = cart.getQuantity();
+
+            // 檢查庫存是否足夠
+            if (product.getStockQuantity() < quantity) {
+                throw new RuntimeException("商品[" + product.getProductDetail().getName() + "] 庫存不足");
+            }
+
+            // 扣庫存
+            product.setStockQuantity(product.getStockQuantity() - quantity);
+            productRepository.save(product);
+        }
+    }
 }
