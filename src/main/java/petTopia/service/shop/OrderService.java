@@ -53,6 +53,7 @@ import petTopia.repository.shop.OrderRepository;
 import petTopia.repository.shop.OrderStatusRepository;
 import petTopia.repository.shop.PaymentCategoryRepository;
 import petTopia.repository.shop.PaymentRepository;
+import petTopia.repository.shop.ProductRepository;
 import petTopia.repository.shop.ShippingCategoryRepository;
 import petTopia.repository.shop.ShippingRepository;
 
@@ -82,6 +83,9 @@ public class OrderService {
 	
 	@Autowired
 	private ShippingRepository shippingRepo;
+	
+	@Autowired
+	private ProductService productService;
 	
 	@Autowired
 	private PaymentService paymentService;
@@ -148,6 +152,16 @@ public class OrderService {
 	        Integer paymentCategoryId, BigDecimal paymentAmount,
 	        String street, String city, String receiverName, String receiverPhone,List<Integer> productIds) throws Exception {
 
+        // 查詢會員購物車中這些商品
+        List<Cart> cartItems = cartRepo.findByMemberIdAndProductIdIn(memberId, productIds);
+        
+        // 更新庫存
+        try {
+            productService.updateStockLevelsByCartItems(cartItems);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("庫存不足，無法完成訂單", e);
+        }
+
 	    // 計算購物車 subtotal 金額
 	    BigDecimal subtotal = cartService.calculateTotalPrice(memberId,productIds);
 
@@ -192,10 +206,7 @@ public class OrderService {
 	    orderRepo.save(order); // 存入資料庫
 
 	    // 訂單詳情
-        // 查詢會員購物車中這些商品
-        List<Cart> cartItems = cartRepo.findByMemberIdAndProductIdIn(memberId, productIds);
-
-	    orderDetailService.createOrderDetails(order, cartItems);
+        orderDetailService.createOrderDetails(order, cartItems);
 
 	    // 更新優惠券使用次數
 	    if (couponId != null) {

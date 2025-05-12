@@ -224,6 +224,7 @@ public class ManageOrderService {
     	}
 	
     //更新單一訂單
+    @Transactional
     public Order updateOrder(Integer orderId,UpdateOneOrderDto updatedOrderRequest) {
         
     	String orderStatus = updatedOrderRequest.getOrderStatus();

@@ -127,60 +127,76 @@ public class CheckOutController {
     }
     
     @PostMapping("/checkout")
-    public ResponseEntity<?> processCheckout(@RequestBody Map<String, Object> checkoutData, 
-    										@RequestParam Integer memberId,
-                                              @RequestHeader(value = "Accept", defaultValue = "application/json") String acceptHeader) throws Exception {
-
+    public ResponseEntity<?> processCheckout(
+    	    @RequestBody Map<String, Object> checkoutData, 
+    	    @RequestParam Integer memberId
+    	) {
     	Optional<Member> memberOpt = memberService.findById(memberId);
     	
     	Member member= memberOpt.get();
     	
         // 從 checkoutData 取得各種資料
-        Integer couponId = checkoutData.get("couponId") != null ? (Integer) checkoutData.get("couponId") : null;
-        Integer shippingCategoryId = (Integer) checkoutData.get("shippingCategoryId");
-        Integer paymentCategoryId = (Integer) checkoutData.get("paymentCategoryId");
+        try {
+            // 從 checkoutData 取得各種資料
+            Integer couponId = checkoutData.get("couponId") != null ? (Integer) checkoutData.get("couponId") : null;
+            Integer shippingCategoryId = (Integer) checkoutData.get("shippingCategoryId");
+            Integer paymentCategoryId = (Integer) checkoutData.get("paymentCategoryId");
 
-        // 取得前端傳來的購物車 ID 清單
-        @SuppressWarnings("unchecked")
-		List<Integer> productIdList = ((List<Map<String, Object>>) checkoutData.get("cartItems"))
+            // 取得購物車內的商品 ID 清單
+            List<Integer> productIdList = ((List<Map<String, Object>>) checkoutData.get("cartItems"))
                 .stream()
-                .map(item -> (Integer) item.get("productId")) // 假設每個 item 中有 productId 欄位
+                .map(item -> (Integer) item.get("productId"))
                 .collect(Collectors.toList());
-        
-        // 取得收件人資料
-        String receiverName = (String) checkoutData.get("receiverName");
-        String receiverPhone = (String) checkoutData.get("receiverPhone");
-        String street = (String) checkoutData.get("street");
-        String city = (String) checkoutData.get("city");
-        String amount = (String) checkoutData.get("paymentAmount");
 
-        BigDecimal paymentAmount = (amount != null) ? new BigDecimal(amount) : null;
+            // 收件人資訊
+            String receiverName = (String) checkoutData.get("receiverName");
+            String receiverPhone = (String) checkoutData.get("receiverPhone");
+            String street = (String) checkoutData.get("street");
+            String city = (String) checkoutData.get("city");
+            String amount = (String) checkoutData.get("paymentAmount");
 
-        // 建立訂單，將收件資訊傳入
-        Map<String, Object> orderResponse = orderService.createOrder(member, memberId, couponId, shippingCategoryId, paymentCategoryId, paymentAmount, street, city, receiverName, receiverPhone,productIdList);
-        Order order = (Order) orderResponse.get("order");
+            BigDecimal paymentAmount = (amount != null) ? new BigDecimal(amount) : null;
 
-        // 如果選擇信用卡付款 (paymentCategoryId == 1)
-        if (paymentCategoryId == 1) {
-            // 調用 processCreditCardPayment 來處理付款並返回支付參數資料
-            PaymentResponseDto paymentResponse = paymentService.processCreditCardPayment(order, paymentCategoryId);
+            // 建立訂單
+            Map<String, Object> orderResponse = orderService.createOrder(
+                member, memberId, couponId, shippingCategoryId,
+                paymentCategoryId, paymentAmount, street, city,
+                receiverName, receiverPhone, productIdList
+            );
+            Order order = (Order) orderResponse.get("order");
 
-            if (paymentResponse != null) {
-                // 如果請求頭是 JSON 格式，返回支付參數資料
-                if ("application/json".equals(acceptHeader)) {
+            // 信用卡付款
+            if (paymentCategoryId == 1) {
+                PaymentResponseDto paymentResponse = paymentService.processCreditCardPayment(order, paymentCategoryId);
+                if (paymentResponse != null) {
                     return ResponseEntity.ok(Map.of(
                         "message", "訂單建立成功，請前往付款",
                         "paymentData", paymentResponse
                     ));
+                } else {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "付款頁面生成失敗"));
                 }
-            } else {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "付款頁面生成失敗"));
             }
-        }
 
-        // 如果付款方式不是信用卡 (paymentCategoryId != 1)，直接返回訂單建立成功
-        return ResponseEntity.ok(Map.of("message", "訂單建立成功，請查看訂單詳情",
-                "orderId", order.getId()));
+            // 非信用卡付款
+            return ResponseEntity.ok(Map.of(
+                "message", "訂單建立成功，請查看訂單詳情",
+                "orderId", order.getId()
+            ));
+
+        } catch (RuntimeException ex) {
+            // 處理例如庫存不足、訂單無效等錯誤
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", "商品庫存不足，無法完成訂單",
+                "message", ex.getMessage()
+            ));
+        } catch (Exception ex) {
+            // 處理其他未預期的錯誤
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                "error", "系統發生錯誤，請稍後再試",
+                "message", ex.getMessage()
+            ));
+        }
     }
 
     @PostMapping("/payment/ecpay/callback")
